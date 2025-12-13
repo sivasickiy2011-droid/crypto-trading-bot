@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 
 const mockBacktestResults = Array.from({ length: 30 }, (_, i) => ({
-  day: `Day ${i + 1}`,
+  day: `День ${i + 1}`,
   pnl: Math.random() * 400 - 100,
   equity: 10000 + (Math.random() * 3000 - 500) * i,
   trades: Math.floor(Math.random() * 10) + 5
@@ -27,12 +27,12 @@ const mockTradeDistribution = [
 ];
 
 const mockMonthlyStats = [
-  { month: 'Jan', profit: 1240, loss: -320, winRate: 72 },
-  { month: 'Feb', profit: 980, loss: -450, winRate: 65 },
-  { month: 'Mar', profit: 1560, loss: -280, winRate: 78 },
-  { month: 'Apr', profit: 1120, loss: -390, winRate: 68 },
-  { month: 'May', profit: 1680, loss: -210, winRate: 82 },
-  { month: 'Jun', profit: 1340, loss: -520, winRate: 61 }
+  { month: 'Янв', profit: 1240, loss: -320, winRate: 72 },
+  { month: 'Фев', profit: 980, loss: -450, winRate: 65 },
+  { month: 'Мар', profit: 1560, loss: -280, winRate: 78 },
+  { month: 'Апр', profit: 1120, loss: -390, winRate: 68 },
+  { month: 'Май', profit: 1680, loss: -210, winRate: 82 },
+  { month: 'Июн', profit: 1340, loss: -520, winRate: 61 }
 ];
 
 export default function BacktestPanel() {
@@ -51,49 +51,49 @@ export default function BacktestPanel() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Backtesting Engine</CardTitle>
+              <CardTitle>Движок бэктестинга</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Test strategies on historical data before live trading
+                Тестируйте стратегии на исторических данных перед реальной торговлей
               </p>
             </div>
             <Badge variant={isRunning ? "default" : "secondary"} className={isRunning ? "animate-pulse-subtle" : ""}>
-              {isRunning ? 'RUNNING' : 'READY'}
+              {isRunning ? 'ЗАПУЩЕН' : 'ГОТОВ'}
             </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label>Strategy</Label>
+              <Label>Стратегия</Label>
               <Select value={strategy} onValueChange={setStrategy}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ma-crossover">MA Crossover</SelectItem>
-                  <SelectItem value="martingale">Martingale</SelectItem>
-                  <SelectItem value="combined">Combined</SelectItem>
+                  <SelectItem value="ma-crossover">Пересечение MA</SelectItem>
+                  <SelectItem value="martingale">Мартингейл</SelectItem>
+                  <SelectItem value="combined">Комбинированная</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Timeframe</Label>
+              <Label>Таймфрейм</Label>
               <Select value={timeframe} onValueChange={setTimeframe}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1m">Last Month</SelectItem>
-                  <SelectItem value="3m">Last 3 Months</SelectItem>
-                  <SelectItem value="6m">Last 6 Months</SelectItem>
-                  <SelectItem value="1y">Last Year</SelectItem>
+                  <SelectItem value="1m">Последний месяц</SelectItem>
+                  <SelectItem value="3m">Последние 3 месяца</SelectItem>
+                  <SelectItem value="6m">Последние 6 месяцев</SelectItem>
+                  <SelectItem value="1y">Последний год</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Initial Capital</Label>
+              <Label>Начальный капитал</Label>
               <Select defaultValue="10000">
                 <SelectTrigger>
                   <SelectValue />
@@ -117,7 +117,7 @@ export default function BacktestPanel() {
                 disabled={isRunning}
               >
                 <Icon name={isRunning ? "Loader2" : "Play"} size={16} className={`mr-2 ${isRunning ? 'animate-spin' : ''}`} />
-                {isRunning ? 'Running...' : 'Run Backtest'}
+                {isRunning ? 'Выполняется...' : 'Запустить'}
               </Button>
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function BacktestPanel() {
                 <Icon name="TrendingUp" size={20} className="text-success" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Total PnL</p>
+                <p className="text-xs text-muted-foreground">Общий PnL</p>
                 <p className="text-xl font-bold font-mono text-success">
                   +${totalPnL.toFixed(2)}
                 </p>
@@ -148,7 +148,7 @@ export default function BacktestPanel() {
                 <Icon name="Percent" size={20} className="text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Win Rate</p>
+                <p className="text-xs text-muted-foreground">Винрейт</p>
                 <p className="text-xl font-bold font-mono">
                   {((winningTrades / totalTrades) * 100).toFixed(1)}%
                 </p>
@@ -164,7 +164,7 @@ export default function BacktestPanel() {
                 <Icon name="Activity" size={20} className="text-foreground" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Total Trades</p>
+                <p className="text-xs text-muted-foreground">Всего сделок</p>
                 <p className="text-xl font-bold font-mono">{totalTrades}</p>
               </div>
             </div>
@@ -178,7 +178,7 @@ export default function BacktestPanel() {
                 <Icon name="TrendingDown" size={20} className="text-destructive" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Max Drawdown</p>
+                <p className="text-xs text-muted-foreground">Макс. просадка</p>
                 <p className="text-xl font-bold font-mono text-destructive">-8.3%</p>
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function BacktestPanel() {
         <div className="col-span-2 space-y-6">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle>Equity Curve</CardTitle>
+              <CardTitle>Кривая капитала</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[350px]">
@@ -235,7 +235,7 @@ export default function BacktestPanel() {
 
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle>Daily PnL Distribution</CardTitle>
+              <CardTitle>Распределение дневного PnL</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[250px]">
@@ -274,34 +274,34 @@ export default function BacktestPanel() {
         <div className="space-y-6">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle>Trade Statistics</CardTitle>
+              <CardTitle>Статистика сделок</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Winning Trades</span>
+                  <span className="text-sm text-muted-foreground">Прибыльные сделки</span>
                   <span className="font-mono font-semibold text-success">{winningTrades}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Losing Trades</span>
+                  <span className="text-sm text-muted-foreground">Убыточные сделки</span>
                   <span className="font-mono font-semibold text-destructive">{losingTrades}</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Avg Win</span>
+                  <span className="text-sm text-muted-foreground">Сред. прибыль</span>
                   <span className="font-mono font-semibold text-success">+$124.50</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Avg Loss</span>
+                  <span className="text-sm text-muted-foreground">Сред. убыток</span>
                   <span className="font-mono font-semibold text-destructive">-$67.30</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Profit Factor</span>
+                  <span className="text-sm text-muted-foreground">Фактор прибыли</span>
                   <span className="font-mono font-semibold">1.85</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Sharpe Ratio</span>
+                  <span className="text-sm text-muted-foreground">Коэффициент Шарпа</span>
                   <span className="font-mono font-semibold">2.34</span>
                 </div>
               </div>
@@ -310,7 +310,7 @@ export default function BacktestPanel() {
 
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle>Return Distribution</CardTitle>
+              <CardTitle>Распределение доходности</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -318,7 +318,7 @@ export default function BacktestPanel() {
                   <div key={i}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-muted-foreground">{item.range}</span>
-                      <span className="text-xs font-mono">{item.count} trades</span>
+                      <span className="text-xs font-mono">{item.count} сделок</span>
                     </div>
                     <div className="h-2 bg-secondary rounded-full overflow-hidden">
                       <div 
@@ -337,7 +337,7 @@ export default function BacktestPanel() {
 
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle>Monthly Performance</CardTitle>
+              <CardTitle>Ежемесячная доходность</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[200px]">

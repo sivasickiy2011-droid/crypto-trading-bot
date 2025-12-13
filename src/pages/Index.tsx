@@ -45,12 +45,12 @@ const mockWatchlist = [
 ];
 
 const mockLogs = [
-  { time: '14:23:15', type: 'info', message: 'MA Crossover signal detected on BTC/USDT' },
-  { time: '14:22:48', type: 'success', message: 'Position opened: LONG BTC/USDT at 43250' },
-  { time: '14:20:33', type: 'warning', message: 'Stop-loss adjusted for ETH/USDT position' },
-  { time: '14:18:12', type: 'info', message: 'Martingale level 2 triggered on SOL/USDT' },
-  { time: '14:15:45', type: 'error', message: 'Insufficient balance for new position' },
-  { time: '14:12:30', type: 'success', message: 'Position closed: SHORT ETH/USDT, PnL: +$30' },
+  { time: '14:23:15', type: 'info', message: 'Обнаружен сигнал MA Crossover на BTC/USDT' },
+  { time: '14:22:48', type: 'success', message: 'Открыта позиция: LONG BTC/USDT по 43250' },
+  { time: '14:20:33', type: 'warning', message: 'Скорректирован стоп-лосс для позиции ETH/USDT' },
+  { time: '14:18:12', type: 'info', message: 'Сработал Мартингейл уровень 2 на SOL/USDT' },
+  { time: '14:15:45', type: 'error', message: 'Недостаточно средств для открытия позиции' },
+  { time: '14:12:30', type: 'success', message: 'Закрыта позиция: SHORT ETH/USDT, PnL: +$30' },
 ];
 
 export default function Index() {
@@ -105,19 +105,19 @@ export default function Index() {
         <main className="flex-1">
           <header className="h-16 border-b border-border px-6 flex items-center justify-between bg-card">
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-semibold">Trading Terminal</h1>
+              <h1 className="text-xl font-semibold">Торговый терминал</h1>
               <Badge variant={botStatus ? "default" : "secondary"} className="animate-pulse-subtle">
                 <Icon name="Circle" size={8} className="mr-1.5 fill-current" />
-                {botStatus ? 'BOT ACTIVE' : 'BOT STOPPED'}
+                {botStatus ? 'БОТ АКТИВЕН' : 'БОТ ОСТАНОВЛЕН'}
               </Badge>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-sm">
-                <span className="text-muted-foreground">Server:</span>
-                <span className="ml-2 text-success font-medium">Connected</span>
+                <span className="text-muted-foreground">Сервер:</span>
+                <span className="ml-2 text-success font-medium">Подключен</span>
               </div>
               <div className="text-sm">
-                <span className="text-muted-foreground">Latency:</span>
+                <span className="text-muted-foreground">Задержка:</span>
                 <span className="ml-2 font-mono text-foreground">12ms</span>
               </div>
               <Separator orientation="vertical" className="h-6" />
@@ -133,17 +133,17 @@ export default function Index() {
             <div className="grid grid-cols-4 gap-4">
               <Card className="bg-card border-border">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Account Balance</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Баланс счета</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold font-mono">$24,580.00</div>
-                  <p className="text-xs text-muted-foreground mt-1">Available: $18,420.00</p>
+                  <p className="text-xs text-muted-foreground mt-1">Доступно: $18,420.00</p>
                 </CardContent>
               </Card>
 
               <Card className="bg-card border-border">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total PnL</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Общий PnL</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className={`text-2xl font-bold font-mono ${totalPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
@@ -157,21 +157,21 @@ export default function Index() {
 
               <Card className="bg-card border-border">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Open Positions</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Открытые позиции</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold font-mono">{mockPositions.length}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Total exposure: 10x</p>
+                  <p className="text-xs text-muted-foreground mt-1">Общее плечо: 10x</p>
                 </CardContent>
               </Card>
 
               <Card className="bg-card border-border">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Win Rate</CardTitle>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Винрейт</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold font-mono text-success">68.4%</div>
-                  <p className="text-xs text-muted-foreground mt-1">Last 24h: 12/18 trades</p>
+                  <p className="text-xs text-muted-foreground mt-1">За 24ч: 12/18 сделок</p>
                 </CardContent>
               </Card>
             </div>
@@ -249,7 +249,7 @@ export default function Index() {
 
                 <Card className="bg-card border-border">
                   <CardHeader>
-                    <CardTitle>Open Positions</CardTitle>
+                    <CardTitle>Открытые позиции</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -262,8 +262,8 @@ export default function Index() {
                             <div>
                               <div className="font-semibold">{position.pair}</div>
                               <div className="text-xs text-muted-foreground">
-                                Entry: <span className="font-mono">${position.entry}</span> | 
-                                Size: <span className="font-mono">{position.size}</span> | 
+                                Вход: <span className="font-mono">${position.entry}</span> | 
+                                Объем: <span className="font-mono">{position.size}</span> | 
                                 {position.leverage}x
                               </div>
                             </div>
@@ -271,7 +271,7 @@ export default function Index() {
                           <div className="flex items-center space-x-6">
                             <div className="text-right">
                               <div className="font-mono text-sm">${position.current}</div>
-                              <div className="text-xs text-muted-foreground">Current</div>
+                              <div className="text-xs text-muted-foreground">Текущая</div>
                             </div>
                             <div className="text-right">
                               <div className={`font-mono font-semibold ${position.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
@@ -283,7 +283,7 @@ export default function Index() {
                             </div>
                             <Button size="sm" variant="destructive">
                               <Icon name="X" size={14} className="mr-1" />
-                              Close
+                              Закрыть
                             </Button>
                           </div>
                         </div>
@@ -296,7 +296,7 @@ export default function Index() {
               <div className="space-y-6">
                 <Card className="bg-card border-border">
                   <CardHeader>
-                    <CardTitle>Watchlist</CardTitle>
+                    <CardTitle>Избранное</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="h-[300px]">
@@ -328,19 +328,19 @@ export default function Index() {
 
                 <Card className="bg-card border-border">
                   <CardHeader>
-                    <CardTitle>Strategy Control</CardTitle>
+                    <CardTitle>Управление стратегиями</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Active Strategy</Label>
+                      <Label>Активная стратегия</Label>
                       <Select value={selectedStrategy} onValueChange={setSelectedStrategy}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="ma-crossover">MA Crossover</SelectItem>
-                          <SelectItem value="martingale">Martingale</SelectItem>
-                          <SelectItem value="combined">Combined Strategy</SelectItem>
+                          <SelectItem value="ma-crossover">Пересечение MA</SelectItem>
+                          <SelectItem value="martingale">Мартингейл</SelectItem>
+                          <SelectItem value="combined">Комбинированная</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -349,22 +349,22 @@ export default function Index() {
 
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label>Enable MA Crossover</Label>
+                        <Label>Включить пересечение MA</Label>
                         <Switch defaultChecked />
                       </div>
                       <div className="flex items-center justify-between">
-                        <Label>Enable Martingale</Label>
+                        <Label>Включить Мартингейл</Label>
                         <Switch defaultChecked />
                       </div>
                       <div className="flex items-center justify-between">
-                        <Label>Auto Stop-Loss</Label>
+                        <Label>Авто стоп-лосс</Label>
                         <Switch defaultChecked />
                       </div>
                     </div>
 
                     <Button className="w-full" variant="outline" onClick={() => setConfigModalOpen(true)}>
                       <Icon name="Settings" size={16} className="mr-2" />
-                      Configure Strategy
+                      Настроить стратегию
                     </Button>
                   </CardContent>
                 </Card>
@@ -373,15 +373,15 @@ export default function Index() {
 
             <Tabs defaultValue="history" className="space-y-4">
               <TabsList className="grid w-full grid-cols-3 max-w-md">
-                <TabsTrigger value="history">Trade History</TabsTrigger>
-                <TabsTrigger value="logs">System Logs</TabsTrigger>
-                <TabsTrigger value="pairs">Manage Pairs</TabsTrigger>
+                <TabsTrigger value="history">История сделок</TabsTrigger>
+                <TabsTrigger value="logs">Системные логи</TabsTrigger>
+                <TabsTrigger value="pairs">Управление парами</TabsTrigger>
               </TabsList>
 
               <TabsContent value="history">
                 <Card className="bg-card border-border">
                   <CardHeader>
-                    <CardTitle>Closed Positions (Today)</CardTitle>
+                    <CardTitle>Закрытые позиции (сегодня)</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
@@ -394,8 +394,8 @@ export default function Index() {
                             <div>
                               <div className="font-semibold text-sm">{trade.pair}</div>
                               <div className="text-xs text-muted-foreground">
-                                Entry: <span className="font-mono">${trade.entry}</span> → 
-                                Exit: <span className="font-mono">${trade.exit}</span>
+                                Вход: <span className="font-mono">${trade.entry}</span> → 
+                                Выход: <span className="font-mono">${trade.exit}</span>
                               </div>
                             </div>
                           </div>
@@ -418,7 +418,7 @@ export default function Index() {
               <TabsContent value="logs">
                 <Card className="bg-card border-border">
                   <CardHeader>
-                    <CardTitle>System Logs</CardTitle>
+                    <CardTitle>Системные логи</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="h-[300px]">
@@ -448,7 +448,7 @@ export default function Index() {
               <TabsContent value="pairs">
                 <Card className="bg-card border-border">
                   <CardHeader>
-                    <CardTitle>Manage Trading Pairs</CardTitle>
+                    <CardTitle>Управление торговыми парами</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-3 gap-3">
@@ -460,7 +460,7 @@ export default function Index() {
                       ))}
                       <Button variant="outline" className="h-auto py-3">
                         <Icon name="Plus" size={16} className="mr-2" />
-                        Add Pair
+                        Добавить пару
                       </Button>
                     </div>
                   </CardContent>

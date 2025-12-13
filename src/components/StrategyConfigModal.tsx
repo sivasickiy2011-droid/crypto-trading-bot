@@ -45,17 +45,17 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Strategy Configuration</DialogTitle>
+          <DialogTitle className="text-2xl">Настройка стратегий</DialogTitle>
           <DialogDescription>
-            Configure trading strategies, risk management, and execution parameters
+            Настройте торговые стратегии, управление рисками и параметры исполнения
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="ma-crossover" className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="ma-crossover">MA Crossover</TabsTrigger>
-            <TabsTrigger value="martingale">Martingale</TabsTrigger>
-            <TabsTrigger value="risk">Risk Management</TabsTrigger>
+            <TabsTrigger value="ma-crossover">Пересечение MA</TabsTrigger>
+            <TabsTrigger value="martingale">Мартингейл</TabsTrigger>
+            <TabsTrigger value="risk">Управление рисками</TabsTrigger>
           </TabsList>
 
           <TabsContent value="ma-crossover" className="space-y-6 mt-6">
@@ -63,9 +63,9 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
               <CardContent className="pt-6 space-y-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-base font-semibold">Enable MA Crossover Strategy</Label>
+                    <Label className="text-base font-semibold">Включить стратегию пересечения MA</Label>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Trade based on moving average crossovers
+                      Торговля на основе пересечения скользящих средних
                     </p>
                   </div>
                   <Switch 
@@ -79,7 +79,7 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm font-medium">Short Period (MA)</Label>
+                      <Label className="text-sm font-medium">Короткий период (MA)</Label>
                       <span className="text-sm font-mono text-muted-foreground">{maConfig.shortPeriod}</span>
                     </div>
                     <Slider
@@ -91,13 +91,13 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                       className="w-full"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Fast-moving average period for signal generation
+                      Быстрая скользящая средняя для генерации сигналов
                     </p>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm font-medium">Long Period (MA)</Label>
+                      <Label className="text-sm font-medium">Длинный период (MA)</Label>
                       <span className="text-sm font-mono text-muted-foreground">{maConfig.longPeriod}</span>
                     </div>
                     <Slider
@@ -109,13 +109,13 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                       className="w-full"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Slow-moving average for trend confirmation
+                      Медленная скользящая средняя для подтверждения тренда
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">Stop Loss (%)</Label>
+                      <Label className="text-sm font-medium mb-2 block">Стоп-лосс (%)</Label>
                       <Input
                         type="number"
                         value={maConfig.stopLoss}
@@ -125,7 +125,7 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                       />
                     </div>
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">Take Profit (%)</Label>
+                      <Label className="text-sm font-medium mb-2 block">Тейк-профит (%)</Label>
                       <Input
                         type="number"
                         value={maConfig.takeProfit}
@@ -137,7 +137,7 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Minimum Volume (USDT)</Label>
+                    <Label className="text-sm font-medium mb-2 block">Минимальный объем (USDT)</Label>
                     <Input
                       type="number"
                       value={maConfig.minVolume}
@@ -146,7 +146,7 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                       className="font-mono"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Only trade pairs with volume above this threshold
+                      Торговать только парами с объемом выше этого порога
                     </p>
                   </div>
                 </div>
@@ -157,9 +157,9 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
               <div className="flex items-center space-x-3">
                 <Icon name="Info" size={20} className="text-primary" />
                 <div>
-                  <p className="text-sm font-medium">Strategy Signal</p>
+                  <p className="text-sm font-medium">Сигнал стратегии</p>
                   <p className="text-xs text-muted-foreground">
-                    Buy when short MA crosses above long MA, sell on opposite
+                    Покупка при пересечении короткой MA над длинной, продажа наоборот
                   </p>
                 </div>
               </div>
@@ -171,9 +171,9 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
               <CardContent className="pt-6 space-y-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-base font-semibold">Enable Martingale Strategy</Label>
+                    <Label className="text-base font-semibold">Включить стратегию Мартингейл</Label>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Average down positions at extremum levels
+                      Усреднение позиций на уровнях экстремумов
                     </p>
                   </div>
                   <Switch 
@@ -187,7 +187,7 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm font-medium">Maximum Levels</Label>
+                      <Label className="text-sm font-medium">Максимум уровней</Label>
                       <span className="text-sm font-mono text-muted-foreground">{martingaleConfig.maxLevels}</span>
                     </div>
                     <Slider
@@ -199,13 +199,13 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                       className="w-full"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Maximum number of averaging levels
+                      Максимальное количество уровней усреднения
                     </p>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm font-medium">Position Multiplier</Label>
+                      <Label className="text-sm font-medium">Множитель позиции</Label>
                       <span className="text-sm font-mono text-muted-foreground">{martingaleConfig.multiplier.toFixed(1)}x</span>
                     </div>
                     <Slider
@@ -217,13 +217,13 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                       className="w-full"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Size multiplier for each averaging level
+                      Множитель размера для каждого уровня
                     </p>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm font-medium">Extremum Period (days)</Label>
+                      <Label className="text-sm font-medium">Период экстремумов (дней)</Label>
                       <span className="text-sm font-mono text-muted-foreground">{martingaleConfig.extremumPeriod}</span>
                     </div>
                     <Slider
@@ -235,13 +235,13 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                       className="w-full"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Look for high/low extremums in this period
+                      Поиск максимумов/минимумов за этот период
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">Base Size</Label>
+                      <Label className="text-sm font-medium mb-2 block">Базовый размер</Label>
                       <Input
                         type="number"
                         value={martingaleConfig.baseSize}
@@ -249,10 +249,10 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                         step="0.01"
                         className="font-mono"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">Initial position size</p>
+                      <p className="text-xs text-muted-foreground mt-1">Начальный размер позиции</p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium mb-2 block">Min Distance (%)</Label>
+                      <Label className="text-sm font-medium mb-2 block">Мин. дистанция (%)</Label>
                       <Input
                         type="number"
                         value={martingaleConfig.minDistance}
@@ -260,7 +260,7 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                         step="0.5"
                         className="font-mono"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">Min price move to trigger</p>
+                      <p className="text-xs text-muted-foreground mt-1">Мин. изменение цены для срабатывания</p>
                     </div>
                   </div>
                 </div>
@@ -271,9 +271,9 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
               <div className="flex items-center space-x-3">
                 <Icon name="AlertTriangle" size={20} className="text-destructive" />
                 <div>
-                  <p className="text-sm font-medium">High Risk Strategy</p>
+                  <p className="text-sm font-medium">Высокорискованная стратегия</p>
                   <p className="text-xs text-muted-foreground">
-                    Martingale can lead to significant losses in trending markets
+                    Мартингейл может привести к значительным убыткам на трендовых рынках
                   </p>
                 </div>
               </div>
@@ -284,9 +284,9 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
             <Card className="bg-secondary border-border">
               <CardContent className="pt-6 space-y-5">
                 <div>
-                  <Label className="text-base font-semibold">Risk Management Settings</Label>
+                  <Label className="text-base font-semibold">Настройки управления рисками</Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Control exposure and protect your capital
+                    Контролируйте риски и защитите свой капитал
                   </p>
                 </div>
 
@@ -295,7 +295,7 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm font-medium">Max Open Positions</Label>
+                      <Label className="text-sm font-medium">Макс. открытых позиций</Label>
                       <span className="text-sm font-mono text-muted-foreground">{riskConfig.maxPositions}</span>
                     </div>
                     <Slider
@@ -310,7 +310,7 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
 
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm font-medium">Maximum Leverage</Label>
+                      <Label className="text-sm font-medium">Максимальное плечо</Label>
                       <span className="text-sm font-mono text-muted-foreground">{riskConfig.maxLeverage}x</span>
                     </div>
                     <Slider
@@ -325,7 +325,7 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
 
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="text-sm font-medium">Portfolio Risk (%)</Label>
+                      <Label className="text-sm font-medium">Риск портфеля (%)</Label>
                       <span className="text-sm font-mono text-muted-foreground">{riskConfig.portfolioRisk}%</span>
                     </div>
                     <Slider
@@ -337,12 +337,12 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                       className="w-full"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Maximum portfolio exposure at risk
+                      Максимальный риск портфеля
                     </p>
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Daily Loss Limit (USDT)</Label>
+                    <Label className="text-sm font-medium mb-2 block">Дневной лимит убытков (USDT)</Label>
                     <Input
                       type="number"
                       value={riskConfig.dailyLossLimit}
@@ -351,7 +351,7 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
                       className="font-mono"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Bot stops trading if daily losses exceed this amount
+                      Бот останавливает торговлю при превышении этой суммы
                     </p>
                   </div>
                 </div>
@@ -362,21 +362,21 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
               <Card className="bg-card border-border">
                 <CardContent className="pt-4 text-center">
                   <Icon name="Shield" size={24} className="mx-auto mb-2 text-success" />
-                  <p className="text-xs text-muted-foreground">Protected Capital</p>
+                  <p className="text-xs text-muted-foreground">Защищенный капитал</p>
                   <p className="text-lg font-bold font-mono mt-1">$19,664</p>
                 </CardContent>
               </Card>
               <Card className="bg-card border-border">
                 <CardContent className="pt-4 text-center">
                   <Icon name="TrendingUp" size={24} className="mx-auto mb-2 text-primary" />
-                  <p className="text-xs text-muted-foreground">At Risk</p>
+                  <p className="text-xs text-muted-foreground">Под риском</p>
                   <p className="text-lg font-bold font-mono mt-1">$4,916</p>
                 </CardContent>
               </Card>
               <Card className="bg-card border-border">
                 <CardContent className="pt-4 text-center">
                   <Icon name="AlertCircle" size={24} className="mx-auto mb-2 text-destructive" />
-                  <p className="text-xs text-muted-foreground">Max Drawdown</p>
+                  <p className="text-xs text-muted-foreground">Макс. просадка</p>
                   <p className="text-lg font-bold font-mono mt-1">-$500</p>
                 </CardContent>
               </Card>
@@ -386,11 +386,11 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
 
         <div className="flex items-center justify-end space-x-3 mt-6 pt-4 border-t border-border">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Отмена
           </Button>
           <Button onClick={() => onOpenChange(false)}>
             <Icon name="Save" size={16} className="mr-2" />
-            Save Configuration
+            Сохранить
           </Button>
         </div>
       </DialogContent>
