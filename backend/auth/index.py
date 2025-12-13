@@ -72,6 +72,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 user_id, password_hash = user
                 
+                if password_hash.startswith('$2b$12$EmptyPasswordNeedsReset'):
+                    return {
+                        'statusCode': 403,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({
+                            'success': False, 
+                            'error': 'Password reset required',
+                            'needs_password_reset': True,
+                            'user_id': user_id,
+                            'username': username
+                        }),
+                        'isBase64Encoded': False
+                    }
+                
                 if bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
                     token = secrets.token_urlsafe(32)
                     
@@ -135,6 +149,50 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'statusCode': 409,
                         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                         'body': json.dumps({'success': False, 'error': 'Username already exists'}),
+                        'isBase64Encoded': False
+                    }
+            
+            elif action == 'set_password':
+                user_id = body_data.get('user_id')
+                new_password = body_data.get('new_password', '')
+                
+                if not user_id or not new_password or len(new_password) < 6:
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'success': False, 'error': 'Invalid password (min 6 chars)'}),
+                        'isBase64Encoded': False
+                    }
+                
+                password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                
+                cursor.execute(
+                    "UPDATE users SET password_hash = %s WHERE id = %s RETURNING username",
+                    (password_hash, int(user_id))
+                )
+                result = cursor.fetchone()
+                
+                if result:
+                    conn.commit()
+                    username = result[0]
+                    token = secrets.token_urlsafe(32)
+                    
+                    return {
+                        'statusCode': 200,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({
+                            'success': True,
+                            'token': token,
+                            'user_id': user_id,
+                            'username': username
+                        }),
+                        'isBase64Encoded': False
+                    }
+                else:
+                    return {
+                        'statusCode': 404,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'success': False, 'error': 'User not found'}),
                         'isBase64Encoded': False
                     }
         

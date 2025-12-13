@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import SetPassword from "./pages/SetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -14,6 +15,9 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
   const [username, setUsername] = useState<string>('');
+  const [needsPasswordReset, setNeedsPasswordReset] = useState(false);
+  const [resetUserId, setResetUserId] = useState<number | null>(null);
+  const [resetUsername, setResetUsername] = useState<string>('');
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
@@ -31,6 +35,20 @@ const App = () => {
     setIsAuthenticated(true);
     setUserId(uid);
     setUsername(uname);
+    setNeedsPasswordReset(false);
+  };
+
+  const handlePasswordResetRequired = (uid: number, uname: string) => {
+    setNeedsPasswordReset(true);
+    setResetUserId(uid);
+    setResetUsername(uname);
+  };
+
+  const handlePasswordSet = (token: string) => {
+    setIsAuthenticated(true);
+    setUserId(resetUserId);
+    setUsername(resetUsername);
+    setNeedsPasswordReset(false);
   };
 
   const handleLogout = () => {
@@ -52,7 +70,30 @@ const App = () => {
             <Route 
               path="/login" 
               element={
-                isAuthenticated ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />
+                needsPasswordReset ? (
+                  <Navigate to="/set-password" replace />
+                ) : isAuthenticated ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <Login 
+                    onLoginSuccess={handleLoginSuccess}
+                    onPasswordResetRequired={handlePasswordResetRequired}
+                  />
+                )
+              } 
+            />
+            <Route 
+              path="/set-password" 
+              element={
+                needsPasswordReset && resetUserId ? (
+                  <SetPassword 
+                    userId={resetUserId}
+                    username={resetUsername}
+                    onPasswordSet={handlePasswordSet}
+                  />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
               } 
             />
             <Route 

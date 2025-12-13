@@ -4,36 +4,46 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
-import { login } from '@/lib/api';
+import { setPassword } from '@/lib/api';
 
-interface LoginProps {
-  onLoginSuccess: (userId: number, username: string, token: string) => void;
-  onPasswordResetRequired: (userId: number, username: string) => void;
+interface SetPasswordProps {
+  userId: number;
+  username: string;
+  onPasswordSet: (token: string) => void;
 }
 
-export default function Login({ onLoginSuccess, onPasswordResetRequired }: LoginProps) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+export default function SetPassword({ userId, username, onPasswordSet }: SetPasswordProps) {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (newPassword.length < 6) {
+      setError('Пароль должен быть минимум 6 символов');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Пароли не совпадают');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const result = await login(username, password);
+      const result = await setPassword(userId, newPassword);
       
-      if (result.needs_password_reset && result.user_id && result.username) {
-        onPasswordResetRequired(result.user_id, result.username);
-      } else if (result.success && result.token && result.user_id && result.username) {
+      if (result.success && result.token) {
         localStorage.setItem('auth_token', result.token);
-        localStorage.setItem('user_id', result.user_id.toString());
-        localStorage.setItem('username', result.username);
-        onLoginSuccess(result.user_id, result.username, result.token);
+        localStorage.setItem('user_id', userId.toString());
+        localStorage.setItem('username', username);
+        onPasswordSet(result.token);
       } else {
-        setError(result.error || 'Ошибка входа');
+        setError(result.error || 'Ошибка установки пароля');
       }
     } catch (err) {
       setError('Ошибка подключения к серверу');
@@ -47,38 +57,41 @@ export default function Login({ onLoginSuccess, onPasswordResetRequired }: Login
       <Card className="w-full max-w-md bg-card border-border">
         <CardHeader className="space-y-3 text-center">
           <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto">
-            <Icon name="TrendingUp" size={32} className="text-primary-foreground" />
+            <Icon name="Lock" size={32} className="text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl">Торговый терминал</CardTitle>
+          <CardTitle className="text-2xl">Установка пароля</CardTitle>
           <CardDescription>
-            Войдите в систему для управления торговым ботом
+            Привет, <strong>{username}</strong>! <br/>
+            Установи свой пароль для входа в систему
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Логин</Label>
+              <Label htmlFor="newPassword">Новый пароль</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="admin"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="newPassword"
+                type="password"
+                placeholder="Минимум 6 символов"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 disabled={isLoading}
                 required
+                minLength={6}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Пароль</Label>
+              <Label htmlFor="confirmPassword">Подтверди пароль</Label>
               <Input
-                id="password"
+                id="confirmPassword"
                 type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Повтори пароль"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
                 required
+                minLength={6}
               />
             </div>
 
@@ -97,23 +110,16 @@ export default function Login({ onLoginSuccess, onPasswordResetRequired }: Login
               {isLoading ? (
                 <>
                   <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
-                  Вход...
+                  Сохранение...
                 </>
               ) : (
                 <>
-                  <Icon name="LogIn" size={16} className="mr-2" />
-                  Войти
+                  <Icon name="Check" size={16} className="mr-2" />
+                  Установить пароль
                 </>
               )}
             </Button>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-border">
-            <div className="text-center text-sm text-muted-foreground">
-              <p>Тестовый доступ:</p>
-              <p className="font-mono mt-1">admin / admin123</p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

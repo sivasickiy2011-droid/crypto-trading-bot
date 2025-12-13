@@ -12,6 +12,7 @@ import Icon from '@/components/ui/icon';
 import StrategyConfigModal from '@/components/StrategyConfigModal';
 import BacktestPanel from '@/components/BacktestPanel';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import ApiKeysModal from '@/components/ApiKeysModal';
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Legend 
@@ -64,6 +65,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [botStatus, setBotStatus] = useState(true);
   const [selectedStrategy, setSelectedStrategy] = useState('ma-crossover');
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [apiKeysModalOpen, setApiKeysModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const totalPnL = mockPositions.reduce((sum, p) => sum + p.pnl, 0);
@@ -98,8 +100,18 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             size="icon" 
             className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent"
             onClick={() => setConfigModalOpen(true)}
+            title="Настройки стратегий"
           >
             <Icon name="Settings" size={20} />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent"
+            onClick={() => setApiKeysModalOpen(true)}
+            title="API ключи Bybit"
+          >
+            <Icon name="Key" size={20} />
           </Button>
           <div className="flex-1" />
           <Button 
@@ -116,6 +128,12 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
         <StrategyConfigModal 
           open={configModalOpen} 
           onOpenChange={setConfigModalOpen}
+          userId={userId}
+        />
+        
+        <ApiKeysModal
+          open={apiKeysModalOpen}
+          onOpenChange={setApiKeysModalOpen}
           userId={userId}
         />
 

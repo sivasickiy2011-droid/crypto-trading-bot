@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "Get API keys for user",
+      "method": "GET",
+      "path": "/?exchange=bybit",
+      "headers": {
+        "X-User-Id": "2"
+      },
+      "expectedStatus": 404,
+      "expectedBody": {
+        "success": false
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

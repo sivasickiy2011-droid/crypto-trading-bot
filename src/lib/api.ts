@@ -2,6 +2,7 @@ const BYBIT_API_URL = 'https://functions.poehali.dev/6312362e-43af-4142-b3d3-cc9
 const AUTH_API_URL = 'https://functions.poehali.dev/59cd39d3-4edd-4a58-9f7c-821efe138ccb';
 const STRATEGY_API_URL = 'https://functions.poehali.dev/fcf2c4c4-a831-42be-b73d-06d909453b38';
 const LANGUAGE_API_URL = 'https://functions.poehali.dev/c93d68f3-190d-4064-8eba-fe82eba4f04d';
+const API_KEYS_URL = 'https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2';
 
 export interface TickerData {
   symbol: string;
@@ -66,6 +67,7 @@ export interface LoginResponse {
   user_id?: number;
   username?: string;
   error?: string;
+  needs_password_reset?: boolean;
 }
 
 export async function login(username: string, password: string): Promise<LoginResponse> {
@@ -124,6 +126,42 @@ export async function setUserLanguage(userId: number, language: 'ru' | 'en'): Pr
       'X-User-Id': userId.toString()
     },
     body: JSON.stringify({ language })
+  });
+  return await response.json();
+}
+
+export async function setPassword(userId: number, newPassword: string): Promise<LoginResponse> {
+  const response = await fetch(AUTH_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'set_password', user_id: userId, new_password: newPassword })
+  });
+  return await response.json();
+}
+
+export async function saveApiKeys(userId: number, apiKey: string, apiSecret: string, exchange: string = 'bybit'): Promise<any> {
+  const response = await fetch(API_KEYS_URL, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-User-Id': userId.toString()
+    },
+    body: JSON.stringify({ exchange, api_key: apiKey, api_secret: apiSecret })
+  });
+  return await response.json();
+}
+
+export async function getApiKeys(userId: number, exchange: string = 'bybit'): Promise<any> {
+  const response = await fetch(`${API_KEYS_URL}?exchange=${exchange}`, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  return await response.json();
+}
+
+export async function deleteApiKeys(userId: number, exchange: string = 'bybit'): Promise<any> {
+  const response = await fetch(`${API_KEYS_URL}?exchange=${exchange}`, {
+    method: 'DELETE',
+    headers: { 'X-User-Id': userId.toString() }
   });
   return await response.json();
 }
