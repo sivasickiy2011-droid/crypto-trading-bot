@@ -12,6 +12,10 @@ interface DashboardHeaderProps {
   userId: number;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  apiMode: 'live' | 'testnet';
+  onApiModeChange: (mode: 'live' | 'testnet') => void;
+  accountMode: 'live' | 'demo';
+  onAccountModeChange: (mode: 'live' | 'demo') => void;
 }
 
 export default function DashboardHeader({
@@ -20,7 +24,11 @@ export default function DashboardHeader({
   username,
   userId,
   activeTab,
-  onTabChange
+  onTabChange,
+  apiMode,
+  onApiModeChange,
+  accountMode,
+  onAccountModeChange
 }: DashboardHeaderProps) {
   return (
     <header className="h-16 border-b border-border px-6 flex items-center justify-between bg-card">
@@ -53,16 +61,48 @@ export default function DashboardHeader({
         </div>
       </div>
       <div className="flex items-center space-x-4">
-        <LanguageSwitcher userId={userId} />
+        <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-border bg-secondary/50">
+          <span className="text-xs text-muted-foreground">API:</span>
+          <Button
+            variant={apiMode === 'testnet' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => onApiModeChange('testnet')}
+            className="h-6 px-2 text-xs"
+          >
+            <Icon name="TestTube" size={12} className="mr-1" />
+            Тестовый
+          </Button>
+          <Button
+            variant={apiMode === 'live' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => onApiModeChange('live')}
+            className="h-6 px-2 text-xs"
+          >
+            <Icon name="Zap" size={12} className="mr-1" />
+            Боевой
+          </Button>
+        </div>
+        <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-border bg-secondary/50">
+          <span className="text-xs text-muted-foreground">Счёт:</span>
+          <Button
+            variant={accountMode === 'demo' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => onAccountModeChange('demo')}
+            className="h-6 px-2 text-xs"
+          >
+            Демо
+          </Button>
+          <Button
+            variant={accountMode === 'live' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => onAccountModeChange('live')}
+            className="h-6 px-2 text-xs"
+          >
+            Боевой
+          </Button>
+        </div>
         <Separator orientation="vertical" className="h-6" />
-        <div className="text-sm">
-          <span className="text-muted-foreground">Сервер:</span>
-          <span className="ml-2 text-success font-medium">Подключен</span>
-        </div>
-        <div className="text-sm">
-          <span className="text-muted-foreground">Задержка:</span>
-          <span className="ml-2 font-mono text-foreground">12ms</span>
-        </div>
+        <LanguageSwitcher userId={userId} />
         <Separator orientation="vertical" className="h-6" />
         <div className="text-sm text-muted-foreground">{username}</div>
         <Separator orientation="vertical" className="h-6" />

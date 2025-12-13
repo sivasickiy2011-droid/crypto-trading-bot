@@ -1,7 +1,7 @@
 import PriceChart from './charts/PriceChart';
-import PositionsList from './charts/PositionsList';
 import OrderbookPanel from './charts/OrderbookPanel';
 import StrategySignalsPanel from './charts/StrategySignalsPanel';
+import TradesPanel from './charts/TradesPanel';
 
 interface Position {
   id: number;
@@ -29,9 +29,22 @@ interface PriceDataPoint {
   signal: string | null;
 }
 
+interface ClosedTrade {
+  id: number;
+  pair: string;
+  side: string;
+  entry: number;
+  exit: number;
+  size: number;
+  pnl: number;
+  pnlPercent: number;
+  closeTime: string;
+}
+
 interface DashboardChartsProps {
   priceData: Array<PriceDataPoint>;
   positions: Position[];
+  closedTrades: ClosedTrade[];
   selectedSymbol: string;
   onTimeframeChange: (timeframe: string) => void;
   orderbook?: Array<{price: number, bidSize: number, askSize: number}>;
@@ -41,6 +54,7 @@ interface DashboardChartsProps {
 export default function DashboardCharts({ 
   priceData, 
   positions, 
+  closedTrades,
   selectedSymbol, 
   onTimeframeChange, 
   orderbook = [], 
@@ -48,19 +62,23 @@ export default function DashboardCharts({
 }: DashboardChartsProps) {
   return (
     <div className="col-span-2 space-y-6">
-      <PriceChart 
-        priceData={priceData}
-        selectedSymbol={selectedSymbol}
-        onTimeframeChange={onTimeframeChange}
-        strategySignals={strategySignals}
-      />
-
-      <PositionsList positions={positions} />
-
-      <div className="grid grid-cols-2 gap-6">
-        <OrderbookPanel orderbook={orderbook} symbol={selectedSymbol.replace('/', '')} />
-        <StrategySignalsPanel strategySignals={strategySignals} />
+      <div className="grid grid-cols-4 gap-6">
+        <div className="col-span-3">
+          <PriceChart 
+            priceData={priceData}
+            selectedSymbol={selectedSymbol}
+            onTimeframeChange={onTimeframeChange}
+            strategySignals={strategySignals}
+          />
+        </div>
+        <div className="col-span-1">
+          <OrderbookPanel orderbook={orderbook} symbol={selectedSymbol.replace('/', '')} />
+        </div>
       </div>
+
+      <TradesPanel positions={positions} closedTrades={closedTrades} />
+
+      <StrategySignalsPanel strategySignals={strategySignals} />
     </div>
   );
 }

@@ -48,6 +48,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [apiKeysModalOpen, setApiKeysModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
+  const [apiMode, setApiMode] = useState<'live' | 'testnet'>('testnet');
+  const [accountMode, setAccountMode] = useState<'live' | 'demo'>('demo');
   
   const [balance, setBalance] = useState<UserBalanceData | null>(null);
   const [positions, setPositions] = useState<UserPositionData[]>([]);
@@ -282,6 +284,10 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             userId={userId}
             activeTab={activeTab}
             onTabChange={setActiveTab}
+            apiMode={apiMode}
+            onApiModeChange={setApiMode}
+            accountMode={accountMode}
+            onAccountModeChange={setAccountMode}
           />
 
           <div className="p-6 space-y-6">
@@ -306,6 +312,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   <DashboardCharts
                     priceData={priceData}
                     positions={displayPositions}
+                    closedTrades={mockClosedTrades}
                     selectedSymbol={formatSymbolForDisplay(selectedSymbol)}
                     onTimeframeChange={setCurrentTimeframe}
                     orderbook={orderbook}
