@@ -1,22 +1,13 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import Icon from '@/components/ui/icon';
 import StrategyConfigModal from '@/components/StrategyConfigModal';
 import BacktestPanel from '@/components/BacktestPanel';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import ApiKeysModal from '@/components/ApiKeysModal';
-import { 
-  LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, Legend 
-} from 'recharts';
+import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
+import DashboardCharts from '@/components/dashboard/DashboardCharts';
+import DashboardSidePanels from '@/components/dashboard/DashboardSidePanels';
+import DashboardTabs from '@/components/dashboard/DashboardTabs';
 
 const mockPriceData = Array.from({ length: 50 }, (_, i) => ({
   time: `${9 + Math.floor(i / 12)}:${(i % 12) * 5}`.padEnd(5, '0'),
@@ -74,56 +65,13 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   return (
     <div className="min-h-screen bg-background">
       <div className="flex">
-        <aside className="w-16 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-6 space-y-6">
-          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-            <Icon name="TrendingUp" size={24} className="text-primary-foreground" />
-          </div>
-          <Separator className="w-8" />
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={`text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent ${activeTab === 'dashboard' ? 'bg-sidebar-accent text-primary' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            <Icon name="LayoutDashboard" size={20} />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={`text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent ${activeTab === 'backtest' ? 'bg-sidebar-accent text-primary' : ''}`}
-            onClick={() => setActiveTab('backtest')}
-          >
-            <Icon name="LineChart" size={20} />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent"
-            onClick={() => setConfigModalOpen(true)}
-            title="Настройки стратегий"
-          >
-            <Icon name="Settings" size={20} />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent"
-            onClick={() => setApiKeysModalOpen(true)}
-            title="API ключи Bybit"
-          >
-            <Icon name="Key" size={20} />
-          </Button>
-          <div className="flex-1" />
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-sidebar-foreground hover:text-destructive hover:bg-sidebar-accent"
-            onClick={onLogout}
-            title="Выйти"
-          >
-            <Icon name="LogOut" size={20} />
-          </Button>
-        </aside>
+        <DashboardSidebar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onConfigOpen={() => setConfigModalOpen(true)}
+          onApiKeysOpen={() => setApiKeysModalOpen(true)}
+          onLogout={onLogout}
+        />
 
         <StrategyConfigModal 
           open={configModalOpen} 
@@ -138,375 +86,44 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
         />
 
         <main className="flex-1">
-          <header className="h-16 border-b border-border px-6 flex items-center justify-between bg-card">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-semibold">Торговый терминал</h1>
-              <Badge variant={botStatus ? "default" : "secondary"} className="animate-pulse-subtle">
-                <Icon name="Circle" size={8} className="mr-1.5 fill-current" />
-                {botStatus ? 'БОТ АКТИВЕН' : 'БОТ ОСТАНОВЛЕН'}
-              </Badge>
-            </div>
-            <div className="flex items-center space-x-4">
-              <LanguageSwitcher userId={userId} />
-              <Separator orientation="vertical" className="h-6" />
-              <div className="text-sm">
-                <span className="text-muted-foreground">Сервер:</span>
-                <span className="ml-2 text-success font-medium">Подключен</span>
-              </div>
-              <div className="text-sm">
-                <span className="text-muted-foreground">Задержка:</span>
-                <span className="ml-2 font-mono text-foreground">12ms</span>
-              </div>
-              <Separator orientation="vertical" className="h-6" />
-              <div className="text-sm text-muted-foreground">{username}</div>
-              <Separator orientation="vertical" className="h-6" />
-              <Switch checked={botStatus} onCheckedChange={setBotStatus} />
-            </div>
-          </header>
+          <DashboardHeader
+            botStatus={botStatus}
+            onBotStatusChange={setBotStatus}
+            username={username}
+            userId={userId}
+          />
 
           <div className="p-6 space-y-6">
             {activeTab === 'backtest' ? (
               <BacktestPanel />
             ) : (
               <>
-            <div className="grid grid-cols-4 gap-4">
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Баланс счета</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold font-mono">$24,580.00</div>
-                  <p className="text-xs text-muted-foreground mt-1">Доступно: $18,420.00</p>
-                </CardContent>
-              </Card>
+                <DashboardMetrics
+                  totalPnL={totalPnL}
+                  totalPnLPercent={totalPnLPercent}
+                  openPositions={mockPositions.length}
+                />
 
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Общий PnL</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-2xl font-bold font-mono ${totalPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
-                    {totalPnL >= 0 ? '+' : ''}{totalPnL.toFixed(2)} USDT
-                  </div>
-                  <p className={`text-xs mt-1 ${totalPnLPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
-                    {totalPnLPercent >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%
-                  </p>
-                </CardContent>
-              </Card>
+                <div className="grid grid-cols-3 gap-6">
+                  <DashboardCharts
+                    priceData={mockPriceData}
+                    positions={mockPositions}
+                  />
 
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Открытые позиции</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold font-mono">{mockPositions.length}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Общее плечо: 10x</p>
-                </CardContent>
-              </Card>
+                  <DashboardSidePanels
+                    watchlist={mockWatchlist}
+                    selectedStrategy={selectedStrategy}
+                    onStrategyChange={setSelectedStrategy}
+                    onConfigOpen={() => setConfigModalOpen(true)}
+                  />
+                </div>
 
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Винрейт</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold font-mono text-success">68.4%</div>
-                  <p className="text-xs text-muted-foreground mt-1">За 24ч: 12/18 сделок</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-3 gap-6">
-              <div className="col-span-2 space-y-6">
-                <Card className="bg-card border-border">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>BTC/USDT</CardTitle>
-                      <div className="flex items-center space-x-3">
-                        <Badge variant="outline" className="text-xs">1m</Badge>
-                        <Badge variant="outline" className="text-xs">5m</Badge>
-                        <Badge className="text-xs">15m</Badge>
-                        <Badge variant="outline" className="text-xs">1h</Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[400px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={mockPriceData}>
-                          <defs>
-                            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 20%)" />
-                          <XAxis 
-                            dataKey="time" 
-                            stroke="hsl(220, 9%, 65%)" 
-                            style={{ fontSize: '12px', fontFamily: 'Roboto Mono' }}
-                          />
-                          <YAxis 
-                            stroke="hsl(220, 9%, 65%)" 
-                            style={{ fontSize: '12px', fontFamily: 'Roboto Mono' }}
-                            domain={['dataMin - 500', 'dataMax + 500']}
-                          />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'hsl(220, 13%, 12%)', 
-                              border: '1px solid hsl(220, 13%, 20%)',
-                              borderRadius: '6px',
-                              fontFamily: 'Roboto Mono'
-                            }}
-                          />
-                          <Legend />
-                          <Area 
-                            type="monotone" 
-                            dataKey="price" 
-                            stroke="hsl(199, 89%, 48%)" 
-                            fill="url(#colorPrice)"
-                            strokeWidth={2}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="ma20" 
-                            stroke="hsl(142, 76%, 36%)" 
-                            strokeWidth={1.5}
-                            dot={false}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="ma50" 
-                            stroke="hsl(0, 84%, 60%)" 
-                            strokeWidth={1.5}
-                            dot={false}
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-card border-border">
-                  <CardHeader>
-                    <CardTitle>Открытые позиции</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {mockPositions.map((position) => (
-                        <div key={position.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border">
-                          <div className="flex items-center space-x-4">
-                            <Badge variant={position.side === 'LONG' ? 'default' : 'destructive'} className="w-16 justify-center">
-                              {position.side}
-                            </Badge>
-                            <div>
-                              <div className="font-semibold">{position.pair}</div>
-                              <div className="text-xs text-muted-foreground">
-                                Вход: <span className="font-mono">${position.entry}</span> | 
-                                Объем: <span className="font-mono">{position.size}</span> | 
-                                {position.leverage}x
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-6">
-                            <div className="text-right">
-                              <div className="font-mono text-sm">${position.current}</div>
-                              <div className="text-xs text-muted-foreground">Текущая</div>
-                            </div>
-                            <div className="text-right">
-                              <div className={`font-mono font-semibold ${position.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
-                                {position.pnl >= 0 ? '+' : ''}{position.pnl} USDT
-                              </div>
-                              <div className={`text-xs ${position.pnlPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
-                                {position.pnlPercent >= 0 ? '+' : ''}{position.pnlPercent}%
-                              </div>
-                            </div>
-                            <Button size="sm" variant="destructive">
-                              <Icon name="X" size={14} className="mr-1" />
-                              Закрыть
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="space-y-6">
-                <Card className="bg-card border-border">
-                  <CardHeader>
-                    <CardTitle>Избранное</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[300px]">
-                      <div className="space-y-2">
-                        {mockWatchlist.map((item) => (
-                          <div key={item.symbol} className="p-2.5 rounded hover:bg-secondary transition-colors cursor-pointer">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-semibold text-sm">{item.symbol}</span>
-                              <Badge 
-                                variant={item.signal === 'buy' ? 'default' : item.signal === 'sell' ? 'destructive' : 'secondary'}
-                                className="text-xs px-1.5 py-0"
-                              >
-                                {item.signal}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="font-mono text-sm">${item.price}</span>
-                              <span className={`text-xs font-medium ${item.change >= 0 ? 'text-success' : 'text-destructive'}`}>
-                                {item.change >= 0 ? '+' : ''}{item.change}%
-                              </span>
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-0.5">Vol: {item.volume}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-card border-border">
-                  <CardHeader>
-                    <CardTitle>Управление стратегиями</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Активная стратегия</Label>
-                      <Select value={selectedStrategy} onValueChange={setSelectedStrategy}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ma-crossover">Пересечение MA</SelectItem>
-                          <SelectItem value="martingale">Мартингейл</SelectItem>
-                          <SelectItem value="combined">Комбинированная</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label>Включить пересечение MA</Label>
-                        <Switch defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label>Включить Мартингейл</Label>
-                        <Switch defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label>Авто стоп-лосс</Label>
-                        <Switch defaultChecked />
-                      </div>
-                    </div>
-
-                    <Button className="w-full" variant="outline" onClick={() => setConfigModalOpen(true)}>
-                      <Icon name="Settings" size={16} className="mr-2" />
-                      Настроить стратегию
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            <Tabs defaultValue="history" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3 max-w-md">
-                <TabsTrigger value="history">История сделок</TabsTrigger>
-                <TabsTrigger value="logs">Системные логи</TabsTrigger>
-                <TabsTrigger value="pairs">Управление парами</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="history">
-                <Card className="bg-card border-border">
-                  <CardHeader>
-                    <CardTitle>Закрытые позиции (сегодня)</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {mockClosedTrades.map((trade) => (
-                        <div key={trade.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border">
-                          <div className="flex items-center space-x-4">
-                            <Badge variant={trade.side === 'LONG' ? 'default' : 'destructive'} className="w-16 justify-center text-xs">
-                              {trade.side}
-                            </Badge>
-                            <div>
-                              <div className="font-semibold text-sm">{trade.pair}</div>
-                              <div className="text-xs text-muted-foreground">
-                                Вход: <span className="font-mono">${trade.entry}</span> → 
-                                Выход: <span className="font-mono">${trade.exit}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-6">
-                            <div className="text-xs text-muted-foreground">{trade.closeTime}</div>
-                            <div className={`font-mono font-semibold ${trade.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
-                              {trade.pnl >= 0 ? '+' : ''}{trade.pnl} USDT
-                            </div>
-                            <div className={`text-xs ${trade.pnlPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
-                              {trade.pnlPercent >= 0 ? '+' : ''}{trade.pnlPercent}%
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="logs">
-                <Card className="bg-card border-border">
-                  <CardHeader>
-                    <CardTitle>Системные логи</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[300px]">
-                      <div className="space-y-2 font-mono text-xs">
-                        {mockLogs.map((log, i) => (
-                          <div key={i} className="flex items-start space-x-3 p-2 rounded hover:bg-secondary">
-                            <span className="text-muted-foreground whitespace-nowrap">{log.time}</span>
-                            <Badge 
-                              variant={
-                                log.type === 'success' ? 'default' : 
-                                log.type === 'error' ? 'destructive' : 
-                                log.type === 'warning' ? 'secondary' : 'outline'
-                              }
-                              className="text-xs px-1.5 py-0 shrink-0"
-                            >
-                              {log.type.toUpperCase()}
-                            </Badge>
-                            <span className="text-foreground">{log.message}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="pairs">
-                <Card className="bg-card border-border">
-                  <CardHeader>
-                    <CardTitle>Управление торговыми парами</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-3 gap-3">
-                      {mockWatchlist.map((item) => (
-                        <div key={item.symbol} className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary">
-                          <span className="font-semibold text-sm">{item.symbol}</span>
-                          <Switch defaultChecked />
-                        </div>
-                      ))}
-                      <Button variant="outline" className="h-auto py-3">
-                        <Icon name="Plus" size={16} className="mr-2" />
-                        Добавить пару
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-            </>
+                <DashboardTabs
+                  closedTrades={mockClosedTrades}
+                  logs={mockLogs}
+                  watchlist={mockWatchlist}
+                />
+              </>
             )}
           </div>
         </main>
