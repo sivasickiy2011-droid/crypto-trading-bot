@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -92,6 +92,7 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
   const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
   const [zoomLevel, setZoomLevel] = useState(1);
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   const timeframes = [
     { label: '1 минута', value: '1' },
@@ -107,23 +108,38 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
     onTimeframeChange(tf);
   };
 
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (e.deltaY) {
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      const newZoom = Math.max(0.5, Math.min(3, zoomLevel + delta));
-      setZoomLevel(newZoom);
+  useEffect(() => {
+    const chartContainer = chartContainerRef.current;
+    if (!chartContainer) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       
-      const dataLength = priceData.length;
-      const visibleCount = Math.floor(dataLength / newZoom);
-      const center = (visibleRange.start + visibleRange.end) / 2;
-      const newStart = Math.max(0, Math.floor(center - visibleCount / 2));
-      const newEnd = Math.min(dataLength, newStart + visibleCount);
-      setVisibleRange({ start: newStart, end: newEnd });
-    }
-  };
+      if (e.deltaY) {
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        setZoomLevel(prev => {
+          const newZoom = Math.max(0.5, Math.min(3, prev + delta));
+          
+          const dataLength = priceData.length;
+          const visibleCount = Math.floor(dataLength / newZoom);
+          setVisibleRange(prevRange => {
+            const center = (prevRange.start + prevRange.end) / 2;
+            const newStart = Math.max(0, Math.floor(center - visibleCount / 2));
+            const newEnd = Math.min(dataLength, newStart + visibleCount);
+            return { start: newStart, end: newEnd };
+          });
+          
+          return newZoom;
+        });
+      }
+    };
+
+    chartContainer.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      chartContainer.removeEventListener('wheel', handleWheel);
+    };
+  }, [priceData.length]);
 
   const chartData = priceData.slice(visibleRange.start, visibleRange.end).map((point, idx) => {
     const buySignals = strategySignals.filter(s => s.signal === 'buy');
@@ -224,7 +240,11 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="h-[450px]" onWheel={handleWheel}>
+        <div 
+          ref={chartContainerRef}
+          className="h-[450px] overflow-hidden" 
+          style={{ touchAction: 'none' }}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
