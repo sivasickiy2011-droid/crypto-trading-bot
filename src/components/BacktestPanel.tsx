@@ -10,7 +10,8 @@ import BacktestCharts from './backtest/BacktestCharts';
 
 export default function BacktestPanel() {
   const [strategy, setStrategy] = useState<'ma-crossover' | 'rsi' | 'bollinger' | 'macd'>('ma-crossover');
-  const [timeframe, setTimeframe] = useState('1000');
+  const [candleInterval, setCandleInterval] = useState('1h');
+  const [candleCount, setCandleCount] = useState('1000');
   const [initialCapital, setInitialCapital] = useState('10000');
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [positionSize, setPositionSize] = useState('20');
@@ -23,7 +24,7 @@ export default function BacktestPanel() {
   const handleRunBacktest = async () => {
     setIsRunning(true);
     try {
-      const klines = await getKlineData(symbol, '1h', parseInt(timeframe));
+      const klines = await getKlineData(symbol, candleInterval, parseInt(candleCount));
       
       const config: BacktestConfig = {
         strategy,
@@ -66,8 +67,10 @@ export default function BacktestPanel() {
             setStrategy={setStrategy}
             symbol={symbol}
             setSymbol={setSymbol}
-            timeframe={timeframe}
-            setTimeframe={setTimeframe}
+            candleInterval={candleInterval}
+            setCandleInterval={setCandleInterval}
+            candleCount={candleCount}
+            setCandleCount={setCandleCount}
             initialCapital={initialCapital}
             setInitialCapital={setInitialCapital}
             positionSize={positionSize}

@@ -8,8 +8,10 @@ interface BacktestSettingsProps {
   setStrategy: (value: 'ma-crossover' | 'rsi' | 'bollinger' | 'macd') => void;
   symbol: string;
   setSymbol: (value: string) => void;
-  timeframe: string;
-  setTimeframe: (value: string) => void;
+  candleInterval: string;
+  setCandleInterval: (value: string) => void;
+  candleCount: string;
+  setCandleCount: (value: string) => void;
   initialCapital: string;
   setInitialCapital: (value: string) => void;
   positionSize: string;
@@ -29,8 +31,10 @@ export default function BacktestSettings({
   setStrategy,
   symbol,
   setSymbol,
-  timeframe,
-  setTimeframe,
+  candleInterval,
+  setCandleInterval,
+  candleCount,
+  setCandleCount,
   initialCapital,
   setInitialCapital,
   positionSize,
@@ -45,7 +49,7 @@ export default function BacktestSettings({
   onRunBacktest
 }: BacktestSettingsProps) {
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-5 gap-4">
       <div className="space-y-2">
         <Label>Стратегия</Label>
         <Select value={strategy} onValueChange={setStrategy}>
@@ -77,15 +81,31 @@ export default function BacktestSettings({
       </div>
 
       <div className="space-y-2">
-        <Label>Количество свечей</Label>
-        <Select value={timeframe} onValueChange={setTimeframe}>
+        <Label>Таймфрейм</Label>
+        <Select value={candleInterval} onValueChange={setCandleInterval}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="200">200 свечей (~2 дня)</SelectItem>
-            <SelectItem value="500">500 свечей (~5 дней)</SelectItem>
-            <SelectItem value="1000">1000 свечей (~10 дней)</SelectItem>
+            <SelectItem value="15m">15 минут</SelectItem>
+            <SelectItem value="1h">1 час</SelectItem>
+            <SelectItem value="4h">4 часа</SelectItem>
+            <SelectItem value="1d">1 день</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Количество свечей</Label>
+        <Select value={candleCount} onValueChange={setCandleCount}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="200">200 свечей</SelectItem>
+            <SelectItem value="500">500 свечей</SelectItem>
+            <SelectItem value="1000">1000 свечей</SelectItem>
+            <SelectItem value="1500">1500 свечей</SelectItem>
           </SelectContent>
         </Select>
       </div>
