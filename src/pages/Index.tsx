@@ -129,6 +129,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
         
         if (klines.length > 0) {
           const closes = klines.map(k => k.close);
+          const highs = klines.map(k => k.high);
+          const lows = klines.map(k => k.low);
           
           const calculateMA = (prices: number[], period: number): number[] => {
             const ma: number[] = [];
@@ -144,8 +146,79 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             return ma;
           };
           
-          const ma20Values = calculateMA(closes, 20);
-          const ma50Values = calculateMA(closes, 50);
+          const calculateEMA = (prices: number[], period: number): number[] => {
+            const ema: number[] = [];
+            const multiplier = 2 / (period + 1);
+            ema[0] = prices[0];
+            for (let i = 1; i < prices.length; i++) {
+              ema[i] = (prices[i] - ema[i - 1]) * multiplier + ema[i - 1];
+            }
+            return ema;
+          };
+          
+          const calculateRSI = (prices: number[], period: number = 14): number[] => {
+            const rsi: number[] = [];
+            const gains: number[] = [];
+            const losses: number[] = [];
+            
+            for (let i = 1; i < prices.length; i++) {
+              const change = prices[i] - prices[i - 1];
+              gains.push(change > 0 ? change : 0);
+              losses.push(change < 0 ? Math.abs(change) : 0);
+            }
+            
+            for (let i = 0; i < gains.length; i++) {
+              if (i < period - 1) {
+                rsi.push(50);
+              } else {
+                const avgGain = gains.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period;
+                const avgLoss = losses.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period;
+                if (avgLoss === 0) {
+                  rsi.push(100);
+                } else {
+                  const rs = avgGain / avgLoss;
+                  rsi.push(100 - (100 / (1 + rs)));
+                }
+              }
+            }
+            return [50, ...rsi];
+          };
+          
+          const calculateBB = (prices: number[], period: number = 20): { upper: number[]; lower: number[] } => {
+            const middle = calculateMA(prices, period);
+            const upper: number[] = [];
+            const lower: number[] = [];
+            
+            for (let i = 0; i < prices.length; i++) {
+              if (i < period - 1) {
+                upper.push(prices[i] * 1.02);
+                lower.push(prices[i] * 0.98);
+              } else {
+                const slice = prices.slice(i - period + 1, i + 1);
+                const mean = middle[i];
+                const variance = slice.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / period;
+                const std = Math.sqrt(variance);
+                upper.push(mean + 2 * std);
+                lower.push(mean - 2 * std);
+              }
+            }
+            return { upper, lower };
+          };
+          
+          const calculateMACD = (prices: number[]): number[] => {
+            const emaFast = calculateEMA(prices, 12);
+            const emaSlow = calculateEMA(prices, 26);
+            const macd = emaFast.map((val, i) => val - emaSlow[i]);
+            const signal = calculateEMA(macd, 9);
+            return macd.map((val, i) => val - signal[i]);
+          };
+          
+          const ema9 = calculateEMA(closes, 9);
+          const ema21 = calculateEMA(closes, 21);
+          const ema50 = calculateEMA(closes, 50);
+          const rsi = calculateRSI(closes, 14);
+          const bb = calculateBB(closes, 20);
+          const macdHist = calculateMACD(closes);
           
           const formattedData = klines.map((k, i) => {
             const date = new Date(parseInt(k.time));
@@ -157,8 +230,15 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
               low: k.low,
               close: k.close,
               volume: k.volume,
-              ma20: ma20Values[i],
-              ma50: ma50Values[i],
+              ma20: calculateMA(closes, 20)[i],
+              ma50: calculateMA(closes, 50)[i],
+              ema9: ema9[i],
+              ema21: ema21[i],
+              ema50: ema50[i],
+              rsi: rsi[i],
+              bbUpper: bb.upper[i],
+              bbLower: bb.lower[i],
+              macd: macdHist[i],
               signal: null
             };
           });

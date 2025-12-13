@@ -25,6 +25,13 @@ interface PriceDataPoint {
   volume?: number;
   ma20: number;
   ma50: number;
+  ema9?: number;
+  ema21?: number;
+  ema50?: number;
+  rsi?: number;
+  bbUpper?: number;
+  bbLower?: number;
+  macd?: number;
   signal: string | null;
 }
 
@@ -81,13 +88,35 @@ const CustomTooltip = ({ active, payload }: any) => {
       {data.volume && (
         <p className="text-xs text-muted-foreground mt-1">Vol: {data.volume.toFixed(4)}</p>
       )}
+      {(data.ema9 || data.ema21 || data.ema50 || data.rsi || data.bbUpper) && (
+        <div className="border-t border-border mt-2 pt-2 space-y-0.5">
+          {data.ema9 && <p className="text-xs"><span className="text-yellow-500">EMA9:</span> <span className="font-mono">{data.ema9.toFixed(2)}</span></p>}
+          {data.ema21 && <p className="text-xs"><span className="text-success">EMA21:</span> <span className="font-mono">{data.ema21.toFixed(2)}</span></p>}
+          {data.ema50 && <p className="text-xs"><span className="text-blue-500">EMA50:</span> <span className="font-mono">{data.ema50.toFixed(2)}</span></p>}
+          {data.rsi && <p className="text-xs"><span className="text-purple-500">RSI:</span> <span className="font-mono">{data.rsi.toFixed(2)}</span></p>}
+          {data.bbUpper && (
+            <p className="text-xs">
+              <span className="text-purple-500">BB:</span> 
+              <span className="font-mono ml-1">{data.bbUpper.toFixed(2)} / {data.bbLower.toFixed(2)}</span>
+            </p>
+          )}
+          {data.macd && <p className="text-xs"><span className="text-blue-500">MACD:</span> <span className="font-mono">{data.macd.toFixed(4)}</span></p>}
+        </div>
+      )}
     </div>
   );
 };
 
 export default function PriceChart({ priceData, selectedSymbol, onTimeframeChange, strategySignals = [] }: PriceChartProps) {
   const [activeTimeframe, setActiveTimeframe] = useState('15');
-  const [showIndicators, setShowIndicators] = useState({ ma20: true, ma50: true });
+  const [showIndicators, setShowIndicators] = useState({ 
+    ema9: false, 
+    ema21: false, 
+    ema50: false, 
+    rsi: false, 
+    bb: false, 
+    macd: false 
+  });
   const [chartType, setChartType] = useState<'line' | 'candle'>('candle');
   const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -222,18 +251,46 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
 
             <div className="flex items-center space-x-1">
               <Badge 
-                variant={showIndicators.ma20 ? 'default' : 'outline'}
+                variant={showIndicators.ema9 ? 'default' : 'outline'}
                 className="text-xs cursor-pointer h-6 px-2"
-                onClick={() => setShowIndicators(prev => ({ ...prev, ma20: !prev.ma20 }))}
+                onClick={() => setShowIndicators(prev => ({ ...prev, ema9: !prev.ema9 }))}
               >
-                MA20
+                EMA9
               </Badge>
               <Badge 
-                variant={showIndicators.ma50 ? 'default' : 'outline'}
+                variant={showIndicators.ema21 ? 'default' : 'outline'}
                 className="text-xs cursor-pointer h-6 px-2"
-                onClick={() => setShowIndicators(prev => ({ ...prev, ma50: !prev.ma50 }))}
+                onClick={() => setShowIndicators(prev => ({ ...prev, ema21: !prev.ema21 }))}
               >
-                MA50
+                EMA21
+              </Badge>
+              <Badge 
+                variant={showIndicators.ema50 ? 'default' : 'outline'}
+                className="text-xs cursor-pointer h-6 px-2"
+                onClick={() => setShowIndicators(prev => ({ ...prev, ema50: !prev.ema50 }))}
+              >
+                EMA50
+              </Badge>
+              <Badge 
+                variant={showIndicators.rsi ? 'default' : 'outline'}
+                className="text-xs cursor-pointer h-6 px-2"
+                onClick={() => setShowIndicators(prev => ({ ...prev, rsi: !prev.rsi }))}
+              >
+                RSI
+              </Badge>
+              <Badge 
+                variant={showIndicators.bb ? 'default' : 'outline'}
+                className="text-xs cursor-pointer h-6 px-2"
+                onClick={() => setShowIndicators(prev => ({ ...prev, bb: !prev.bb }))}
+              >
+                BB
+              </Badge>
+              <Badge 
+                variant={showIndicators.macd ? 'default' : 'outline'}
+                className="text-xs cursor-pointer h-6 px-2"
+                onClick={() => setShowIndicators(prev => ({ ...prev, macd: !prev.macd }))}
+              >
+                MACD
               </Badge>
             </div>
           </div>
@@ -327,10 +384,21 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
                 />
               )}
 
-              {showIndicators.ma20 && (
+              {showIndicators.ema9 && (
                 <Line 
                   type="monotone" 
-                  dataKey="ma20" 
+                  dataKey="ema9" 
+                  stroke="hsl(47, 100%, 50%)" 
+                  strokeWidth={1.5}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              )}
+              
+              {showIndicators.ema21 && (
+                <Line 
+                  type="monotone" 
+                  dataKey="ema21" 
                   stroke="hsl(142, 76%, 36%)" 
                   strokeWidth={1.5}
                   dot={false}
@@ -338,21 +406,155 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
                 />
               )}
               
-              {showIndicators.ma50 && (
+              {showIndicators.ema50 && (
                 <Line 
                   type="monotone" 
-                  dataKey="ma50" 
-                  stroke="hsl(0, 84%, 60%)" 
+                  dataKey="ema50" 
+                  stroke="hsl(199, 89%, 48%)" 
                   strokeWidth={1.5}
                   dot={false}
                   isAnimationActive={false}
                 />
               )}
               
+              {showIndicators.bb && (
+                <>
+                  <Line 
+                    type="monotone" 
+                    dataKey="bbUpper" 
+                    stroke="hsl(280, 70%, 60%)" 
+                    strokeWidth={1}
+                    strokeDasharray="3 3"
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="bbLower" 
+                    stroke="hsl(280, 70%, 60%)" 
+                    strokeWidth={1}
+                    strokeDasharray="3 3"
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </>
+              )}
+              
 
             </ComposedChart>
           </ResponsiveContainer>
         </div>
+        
+        {showIndicators.rsi && (
+          <div className="h-[120px] mt-2">
+            <div className="flex items-center justify-between mb-1 px-2">
+              <span className="text-xs text-muted-foreground">RSI (14)</span>
+              <div className="flex items-center space-x-2 text-xs">
+                <span className="text-destructive">30</span>
+                <span className="text-muted-foreground">|</span>
+                <span className="text-success">70</span>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={chartData} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 18%)" vertical={false} />
+                <XAxis 
+                  dataKey="time" 
+                  stroke="hsl(220, 9%, 50%)" 
+                  tick={{ fontSize: 10 }}
+                  hide
+                />
+                <YAxis 
+                  stroke="hsl(220, 9%, 50%)" 
+                  tick={{ fontSize: 10 }}
+                  domain={[0, 100]}
+                  ticks={[0, 30, 50, 70, 100]}
+                  orientation="right"
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                  formatter={(value: number) => [value.toFixed(2), 'RSI']}
+                />
+                <Line 
+                  type="monotone"
+                  dataKey="rsi"
+                  stroke="hsl(280, 70%, 60%)"
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+                <Line 
+                  type="monotone"
+                  dataKey={() => 30}
+                  stroke="hsl(0, 84%, 60%)"
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                  dot={false}
+                  isAnimationActive={false}
+                />
+                <Line 
+                  type="monotone"
+                  dataKey={() => 70}
+                  stroke="hsl(142, 76%, 36%)"
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+        
+        {showIndicators.macd && (
+          <div className="h-[120px] mt-2">
+            <div className="flex items-center justify-between mb-1 px-2">
+              <span className="text-xs text-muted-foreground">MACD Histogram</span>
+            </div>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={chartData} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 18%)" vertical={false} />
+                <XAxis 
+                  dataKey="time" 
+                  stroke="hsl(220, 9%, 50%)" 
+                  tick={{ fontSize: 10 }}
+                  hide
+                />
+                <YAxis 
+                  stroke="hsl(220, 9%, 50%)" 
+                  tick={{ fontSize: 10 }}
+                  orientation="right"
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                  formatter={(value: number) => [value.toFixed(4), 'MACD']}
+                />
+                <Bar 
+                  dataKey="macd"
+                  fill="hsl(199, 89%, 48%)"
+                  radius={[2, 2, 0, 0]}
+                  isAnimationActive={false}
+                />
+                <Line 
+                  type="monotone"
+                  dataKey={() => 0}
+                  stroke="hsl(220, 9%, 50%)"
+                  strokeWidth={1}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
