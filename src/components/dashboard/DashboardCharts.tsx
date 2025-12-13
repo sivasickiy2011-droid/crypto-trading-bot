@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import PriceChart from './charts/PriceChart';
 import OrderbookPanel from './charts/OrderbookPanel';
 import TradesPanel from './charts/TradesPanel';
 import ManualTradingSettings from './charts/ManualTradingSettings';
 import BotsPanel from './BotsPanel';
+import BotsLogsPanel, { BotLogEntry } from './BotsLogsPanel';
 
 interface Position {
   id: number;
@@ -65,6 +67,12 @@ export default function DashboardCharts({
   accountMode,
   apiMode
 }: DashboardChartsProps) {
+  const [botLogs, setBotLogs] = useState<BotLogEntry[]>([]);
+  
+  const handleLogAdd = (log: BotLogEntry) => {
+    setBotLogs(prev => [log, ...prev].slice(0, 100));
+  };
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-4 gap-6">
@@ -82,8 +90,9 @@ export default function DashboardCharts({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <BotsPanel />
+      <div className="grid grid-cols-3 gap-6">
+        <BotsPanel onLogAdd={handleLogAdd} />
+        <BotsLogsPanel logs={botLogs} />
         <TradesPanel positions={positions} closedTrades={closedTrades} strategySignals={strategySignals} />
       </div>
     </div>

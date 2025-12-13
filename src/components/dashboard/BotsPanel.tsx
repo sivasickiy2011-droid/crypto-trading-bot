@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
+import { BotLogEntry } from './BotsLogsPanel';
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,11 @@ interface Bot {
   entryPrice?: number;
 }
 
-export default function BotsPanel() {
+interface BotsPanelProps {
+  onLogAdd: (log: BotLogEntry) => void;
+}
+
+export default function BotsPanel({ onLogAdd }: BotsPanelProps) {
   const [bots, setBots] = useState<Bot[]>([
     {
       id: '1',
@@ -60,9 +65,27 @@ export default function BotsPanel() {
   });
 
   const toggleBot = (id: string) => {
-    setBots(prev => prev.map(bot => 
-      bot.id === id ? { ...bot, active: !bot.active, status: bot.active ? 'stopped' as const : 'searching' as const } : bot
-    ));
+    setBots(prev => prev.map(bot => {
+      if (bot.id === id) {
+        const newActive = !bot.active;
+        const newStatus = newActive ? 'searching' as const : 'stopped' as const;
+        
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        
+        onLogAdd({
+          id: Date.now().toString(),
+          botId: bot.id,
+          botName: `${bot.pair} (${bot.strategy})`,
+          timestamp: timeStr,
+          type: 'info',
+          message: newActive ? 'Бот запущен и начал поиск точки входа' : 'Бот остановлен'
+        });
+        
+        return { ...bot, active: newActive, status: newStatus };
+      }
+      return bot;
+    }));
   };
 
   const addBot = () => {
@@ -83,12 +106,107 @@ export default function BotsPanel() {
     };
 
     setBots(prev => [...prev, newBotData]);
+    
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    
+    onLogAdd({
+      id: Date.now().toString(),
+      botId: newBotData.id,
+      botName: `${newBotData.pair} (${newBotData.strategy})`,
+      timestamp: timeStr,
+      type: 'info',
+      message: `Бот создан и запущен на ${newBotData.market === 'spot' ? 'споте' : 'фьючерсах'}`
+    });
+    
     setNewBotOpen(false);
   };
 
   const removeBot = (id: string) => {
+    const bot = bots.find(b => b.id === id);
+    if (bot) {
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      
+      onLogAdd({
+        id: Date.now().toString(),
+        botId: bot.id,
+        botName: `${bot.pair} (${bot.strategy})`,
+        timestamp: timeStr,
+        type: 'info',
+        message: 'Бот удалён'
+      });
+    }
     setBots(prev => prev.filter(bot => bot.id !== id));
   };
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      bots.forEach(bot => {
+        if (!bot.active) return;
+        
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        
+        if (bot.status === 'searching' && Math.random() > 0.95) {
+          onLogAdd({
+            id: Date.now().toString() + Math.random(),
+            botId: bot.id,
+            botName: `${bot.pair} (${bot.strategy})`,
+            timestamp: timeStr,
+            type: 'signal',
+            message: 'Получен сигнал для входа в позицию',
+            details: {
+              signal: bot.entrySignal || 'Условия стратегии выполнены'
+            }
+          });
+        }
+        
+        if (bot.status === 'searching' && Math.random() > 0.98) {
+          const entryPrice = 43500 + Math.random() * 1000;
+          setBots(prev => prev.map(b => 
+            b.id === bot.id ? { ...b, status: 'in_position' as const, entryPrice, currentPnL: 0 } : b
+          ));
+          
+          onLogAdd({
+            id: Date.now().toString() + Math.random(),
+            botId: bot.id,
+            botName: `${bot.pair} (${bot.strategy})`,
+            timestamp: timeStr,
+            type: 'entry',
+            message: 'Открыта позиция LONG',
+            details: {
+              price: entryPrice
+            }
+          });
+        }
+        
+        if (bot.status === 'in_position' && Math.random() > 0.97) {
+          const exitPrice = (bot.entryPrice || 43500) * (1 + (Math.random() * 0.1 - 0.03));
+          const pnl = ((exitPrice - (bot.entryPrice || 43500)) / (bot.entryPrice || 43500)) * 100;
+          
+          setBots(prev => prev.map(b => 
+            b.id === bot.id ? { ...b, status: 'searching' as const, entryPrice: undefined, currentPnL: undefined } : b
+          ));
+          
+          onLogAdd({
+            id: Date.now().toString() + Math.random(),
+            botId: bot.id,
+            botName: `${bot.pair} (${bot.strategy})`,
+            timestamp: timeStr,
+            type: 'exit',
+            message: pnl >= 0 ? 'Позиция закрыта с прибылью (тейк-профит)' : 'Позиция закрыта с убытком (стоп-лосс)',
+            details: {
+              price: exitPrice,
+              pnl: pnl
+            }
+          });
+        }
+      });
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [bots, onLogAdd]);
 
   const getStatusBadge = (status: Bot['status']) => {
     switch (status) {
