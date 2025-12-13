@@ -53,10 +53,10 @@ export default function BacktestSettings({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ma-crossover">Пересечение MA (20/50)</SelectItem>
-            <SelectItem value="rsi">RSI (30/70)</SelectItem>
-            <SelectItem value="bollinger">Bollinger Bands</SelectItem>
-            <SelectItem value="macd">MACD</SelectItem>
+            <SelectItem value="ma-crossover">EMA 9/21/55 (тренд + кросс)</SelectItem>
+            <SelectItem value="rsi">RSI 14 + EMA50 (отбой от зон)</SelectItem>
+            <SelectItem value="bollinger">BB + EMA50 (отбой от границ)</SelectItem>
+            <SelectItem value="macd">MACD + EMA200 (дивергенция)</SelectItem>
           </SelectContent>
         </Select>
       </div>

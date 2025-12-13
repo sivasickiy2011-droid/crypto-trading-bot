@@ -31,24 +31,37 @@ export interface BacktestResults {
 export interface BacktestConfig {
   strategy: 'ma-crossover' | 'rsi' | 'bollinger' | 'macd';
   initialCapital: number;
-  positionSize: number; // Процент от капитала на сделку
-  commission: number; // Комиссия в процентах (например, 0.1 для 0.1%)
+  positionSize: number;
+  commission: number;
   leverage: number;
-  stopLoss?: number; // В процентах
-  takeProfit?: number; // В процентах
+  stopLoss?: number;
+  takeProfit?: number;
 }
 
-// Расчёт индикаторов
 function calculateSMA(data: number[], period: number): number[] {
   const result: number[] = [];
   for (let i = 0; i < data.length; i++) {
     if (i < period - 1) {
-      result.push(data[i]);
+      const slice = data.slice(0, i + 1);
+      result.push(slice.reduce((a, b) => a + b, 0) / slice.length);
     } else {
-      const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
-      result.push(sum / period);
+      const slice = data.slice(i - period + 1, i + 1);
+      result.push(slice.reduce((a, b) => a + b, 0) / slice.length);
     }
   }
+  return result;
+}
+
+function calculateEMA(data: number[], period: number): number[] {
+  const result: number[] = [];
+  const multiplier = 2 / (period + 1);
+  
+  result[0] = data[0];
+  
+  for (let i = 1; i < data.length; i++) {
+    result[i] = (data[i] - result[i - 1]) * multiplier + result[i - 1];
+  }
+  
   return result;
 }
 
@@ -80,7 +93,7 @@ function calculateRSI(data: number[], period: number = 14): number[] {
     }
   }
 
-  return [50, ...result]; // Добавляем первое значение
+  return [50, ...result];
 }
 
 function calculateBollingerBands(data: number[], period: number = 20, stdDev: number = 2): { upper: number[]; middle: number[]; lower: number[] } {
@@ -90,8 +103,8 @@ function calculateBollingerBands(data: number[], period: number = 20, stdDev: nu
 
   for (let i = 0; i < data.length; i++) {
     if (i < period - 1) {
-      upper.push(data[i]);
-      lower.push(data[i]);
+      upper.push(data[i] * 1.02);
+      lower.push(data[i] * 0.98);
     } else {
       const slice = data.slice(i - period + 1, i + 1);
       const mean = middle[i];
@@ -117,33 +130,25 @@ function calculateMACD(data: number[], fastPeriod: number = 12, slowPeriod: numb
   return { macd, signal, histogram };
 }
 
-function calculateEMA(data: number[], period: number): number[] {
-  const result: number[] = [];
-  const multiplier = 2 / (period + 1);
-  
-  result[0] = data[0];
-  
-  for (let i = 1; i < data.length; i++) {
-    result[i] = (data[i] - result[i - 1]) * multiplier + result[i - 1];
-  }
-  
-  return result;
-}
-
-// Генерация сигналов по стратегиям
 function generateSignals(klines: KlineData[], strategy: string): Array<'BUY' | 'SELL' | 'HOLD'> {
   const closes = klines.map(k => k.close);
+  const highs = klines.map(k => k.high);
+  const lows = klines.map(k => k.low);
   const signals: Array<'BUY' | 'SELL' | 'HOLD'> = new Array(klines.length).fill('HOLD');
 
   switch (strategy) {
     case 'ma-crossover': {
-      const ma20 = calculateSMA(closes, 20);
-      const ma50 = calculateSMA(closes, 50);
+      const ema9 = calculateEMA(closes, 9);
+      const ema21 = calculateEMA(closes, 21);
+      const ema55 = calculateEMA(closes, 55);
       
-      for (let i = 1; i < klines.length; i++) {
-        if (ma20[i - 1] < ma50[i - 1] && ma20[i] > ma50[i]) {
+      for (let i = 55; i < klines.length; i++) {
+        const trendUp = ema21[i] > ema55[i];
+        const trendDown = ema21[i] < ema55[i];
+        
+        if (trendUp && ema9[i - 1] <= ema21[i - 1] && ema9[i] > ema21[i]) {
           signals[i] = 'BUY';
-        } else if (ma20[i - 1] > ma50[i - 1] && ma20[i] < ma50[i]) {
+        } else if (trendDown && ema9[i - 1] >= ema21[i - 1] && ema9[i] < ema21[i]) {
           signals[i] = 'SELL';
         }
       }
@@ -152,12 +157,16 @@ function generateSignals(klines: KlineData[], strategy: string): Array<'BUY' | '
 
     case 'rsi': {
       const rsi = calculateRSI(closes, 14);
+      const ema50 = calculateEMA(closes, 50);
       
-      for (let i = 1; i < klines.length; i++) {
-        if (rsi[i - 1] > 30 && rsi[i] <= 30) {
-          signals[i] = 'BUY'; // Перепроданность
-        } else if (rsi[i - 1] < 70 && rsi[i] >= 70) {
-          signals[i] = 'SELL'; // Перекупленность
+      for (let i = 50; i < klines.length; i++) {
+        const trendUp = closes[i] > ema50[i];
+        const trendDown = closes[i] < ema50[i];
+        
+        if (trendUp && rsi[i - 1] <= 35 && rsi[i] > 35) {
+          signals[i] = 'BUY';
+        } else if (trendDown && rsi[i - 1] >= 65 && rsi[i] < 65) {
+          signals[i] = 'SELL';
         }
       }
       break;
@@ -165,12 +174,19 @@ function generateSignals(klines: KlineData[], strategy: string): Array<'BUY' | '
 
     case 'bollinger': {
       const bb = calculateBollingerBands(closes, 20, 2);
+      const ema50 = calculateEMA(closes, 50);
       
-      for (let i = 1; i < klines.length; i++) {
-        if (closes[i] < bb.lower[i] && closes[i - 1] >= bb.lower[i - 1]) {
-          signals[i] = 'BUY'; // Цена коснулась нижней полосы
-        } else if (closes[i] > bb.upper[i] && closes[i - 1] <= bb.upper[i - 1]) {
-          signals[i] = 'SELL'; // Цена коснулась верхней полосы
+      for (let i = 50; i < klines.length; i++) {
+        const trendUp = closes[i] > ema50[i];
+        const trendDown = closes[i] < ema50[i];
+        
+        const priceBelowLower = lows[i] <= bb.lower[i] && closes[i] > bb.lower[i];
+        const priceAboveUpper = highs[i] >= bb.upper[i] && closes[i] < bb.upper[i];
+        
+        if (trendUp && priceBelowLower) {
+          signals[i] = 'BUY';
+        } else if (trendDown && priceAboveUpper) {
+          signals[i] = 'SELL';
         }
       }
       break;
@@ -178,12 +194,19 @@ function generateSignals(klines: KlineData[], strategy: string): Array<'BUY' | '
 
     case 'macd': {
       const macdData = calculateMACD(closes, 12, 26, 9);
+      const ema200 = calculateEMA(closes, 200);
       
-      for (let i = 1; i < klines.length; i++) {
-        if (macdData.histogram[i - 1] < 0 && macdData.histogram[i] > 0) {
-          signals[i] = 'BUY'; // MACD пересекает сигнальную снизу вверх
-        } else if (macdData.histogram[i - 1] > 0 && macdData.histogram[i] < 0) {
-          signals[i] = 'SELL'; // MACD пересекает сигнальную сверху вниз
+      for (let i = 200; i < klines.length; i++) {
+        const trendUp = closes[i] > ema200[i];
+        const trendDown = closes[i] < ema200[i];
+        
+        const bullishCross = macdData.histogram[i - 1] <= 0 && macdData.histogram[i] > 0;
+        const bearishCross = macdData.histogram[i - 1] >= 0 && macdData.histogram[i] < 0;
+        
+        if (trendUp && bullishCross && macdData.macd[i] < 0) {
+          signals[i] = 'BUY';
+        } else if (trendDown && bearishCross && macdData.macd[i] > 0) {
+          signals[i] = 'SELL';
         }
       }
       break;
@@ -193,7 +216,6 @@ function generateSignals(klines: KlineData[], strategy: string): Array<'BUY' | '
   return signals;
 }
 
-// Основная функция бэктестинга
 export function runBacktest(klines: KlineData[], config: BacktestConfig): BacktestResults {
   const signals = generateSignals(klines, config.strategy);
   const trades: BacktestTrade[] = [];
@@ -209,7 +231,6 @@ export function runBacktest(klines: KlineData[], config: BacktestConfig): Backte
     const signal = signals[i];
     const currentPrice = kline.close;
 
-    // Проверка стоп-лосса и тейк-профита для открытой позиции
     if (position) {
       let shouldClose = false;
       let reason = '';
@@ -236,7 +257,6 @@ export function runBacktest(klines: KlineData[], config: BacktestConfig): Backte
         }
       }
 
-      // Закрытие по сигналу
       if ((signal === 'SELL' && position.side === 'LONG') || (signal === 'BUY' && position.side === 'SHORT')) {
         shouldClose = true;
         reason = 'Signal';
@@ -260,15 +280,14 @@ export function runBacktest(klines: KlineData[], config: BacktestConfig): Backte
           exitPrice: currentPrice,
           side: position.side,
           pnl: netPnl,
-          pnlPercent: pnlPercent,
-          reason: reason
+          pnlPercent,
+          reason
         });
 
         position = null;
       }
     }
 
-    // Открытие новой позиции
     if (!position && signal !== 'HOLD') {
       const positionValue = equity * (config.positionSize / 100);
       const size = positionValue / currentPrice;
@@ -277,30 +296,32 @@ export function runBacktest(klines: KlineData[], config: BacktestConfig): Backte
         side: signal === 'BUY' ? 'LONG' : 'SHORT',
         entryPrice: currentPrice,
         entryTime: kline.time,
-        size: size
+        size
       };
     }
 
-    // Обновление кривой капитала
-    maxEquity = Math.max(maxEquity, equity);
-    const drawdown = ((maxEquity - equity) / maxEquity) * 100;
-    maxDrawdown = Math.max(maxDrawdown, drawdown);
+    if (equity > maxEquity) {
+      maxEquity = equity;
+    }
+    const drawdown = maxEquity - equity;
+    if (drawdown > maxDrawdown) {
+      maxDrawdown = drawdown;
+    }
 
     equityCurve.push({
       time: kline.time,
-      equity: equity,
+      equity,
       pnl: equity - config.initialCapital
     });
   }
 
-  // Закрываем открытую позицию в конце
   if (position) {
-    const lastKline = klines[klines.length - 1];
+    const currentPrice = klines[klines.length - 1].close;
     const pnl = position.side === 'LONG'
-      ? (lastKline.close - position.entryPrice) * position.size * config.leverage
-      : (position.entryPrice - lastKline.close) * position.size * config.leverage;
+      ? (currentPrice - position.entryPrice) * position.size * config.leverage
+      : (position.entryPrice - currentPrice) * position.size * config.leverage;
     
-    const commission = (position.entryPrice * position.size + lastKline.close * position.size) * (config.commission / 100);
+    const commission = (position.entryPrice * position.size + currentPrice * position.size) * (config.commission / 100);
     const netPnl = pnl - commission;
     const pnlPercent = (netPnl / equity) * 100;
 
@@ -308,71 +329,75 @@ export function runBacktest(klines: KlineData[], config: BacktestConfig): Backte
 
     trades.push({
       entryTime: position.entryTime,
-      exitTime: lastKline.time,
+      exitTime: klines[klines.length - 1].time,
       entryPrice: position.entryPrice,
-      exitPrice: lastKline.close,
+      exitPrice: currentPrice,
       side: position.side,
       pnl: netPnl,
-      pnlPercent: pnlPercent,
-      reason: 'End of period'
+      pnlPercent,
+      reason: 'End of backtest'
     });
   }
 
-  // Расчёт статистики
   const winningTrades = trades.filter(t => t.pnl > 0);
-  const losingTrades = trades.filter(t => t.pnl < 0);
+  const losingTrades = trades.filter(t => t.pnl <= 0);
+  const winRate = trades.length > 0 ? (winningTrades.length / trades.length) * 100 : 0;
+  
   const totalWins = winningTrades.reduce((sum, t) => sum + t.pnl, 0);
   const totalLosses = Math.abs(losingTrades.reduce((sum, t) => sum + t.pnl, 0));
+  const profitFactor = totalLosses > 0 ? totalWins / totalLosses : totalWins > 0 ? 999 : 0;
   
-  const profitFactor = totalLosses > 0 ? totalWins / totalLosses : totalWins > 0 ? Infinity : 0;
   const avgWin = winningTrades.length > 0 ? totalWins / winningTrades.length : 0;
   const avgLoss = losingTrades.length > 0 ? totalLosses / losingTrades.length : 0;
 
-  // Sharpe Ratio (упрощённый)
-  const returns = equityCurve.map(e => (e.equity - config.initialCapital) / config.initialCapital);
+  const returns = equityCurve.map((e, i) => 
+    i === 0 ? 0 : (e.equity - equityCurve[i - 1].equity) / equityCurve[i - 1].equity
+  );
   const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-  const variance = returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / returns.length;
-  const stdDev = Math.sqrt(variance);
-  const sharpeRatio = stdDev > 0 ? (avgReturn / stdDev) * Math.sqrt(252) : 0; // Годовой Sharpe
+  const stdReturn = Math.sqrt(
+    returns.reduce((sum, r) => sum + Math.pow(r - avgReturn, 2), 0) / returns.length
+  );
+  const sharpeRatio = stdReturn > 0 ? (avgReturn / stdReturn) * Math.sqrt(252) : 0;
 
-  // Месячная статистика
   const monthlyStats: Array<{ month: string; profit: number; loss: number; winRate: number; trades: number }> = [];
-  const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-  const tradesByMonth = new Map<string, BacktestTrade[]>();
+  const monthlyData: { [key: string]: BacktestTrade[] } = {};
 
   trades.forEach(trade => {
     const date = new Date(parseInt(trade.entryTime));
-    const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
-    if (!tradesByMonth.has(monthKey)) {
-      tradesByMonth.set(monthKey, []);
+    const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    if (!monthlyData[monthKey]) {
+      monthlyData[monthKey] = [];
     }
-    tradesByMonth.get(monthKey)!.push(trade);
+    monthlyData[monthKey].push(trade);
   });
 
-  tradesByMonth.forEach((monthTrades, monthKey) => {
-    const [year, month] = monthKey.split('-').map(Number);
-    const profit = monthTrades.filter(t => t.pnl > 0).reduce((sum, t) => sum + t.pnl, 0);
-    const loss = monthTrades.filter(t => t.pnl < 0).reduce((sum, t) => sum + t.pnl, 0);
-    const winRate = (monthTrades.filter(t => t.pnl > 0).length / monthTrades.length) * 100;
-
+  Object.keys(monthlyData).sort().forEach(monthKey => {
+    const monthTrades = monthlyData[monthKey];
+    const wins = monthTrades.filter(t => t.pnl > 0);
+    const losses = monthTrades.filter(t => t.pnl <= 0);
+    
     monthlyStats.push({
-      month: monthNames[month],
-      profit: profit,
-      loss: loss,
-      winRate: winRate,
+      month: monthKey,
+      profit: wins.reduce((sum, t) => sum + t.pnl, 0),
+      loss: Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0)),
+      winRate: monthTrades.length > 0 ? (wins.length / monthTrades.length) * 100 : 0,
       trades: monthTrades.length
     });
   });
 
+  const totalPnL = equity - config.initialCapital;
+  const totalPnLPercent = (totalPnL / config.initialCapital) * 100;
+  const maxDrawdownPercent = (maxDrawdown / maxEquity) * 100;
+
   return {
     trades,
-    totalPnL: equity - config.initialCapital,
-    totalPnLPercent: ((equity - config.initialCapital) / config.initialCapital) * 100,
+    totalPnL,
+    totalPnLPercent,
     winningTrades: winningTrades.length,
     losingTrades: losingTrades.length,
-    winRate: trades.length > 0 ? (winningTrades.length / trades.length) * 100 : 0,
-    maxDrawdown: maxDrawdown * config.initialCapital / 100,
-    maxDrawdownPercent: maxDrawdown,
+    winRate,
+    maxDrawdown,
+    maxDrawdownPercent,
     sharpeRatio,
     profitFactor,
     avgWin,
