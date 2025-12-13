@@ -8,6 +8,7 @@ import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import DashboardSidePanels from '@/components/dashboard/DashboardSidePanels';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
+import DashboardWatchlist from '@/components/dashboard/DashboardWatchlist';
 import { getUserBalance, getUserPositions, UserBalanceData, UserPositionData, getMarketTickers, getKlineData, TickerData, KlineData, getOrderbook, OrderbookEntry, getStrategySignals, StrategySignal } from '@/lib/api';
 
 const generateMockPriceData = (basePrice: number) => Array.from({ length: 50 }, (_, i) => ({
@@ -293,6 +294,12 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   totalPnLPercent={totalPnLPercent}
                   openPositions={displayPositions.length}
                   balance={balance}
+                />
+
+                <DashboardWatchlist
+                  watchlist={watchlist}
+                  onSymbolSelect={setSelectedSymbol}
+                  selectedSymbol={selectedSymbol}
                 />
 
                 <div className="grid grid-cols-3 gap-6">

@@ -12,60 +12,100 @@ interface OrderbookPanelProps {
 }
 
 export default function OrderbookPanel({ orderbook }: OrderbookPanelProps) {
-  const maxBidSize = Math.max(...orderbook.map(o => o.bidSize), 1);
-  const maxAskSize = Math.max(...orderbook.map(o => o.askSize), 1);
+  if (orderbook.length === 0) {
+    return (
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-base">Стакан ордеров</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center text-muted-foreground py-12">
+            <Icon name="BookOpen" size={36} className="mx-auto mb-3 opacity-30" />
+            <p className="text-sm">Загрузка стакана...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const asks = orderbook.filter(o => o.askSize > 0).sort((a, b) => b.price - a.price).slice(0, 10);
+  const bids = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 10);
+  
+  const maxAskSize = Math.max(...asks.map(o => o.askSize), 1);
+  const maxBidSize = Math.max(...bids.map(o => o.bidSize), 1);
+
+  const spreadPrice = asks.length > 0 && bids.length > 0 ? asks[asks.length - 1].price - bids[0].price : 0;
+  const spreadPercent = asks.length > 0 && bids.length > 0 ? (spreadPrice / bids[0].price) * 100 : 0;
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader>
+    <Card className="bg-card border-border h-full">
+      <CardHeader className="pb-3">
         <CardTitle className="text-base">Стакан ордеров</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-1">
+        <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground mb-2 pb-2 border-b border-border">
+          <div className="w-28 text-left">Цена (USDT)</div>
+          <div className="flex-1 text-right">Объём</div>
+        </div>
+
         <div className="space-y-px">
-          <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground mb-2 pb-2 border-b border-border">
-            <div className="flex-1 text-right pr-2">Bid</div>
-            <div className="w-24 text-center">Цена</div>
-            <div className="flex-1 text-left pl-2">Ask</div>
-          </div>
-          {orderbook.slice(0, 20).map((order, idx) => {
-            const totalSize = order.askSize + order.bidSize;
-            const isLargeOrder = totalSize > (maxBidSize + maxAskSize) * 0.3;
-            const bidPercent = (order.bidSize / maxBidSize) * 100;
-            const askPercent = (order.askSize / maxAskSize) * 100;
+          {asks.map((order, idx) => {
+            const percent = (order.askSize / maxAskSize) * 100;
+            const isLarge = order.askSize > maxAskSize * 0.5;
             
             return (
-              <div key={idx} className="flex items-center justify-between text-xs font-mono hover:bg-secondary/50 transition-colors">
-                <div className="flex-1 relative h-6">
-                  <div 
-                    className="absolute right-0 top-0 h-full bg-success/15"
-                    style={{ width: `${bidPercent}%` }}
-                  />
-                  <div className={`relative z-10 text-right pr-2 py-1 ${isLargeOrder ? 'text-success font-semibold' : 'text-success/70'}`}>
-                    {order.bidSize > 0 ? order.bidSize.toFixed(4) : ''}
-                  </div>
-                </div>
-                <div className="w-24 text-center font-semibold text-foreground py-1">
+              <div key={`ask-${idx}`} className="flex items-center justify-between text-xs font-mono hover:bg-destructive/5 transition-colors">
+                <div className="w-28 font-semibold text-destructive py-1">
                   {order.price.toFixed(2)}
                 </div>
                 <div className="flex-1 relative h-6">
                   <div 
-                    className="absolute left-0 top-0 h-full bg-destructive/15"
-                    style={{ width: `${askPercent}%` }}
+                    className="absolute right-0 top-0 h-full bg-destructive/15"
+                    style={{ width: `${percent}%` }}
                   />
-                  <div className={`relative z-10 text-left pl-2 py-1 ${isLargeOrder ? 'text-destructive font-semibold' : 'text-destructive/70'}`}>
-                    {order.askSize > 0 ? order.askSize.toFixed(4) : ''}
+                  <div className={`relative z-10 text-right pr-2 py-1 ${isLarge ? 'text-destructive font-semibold' : 'text-destructive/80'}`}>
+                    {order.askSize.toFixed(4)}
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
-        {orderbook.length === 0 && (
-          <div className="text-center text-muted-foreground py-12">
-            <Icon name="BookOpen" size={36} className="mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Загрузка стакана...</p>
+
+        {spreadPrice > 0 && (
+          <div className="flex items-center justify-center py-2 my-1 bg-secondary/50 rounded-md border border-border">
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">Спред</div>
+              <div className="text-sm font-mono font-semibold">
+                {spreadPrice.toFixed(2)} <span className="text-xs text-muted-foreground">({spreadPercent.toFixed(3)}%)</span>
+              </div>
+            </div>
           </div>
         )}
+
+        <div className="space-y-px">
+          {bids.map((order, idx) => {
+            const percent = (order.bidSize / maxBidSize) * 100;
+            const isLarge = order.bidSize > maxBidSize * 0.5;
+            
+            return (
+              <div key={`bid-${idx}`} className="flex items-center justify-between text-xs font-mono hover:bg-success/5 transition-colors">
+                <div className="w-28 font-semibold text-success py-1">
+                  {order.price.toFixed(2)}
+                </div>
+                <div className="flex-1 relative h-6">
+                  <div 
+                    className="absolute right-0 top-0 h-full bg-success/15"
+                    style={{ width: `${percent}%` }}
+                  />
+                  <div className={`relative z-10 text-right pr-2 py-1 ${isLarge ? 'text-success font-semibold' : 'text-success/80'}`}>
+                    {order.bidSize.toFixed(4)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );

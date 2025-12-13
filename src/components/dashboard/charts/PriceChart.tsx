@@ -89,6 +89,7 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
   const [activeTimeframe, setActiveTimeframe] = useState('15');
   const [showIndicators, setShowIndicators] = useState({ ma20: true, ma50: true, signals: true });
   const [chartType, setChartType] = useState<'line' | 'candle'>('candle');
+  const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
 
   const timeframes = [
     { label: '1 минута', value: '1' },
@@ -130,6 +131,24 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
             <Badge variant="outline" className="text-xs font-mono">
               {chartData.length > 0 ? `$${(chartData[chartData.length - 1]?.close || chartData[chartData.length - 1]?.price)?.toFixed(2)}` : '—'}
             </Badge>
+            <div className="flex items-center space-x-1 border border-border rounded-md p-1">
+              <Button
+                variant={marketType === 'spot' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => setMarketType('spot')}
+              >
+                Спот
+              </Button>
+              <Button
+                variant={marketType === 'futures' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => setMarketType('futures')}
+              >
+                Фьючерсы
+              </Button>
+            </div>
           </div>
           
           <div className="flex items-center space-x-3">
