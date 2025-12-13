@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,9 +32,10 @@ interface Bot {
 
 interface BotsPanelProps {
   onLogAdd: (log: BotLogEntry) => void;
+  onBotCountChange?: (count: number) => void;
 }
 
-export default function BotsPanel({ onLogAdd }: BotsPanelProps) {
+export default function BotsPanel({ onLogAdd, onBotCountChange }: BotsPanelProps) {
   const [bots, setBots] = useState<Bot[]>([
     {
       id: '1',
@@ -64,8 +65,14 @@ export default function BotsPanel({ onLogAdd }: BotsPanelProps) {
     strategy: 'ma-crossover'
   });
 
+  useEffect(() => {
+    const activeCount = bots.filter(b => b.active).length;
+    onBotCountChange?.(activeCount);
+  }, [bots, onBotCountChange]);
+
   const toggleBot = (id: string) => {
-    setBots(prev => prev.map(bot => {
+    setBots(prev => {
+      const updated = prev.map(bot => {
       if (bot.id === id) {
         const newActive = !bot.active;
         const newStatus = newActive ? 'searching' as const : 'stopped' as const;
@@ -84,8 +91,12 @@ export default function BotsPanel({ onLogAdd }: BotsPanelProps) {
         
         return { ...bot, active: newActive, status: newStatus };
       }
-      return bot;
-    }));
+        return bot;
+      });
+      const activeCount = updated.filter(b => b.active).length;
+      onBotCountChange?.(activeCount);
+      return updated;
+    });
   };
 
   const addBot = () => {
@@ -105,7 +116,12 @@ export default function BotsPanel({ onLogAdd }: BotsPanelProps) {
       active: true
     };
 
-    setBots(prev => [...prev, newBotData]);
+    setBots(prev => {
+      const updated = [...prev, newBotData];
+      const activeCount = updated.filter(b => b.active).length;
+      onBotCountChange?.(activeCount);
+      return updated;
+    });
     
     const now = new Date();
     const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
@@ -137,7 +153,12 @@ export default function BotsPanel({ onLogAdd }: BotsPanelProps) {
         message: 'Бот удалён'
       });
     }
-    setBots(prev => prev.filter(bot => bot.id !== id));
+    setBots(prev => {
+      const updated = prev.filter(bot => bot.id !== id);
+      const activeCount = updated.filter(b => b.active).length;
+      onBotCountChange?.(activeCount);
+      return updated;
+    });
   };
   
   useEffect(() => {

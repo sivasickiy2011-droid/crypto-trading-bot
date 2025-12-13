@@ -24,14 +24,22 @@ interface PriceDataPoint {
   signal: string | null;
 }
 
+interface PositionLevel {
+  entryPrice: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  side: 'LONG' | 'SHORT';
+}
+
 interface PriceChartProps {
   priceData: Array<PriceDataPoint>;
   selectedSymbol: string;
   onTimeframeChange: (timeframe: string) => void;
   strategySignals?: Array<{strategy: string, signal: 'buy' | 'sell' | 'neutral', strength: number, reason: string}>;
+  positionLevels?: PositionLevel[];
 }
 
-export default function PriceChart({ priceData, selectedSymbol, onTimeframeChange, strategySignals = [] }: PriceChartProps) {
+export default function PriceChart({ priceData, selectedSymbol, onTimeframeChange, strategySignals = [], positionLevels = [] }: PriceChartProps) {
   const [activeTimeframe, setActiveTimeframe] = useState('15');
   const [showIndicators, setShowIndicators] = useState({ 
     ema9: false, 
@@ -132,6 +140,7 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
             showIndicators={showIndicators}
             yMin={yMin}
             yMax={yMax}
+            positionLevels={positionLevels}
           />
         </div>
         

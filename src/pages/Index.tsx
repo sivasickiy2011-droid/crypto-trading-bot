@@ -275,6 +275,15 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     pnlPercent: p.pnlPercent,
     status: 'active'
   }));
+
+  const positionLevels = positions
+    .filter(p => p.symbol === selectedSymbol)
+    .map(p => ({
+      entryPrice: p.entryPrice,
+      stopLoss: p.side === 'LONG' ? p.entryPrice * 0.97 : p.entryPrice * 1.03,
+      takeProfit: p.side === 'LONG' ? p.entryPrice * 1.05 : p.entryPrice * 0.95,
+      side: p.side as 'LONG' | 'SHORT'
+    }));
   
   const formatSymbolForDisplay = (symbol: string) => {
     return symbol.replace('USDT', '/USDT');
@@ -414,6 +423,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   strategySignals={strategySignals}
                   accountMode={accountMode}
                   apiMode={apiMode}
+                  positionLevels={positionLevels}
                 />
 
                 <DashboardTabs

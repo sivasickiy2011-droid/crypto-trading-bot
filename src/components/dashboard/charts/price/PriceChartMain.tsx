@@ -1,4 +1,5 @@
-import { Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Scatter } from 'recharts';
+import React from 'react';
+import { Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Scatter, ReferenceLine } from 'recharts';
 import { CustomTooltip } from './PriceChartTooltip';
 
 interface PriceDataPoint {
@@ -21,6 +22,13 @@ interface PriceDataPoint {
   signal: string | null;
 }
 
+interface PositionLevel {
+  entryPrice: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  side: 'LONG' | 'SHORT';
+}
+
 interface PriceChartMainProps {
   chartData: PriceDataPoint[];
   chartType: 'line' | 'candle';
@@ -34,9 +42,10 @@ interface PriceChartMainProps {
   };
   yMin: number;
   yMax: number;
+  positionLevels?: PositionLevel[];
 }
 
-export default function PriceChartMain({ chartData, chartType, showIndicators, yMin, yMax }: PriceChartMainProps) {
+export default function PriceChartMain({ chartData, chartType, showIndicators, yMin, yMax, positionLevels = [] }: PriceChartMainProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -175,6 +184,52 @@ export default function PriceChartMain({ chartData, chartType, showIndicators, y
             />
           </>
         )}
+
+        {positionLevels.map((level, idx) => (
+          <React.Fragment key={idx}>
+            <ReferenceLine 
+              y={level.entryPrice} 
+              stroke={level.side === 'LONG' ? 'hsl(142, 76%, 36%)' : 'hsl(0, 84%, 60%)'} 
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              label={{ 
+                value: `Вход: $${level.entryPrice.toFixed(2)}`, 
+                position: 'right',
+                fill: level.side === 'LONG' ? 'hsl(142, 76%, 36%)' : 'hsl(0, 84%, 60%)',
+                fontSize: 11,
+                fontWeight: 600
+              }}
+            />
+            {level.stopLoss && (
+              <ReferenceLine 
+                y={level.stopLoss} 
+                stroke="hsl(0, 84%, 60%)" 
+                strokeWidth={1.5}
+                strokeDasharray="3 3"
+                label={{ 
+                  value: `SL: $${level.stopLoss.toFixed(2)}`, 
+                  position: 'right',
+                  fill: 'hsl(0, 84%, 60%)',
+                  fontSize: 10
+                }}
+              />
+            )}
+            {level.takeProfit && (
+              <ReferenceLine 
+                y={level.takeProfit} 
+                stroke="hsl(142, 76%, 36%)" 
+                strokeWidth={1.5}
+                strokeDasharray="3 3"
+                label={{ 
+                  value: `TP: $${level.takeProfit.toFixed(2)}`, 
+                  position: 'right',
+                  fill: 'hsl(142, 76%, 36%)',
+                  fontSize: 10
+                }}
+              />
+            )}
+          </React.Fragment>
+        ))}
       </ComposedChart>
     </ResponsiveContainer>
   );

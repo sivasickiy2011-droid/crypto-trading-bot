@@ -43,6 +43,13 @@ interface ClosedTrade {
   closeTime: string;
 }
 
+interface PositionLevel {
+  entryPrice: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  side: 'LONG' | 'SHORT';
+}
+
 interface DashboardChartsProps {
   priceData: Array<PriceDataPoint>;
   positions: Position[];
@@ -53,6 +60,7 @@ interface DashboardChartsProps {
   strategySignals?: Array<{strategy: string, signal: 'buy' | 'sell' | 'neutral', strength: number, reason: string}>;
   accountMode: 'live' | 'demo';
   apiMode: 'live' | 'testnet';
+  positionLevels?: PositionLevel[];
 }
 
 export default function DashboardCharts({ 
@@ -64,9 +72,11 @@ export default function DashboardCharts({
   orderbook = [], 
   strategySignals = [],
   accountMode,
-  apiMode
+  apiMode,
+  positionLevels = []
 }: DashboardChartsProps) {
   const [botLogs, setBotLogs] = useState<BotLogEntry[]>([]);
+  const [activeBotCount, setActiveBotCount] = useState(0);
   
   const handleLogAdd = (log: BotLogEntry) => {
     setBotLogs(prev => [log, ...prev].slice(0, 100));
@@ -81,6 +91,7 @@ export default function DashboardCharts({
             selectedSymbol={selectedSymbol}
             onTimeframeChange={onTimeframeChange}
             strategySignals={strategySignals}
+            positionLevels={positionLevels}
           />
           
           <TradesPanel 
@@ -89,6 +100,8 @@ export default function DashboardCharts({
             strategySignals={strategySignals}
             botLogs={botLogs}
             onLogAdd={handleLogAdd}
+            activeBotCount={activeBotCount}
+            onBotCountChange={setActiveBotCount}
           />
         </div>
         
