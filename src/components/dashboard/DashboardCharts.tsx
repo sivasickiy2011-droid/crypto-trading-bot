@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, Legend, BarChart, Bar, Cell
+  Tooltip, ResponsiveContainer, Legend, BarChart, Bar, Cell, ComposedChart, Scatter
 } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -22,14 +22,21 @@ interface Position {
   status: string;
 }
 
+interface PriceDataPoint {
+  time: string;
+  price: number;
+  open?: number;
+  high?: number;
+  low?: number;
+  close?: number;
+  volume?: number;
+  ma20: number;
+  ma50: number;
+  signal: string | null;
+}
+
 interface DashboardChartsProps {
-  priceData: Array<{
-    time: string;
-    price: number;
-    ma20: number;
-    ma50: number;
-    signal: string | null;
-  }>;
+  priceData: Array<PriceDataPoint>;
   positions: Position[];
   selectedSymbol: string;
   onTimeframeChange: (timeframe: string) => void;
@@ -40,6 +47,7 @@ interface DashboardChartsProps {
 export default function DashboardCharts({ priceData, positions, selectedSymbol, onTimeframeChange, orderbook = [], strategySignals = [] }: DashboardChartsProps) {
   const [activeTimeframe, setActiveTimeframe] = useState('15');
   const [showIndicators, setShowIndicators] = useState({ ma20: true, ma50: true, volume: false });
+  const [chartType, setChartType] = useState<'line' | 'candle' | 'bar'>('line');
 
   const timeframes = [
     { label: '1m', value: '1' },
@@ -58,6 +66,39 @@ export default function DashboardCharts({ priceData, positions, selectedSymbol, 
   const maxBidSize = Math.max(...orderbook.map(o => o.bidSize), 1);
   const maxAskSize = Math.max(...orderbook.map(o => o.askSize), 1);
 
+  const chartTypes = [
+    { label: 'Линия', value: 'line' as const, icon: 'TrendingUp' },
+    { label: 'Свечи', value: 'candle' as const, icon: 'BarChart4' },
+    { label: 'Бары', value: 'bar' as const, icon: 'BarChart3' }
+  ];
+
+  const signalPoints = priceData.map((point, idx) => {
+    const buySignals = strategySignals.filter(s => s.signal === 'buy');
+    const sellSignals = strategySignals.filter(s => s.signal === 'sell');
+    
+    if (idx === priceData.length - 1 && buySignals.length > 0) {
+      return { ...point, buySignal: point.price };
+    } else if (idx === priceData.length - 1 && sellSignals.length > 0) {
+      return { ...point, sellSignal: point.price };
+    }
+    return point;
+  });
+
+  const CandlestickBar = (props: any) => {
+    const { x, y, width, height, open, close, high, low } = props;
+    const isGreen = close > open;
+    const color = isGreen ? 'hsl(142, 76%, 36%)' : 'hsl(0, 84%, 60%)';
+    const yTop = Math.min(open, close);
+    const bodyHeight = Math.abs(close - open);
+    
+    return (
+      <g>
+        <line x1={x + width / 2} y1={y} x2={x + width / 2} y2={y + height} stroke={color} strokeWidth={1} />
+        <rect x={x} y={yTop} width={width} height={bodyHeight} fill={color} stroke={color} strokeWidth={1} />
+      </g>
+    );
+  };
+
   return (
     <div className="col-span-2 space-y-6">
       <Card className="bg-card border-border">
@@ -74,6 +115,19 @@ export default function DashboardCharts({ priceData, positions, selectedSymbol, 
                     onClick={() => handleTimeframeChange(tf.value)}
                   >
                     {tf.label}
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex items-center space-x-2 border-l border-border pl-4">
+                {chartTypes.map(ct => (
+                  <Badge 
+                    key={ct.value}
+                    variant={chartType === ct.value ? 'default' : 'outline'}
+                    className="text-xs cursor-pointer hover:bg-secondary"
+                    onClick={() => setChartType(ct.value)}
+                  >
+                    <Icon name={ct.icon} size={12} className="mr-1" />
+                    {ct.label}
                   </Badge>
                 ))}
               </div>
@@ -106,7 +160,7 @@ export default function DashboardCharts({ priceData, positions, selectedSymbol, 
         <CardContent>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={priceData}>
+              <ComposedChart data={signalPoints}>
                 <defs>
                   <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.3}/>
@@ -133,13 +187,28 @@ export default function DashboardCharts({ priceData, positions, selectedSymbol, 
                   }}
                 />
                 <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="price" 
-                  stroke="hsl(199, 89%, 48%)" 
-                  fill="url(#colorPrice)"
-                  strokeWidth={2}
-                />
+                
+                {chartType === 'line' && (
+                  <Area 
+                    type="monotone" 
+                    dataKey="price" 
+                    stroke="hsl(199, 89%, 48%)" 
+                    fill="url(#colorPrice)"
+                    strokeWidth={2}
+                  />
+                )}
+                
+                {chartType === 'candle' && (
+                  <Bar 
+                    dataKey="high" 
+                    fill="hsl(142, 76%, 36%)" 
+                    shape={<CandlestickBar />}
+                  />
+                )}
+                
+                {chartType === 'bar' && (
+                  <Bar dataKey="close" fill="hsl(199, 89%, 48%)" />
+                )}
                 {showIndicators.ma20 && (
                   <Line 
                     type="monotone" 
@@ -158,7 +227,39 @@ export default function DashboardCharts({ priceData, positions, selectedSymbol, 
                     dot={false}
                   />
                 )}
-              </AreaChart>
+                
+                <Scatter
+                  dataKey="buySignal"
+                  fill="hsl(142, 76%, 36%)"
+                  shape={(props: any) => {
+                    const { cx, cy } = props;
+                    if (cy === undefined) return null;
+                    return (
+                      <g>
+                        <circle cx={cx} cy={cy} r={8} fill="hsl(142, 76%, 36%)" opacity={0.3} />
+                        <circle cx={cx} cy={cy} r={5} fill="hsl(142, 76%, 36%)" />
+                        <path d={`M ${cx} ${cy - 10} L ${cx + 6} ${cy - 18} L ${cx - 6} ${cy - 18} Z`} fill="hsl(142, 76%, 36%)" />
+                      </g>
+                    );
+                  }}
+                />
+                
+                <Scatter
+                  dataKey="sellSignal"
+                  fill="hsl(0, 84%, 60%)"
+                  shape={(props: any) => {
+                    const { cx, cy } = props;
+                    if (cy === undefined) return null;
+                    return (
+                      <g>
+                        <circle cx={cx} cy={cy} r={8} fill="hsl(0, 84%, 60%)" opacity={0.3} />
+                        <circle cx={cx} cy={cy} r={5} fill="hsl(0, 84%, 60%)" />
+                        <path d={`M ${cx} ${cy + 10} L ${cx + 6} ${cy + 18} L ${cx - 6} ${cy + 18} Z`} fill="hsl(0, 84%, 60%)" />
+                      </g>
+                    );
+                  }}
+                />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </CardContent>

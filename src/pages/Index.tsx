@@ -125,13 +125,25 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
         const klines = await getKlineData(selectedSymbol, currentTimeframe, 50);
         
         if (klines.length > 0) {
+          const closes = klines.map(k => k.close);
+          const calculateMA = (prices: number[], period: number, index: number) => {
+            if (index < period - 1) return prices[index];
+            const slice = prices.slice(Math.max(0, index - period + 1), index + 1);
+            return slice.reduce((a, b) => a + b, 0) / slice.length;
+          };
+          
           const formattedData = klines.map((k, i) => {
             const date = new Date(parseInt(k.time));
             return {
               time: `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`,
               price: k.close,
-              ma20: k.close,
-              ma50: k.close,
+              open: k.open,
+              high: k.high,
+              low: k.low,
+              close: k.close,
+              volume: k.volume,
+              ma20: calculateMA(closes, 20, i),
+              ma50: calculateMA(closes, 50, i),
               signal: null
             };
           });
