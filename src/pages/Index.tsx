@@ -300,6 +300,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   totalPnLPercent={totalPnLPercent}
                   openPositions={displayPositions.length}
                   balance={balance}
+                  apiMode={apiMode}
+                  accountMode={accountMode}
                 />
 
                 <DashboardWatchlist

@@ -23,36 +23,33 @@ export default function DashboardWatchlist({
 }: DashboardWatchlistProps) {
   return (
     <Card className="bg-card border-border">
-      <CardContent className="p-3">
+      <CardContent className="p-2">
         <ScrollArea className="w-full">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             {watchlist.map((item) => (
               <div 
                 key={item.symbol} 
                 onClick={() => onSymbolSelect(item.symbol)}
-                className={`flex-shrink-0 p-2 rounded-lg border transition-all cursor-pointer min-w-[140px] ${
+                className={`flex-shrink-0 p-1.5 rounded-md border transition-all cursor-pointer min-w-[110px] ${
                   selectedSymbol === item.symbol 
                     ? 'bg-primary/10 border-primary' 
                     : 'bg-secondary/50 border-border hover:border-primary/50'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-sm">{item.symbol.replace('USDT', '/USDT')}</span>
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="font-semibold text-[11px]">{item.symbol.replace('USDT', '/USDT')}</span>
                   <Badge 
                     variant={item.signal === 'buy' ? 'default' : item.signal === 'sell' ? 'destructive' : 'secondary'}
-                    className="text-[9px] px-1.5 py-0 h-4"
+                    className="text-[8px] px-1 py-0 h-3"
                   >
                     {item.signal === 'buy' ? '↑' : item.signal === 'sell' ? '↓' : '—'}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-[10px]">
                   <span className="font-mono font-semibold">${item.price.toLocaleString()}</span>
                   <span className={`font-medium ${item.change >= 0 ? 'text-success' : 'text-destructive'}`}>
                     {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}%
                   </span>
-                </div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">
-                  Vol: {item.volume}
                 </div>
               </div>
             ))}
