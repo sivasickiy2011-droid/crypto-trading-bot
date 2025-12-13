@@ -51,7 +51,7 @@ export default function QuickOrderModal({
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Цена</Label>
+            <Label>Цена (за 1 {symbol.replace('USDT', '')})</Label>
             <div className="flex items-center space-x-2">
               <Input 
                 type="number" 
@@ -63,26 +63,33 @@ export default function QuickOrderModal({
                 USDT
               </Badge>
             </div>
+            <div className="text-[10px] text-muted-foreground">
+              Цена покупки/продажи из стакана ордеров
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Количество</Label>
+            <Label>Количество криптовалюты</Label>
             <div className="flex items-center space-x-2">
               <Input 
                 type="number" 
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
+                placeholder="0.00000000"
+                step="0.00000001"
                 className="font-mono"
               />
               <Badge variant="outline" className="whitespace-nowrap">
                 {symbol.replace('USDT', '')}
               </Badge>
             </div>
+            <div className="text-[10px] text-muted-foreground">
+              Сколько {symbol.replace('USDT', '')} вы хотите купить/продать
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Плечо</Label>
+            <Label>Плечо (маржинальная торговля)</Label>
             <div className="flex items-center space-x-2">
               <Input 
                 type="number" 
@@ -107,16 +114,29 @@ export default function QuickOrderModal({
                 </Button>
               ))}
             </div>
+            <div className="text-[10px] text-muted-foreground">
+              Плечо увеличивает размер позиции за счет заёмных средств
+            </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-secondary space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Сумма:</span>
-              <span className="font-mono font-semibold">{total.toFixed(2)} USDT</span>
+          <div className="p-3 rounded-lg bg-secondary space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Количество:</span>
+              <span className="font-mono">{amount || '0'} {symbol.replace('USDT', '')}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">С плечом:</span>
-              <span className="font-mono font-semibold">{(total * parseFloat(leverage)).toFixed(2)} USDT</span>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Цена за 1 {symbol.replace('USDT', '')}:</span>
+              <span className="font-mono">{price.toFixed(2)} USDT</span>
+            </div>
+            <div className="border-t border-border pt-1.5 mt-1.5">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Требуется USDT:</span>
+                <span className="font-mono font-semibold">{total.toFixed(2)} USDT</span>
+              </div>
+              <div className="flex justify-between text-sm mt-1">
+                <span className="text-muted-foreground">Размер позиции (с плечом {leverage}x):</span>
+                <span className="font-mono font-semibold text-primary">{(total * parseFloat(leverage)).toFixed(2)} USDT</span>
+              </div>
             </div>
           </div>
         </div>
