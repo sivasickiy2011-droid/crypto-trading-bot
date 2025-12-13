@@ -10,26 +10,26 @@ import BacktestCharts from './backtest/BacktestCharts';
 
 export default function BacktestPanel() {
   const [strategy, setStrategy] = useState<'ma-crossover' | 'rsi' | 'bollinger' | 'macd'>('ma-crossover');
-  const [timeframe, setTimeframe] = useState('500');
+  const [timeframe, setTimeframe] = useState('1000');
   const [initialCapital, setInitialCapital] = useState('10000');
   const [symbol, setSymbol] = useState('BTCUSDT');
-  const [positionSize, setPositionSize] = useState('10');
-  const [leverage, setLeverage] = useState('1');
-  const [stopLoss, setStopLoss] = useState('2');
-  const [takeProfit, setTakeProfit] = useState('5');
+  const [positionSize, setPositionSize] = useState('20');
+  const [leverage, setLeverage] = useState('2');
+  const [stopLoss, setStopLoss] = useState('3');
+  const [takeProfit, setTakeProfit] = useState('10');
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<BacktestResults | null>(null);
 
   const handleRunBacktest = async () => {
     setIsRunning(true);
     try {
-      const klines = await getKlineData(symbol, '15', parseInt(timeframe));
+      const klines = await getKlineData(symbol, '1h', parseInt(timeframe));
       
       const config: BacktestConfig = {
         strategy,
         initialCapital: parseFloat(initialCapital),
         positionSize: parseFloat(positionSize),
-        commission: 0.1,
+        commission: 0.04,
         leverage: parseFloat(leverage),
         stopLoss: parseFloat(stopLoss),
         takeProfit: parseFloat(takeProfit)

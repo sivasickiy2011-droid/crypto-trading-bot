@@ -267,7 +267,9 @@ export function runBacktest(klines: KlineData[], config: BacktestConfig): Backte
           ? (currentPrice - position.entryPrice) * position.size * config.leverage
           : (position.entryPrice - currentPrice) * position.size * config.leverage;
         
-        const commission = (position.entryPrice * position.size + currentPrice * position.size) * (config.commission / 100);
+        const entryValue = position.entryPrice * position.size;
+        const exitValue = currentPrice * position.size;
+        const commission = (entryValue * (config.commission / 100)) + (exitValue * (config.commission / 100));
         const netPnl = pnl - commission;
         const pnlPercent = (netPnl / equity) * 100;
 
@@ -321,7 +323,9 @@ export function runBacktest(klines: KlineData[], config: BacktestConfig): Backte
       ? (currentPrice - position.entryPrice) * position.size * config.leverage
       : (position.entryPrice - currentPrice) * position.size * config.leverage;
     
-    const commission = (position.entryPrice * position.size + currentPrice * position.size) * (config.commission / 100);
+    const entryValue = position.entryPrice * position.size;
+    const exitValue = currentPrice * position.size;
+    const commission = (entryValue * (config.commission / 100)) + (exitValue * (config.commission / 100));
     const netPnl = pnl - commission;
     const pnlPercent = (netPnl / equity) * 100;
 
