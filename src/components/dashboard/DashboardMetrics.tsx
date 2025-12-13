@@ -1,16 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { UserBalanceData } from '@/lib/api';
 
 interface DashboardMetricsProps {
   totalPnL: number;
   totalPnLPercent: number;
   openPositions: number;
+  balance?: UserBalanceData | null;
 }
 
 export default function DashboardMetrics({ 
   totalPnL, 
   totalPnLPercent, 
-  openPositions 
+  openPositions,
+  balance
 }: DashboardMetricsProps) {
+  const totalEquity = balance?.totalEquity || 24580;
+  const totalAvailable = balance?.totalAvailable || 18420;
+  
   return (
     <div className="grid grid-cols-4 gap-4">
       <Card className="bg-card border-border">
@@ -18,8 +24,8 @@ export default function DashboardMetrics({
           <CardTitle className="text-sm font-medium text-muted-foreground">Баланс счета</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold font-mono">$24,580.00</div>
-          <p className="text-xs text-muted-foreground mt-1">Доступно: $18,420.00</p>
+          <div className="text-2xl font-bold font-mono">${totalEquity.toFixed(2)}</div>
+          <p className="text-xs text-muted-foreground mt-1">Доступно: ${totalAvailable.toFixed(2)}</p>
         </CardContent>
       </Card>
 

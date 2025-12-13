@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import StrategyConfigModal from '@/components/StrategyConfigModal';
 import BacktestPanel from '@/components/BacktestPanel';
 import ApiKeysModal from '@/components/ApiKeysModal';
@@ -8,6 +8,7 @@ import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import DashboardSidePanels from '@/components/dashboard/DashboardSidePanels';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
+import { getUserBalance, getUserPositions, UserBalanceData, UserPositionData } from '@/lib/api';
 
 const mockPriceData = Array.from({ length: 50 }, (_, i) => ({
   time: `${9 + Math.floor(i / 12)}:${(i % 12) * 5}`.padEnd(5, '0'),
@@ -58,9 +59,55 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [apiKeysModalOpen, setApiKeysModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
+  
+  const [balance, setBalance] = useState<UserBalanceData | null>(null);
+  const [positions, setPositions] = useState<UserPositionData[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
-  const totalPnL = mockPositions.reduce((sum, p) => sum + p.pnl, 0);
-  const totalPnLPercent = (totalPnL / 10000) * 100;
+  useEffect(() => {
+    const loadUserData = async () => {
+      setIsLoadingData(true);
+      try {
+        const [balanceData, positionsData] = await Promise.all([
+          getUserBalance(userId).catch(() => null),
+          getUserPositions(userId).catch(() => [])
+        ]);
+        setBalance(balanceData);
+        setPositions(positionsData);
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadUserData();
+    const interval = setInterval(loadUserData, 30000);
+    return () => clearInterval(interval);
+  }, [userId]);
+
+  const totalPnL = positions.length > 0 
+    ? positions.reduce((sum, p) => sum + p.unrealizedPnl, 0) 
+    : mockPositions.reduce((sum, p) => sum + p.pnl, 0);
+  
+  const totalPnLPercent = balance 
+    ? (totalPnL / balance.totalEquity) * 100 
+    : (totalPnL / 10000) * 100;
+  
+  const displayPositions = positions.length > 0 
+    ? positions.map((p, idx) => ({
+        id: idx + 1,
+        pair: p.symbol,
+        side: p.side,
+        entry: p.entryPrice,
+        current: p.currentPrice,
+        size: p.size,
+        leverage: p.leverage,
+        pnl: p.unrealizedPnl,
+        pnlPercent: p.pnlPercent,
+        status: 'active'
+      }))
+    : mockPositions;
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,13 +148,14 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                 <DashboardMetrics
                   totalPnL={totalPnL}
                   totalPnLPercent={totalPnLPercent}
-                  openPositions={mockPositions.length}
+                  openPositions={displayPositions.length}
+                  balance={balance}
                 />
 
                 <div className="grid grid-cols-3 gap-6">
                   <DashboardCharts
                     priceData={mockPriceData}
-                    positions={mockPositions}
+                    positions={displayPositions}
                   />
 
                   <DashboardSidePanels

@@ -1,4 +1,5 @@
 const BYBIT_API_URL = 'https://functions.poehali.dev/6312362e-43af-4142-b3d3-cc951ebd3d8b';
+const BYBIT_USER_DATA_URL = 'https://functions.poehali.dev/13894e82-44c1-492b-b6f2-e2e9ae738abd';
 const AUTH_API_URL = 'https://functions.poehali.dev/59cd39d3-4edd-4a58-9f7c-821efe138ccb';
 const STRATEGY_API_URL = 'https://functions.poehali.dev/fcf2c4c4-a831-42be-b73d-06d909453b38';
 const LANGUAGE_API_URL = 'https://functions.poehali.dev/c93d68f3-190d-4064-8eba-fe82eba4f04d';
@@ -164,4 +165,73 @@ export async function deleteApiKeys(userId: number, exchange: string = 'bybit'):
     headers: { 'X-User-Id': userId.toString() }
   });
   return await response.json();
+}
+
+export interface UserBalanceData {
+  totalEquity: number;
+  totalWalletBalance: number;
+  totalAvailable: number;
+  usdtBalance: number;
+}
+
+export interface UserPositionData {
+  symbol: string;
+  side: string;
+  size: number;
+  entryPrice: number;
+  currentPrice: number;
+  leverage: number;
+  unrealizedPnl: number;
+  pnlPercent: number;
+}
+
+export interface UserOrderData {
+  orderId: string;
+  symbol: string;
+  side: string;
+  orderType: string;
+  price: number;
+  qty: number;
+  cumExecQty: number;
+  orderStatus: string;
+  createdTime: string;
+}
+
+export async function getUserBalance(userId: number): Promise<UserBalanceData> {
+  const response = await fetch(`${BYBIT_USER_DATA_URL}?action=balance`, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.data;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch user balance');
+}
+
+export async function getUserPositions(userId: number): Promise<UserPositionData[]> {
+  const response = await fetch(`${BYBIT_USER_DATA_URL}?action=positions`, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.data;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch user positions');
+}
+
+export async function getUserOrders(userId: number): Promise<UserOrderData[]> {
+  const response = await fetch(`${BYBIT_USER_DATA_URL}?action=orders`, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.data;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch user orders');
 }
