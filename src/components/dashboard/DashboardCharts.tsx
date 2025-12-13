@@ -1,6 +1,7 @@
 import PriceChart from './charts/PriceChart';
 import OrderbookPanel from './charts/OrderbookPanel';
 import TradesPanel from './charts/TradesPanel';
+import ManualTradingSettings from './charts/ManualTradingSettings';
 
 interface Position {
   id: number;
@@ -48,6 +49,7 @@ interface DashboardChartsProps {
   onTimeframeChange: (timeframe: string) => void;
   orderbook?: Array<{price: number, bidSize: number, askSize: number}>;
   strategySignals?: Array<{strategy: string, signal: 'buy' | 'sell' | 'neutral', strength: number, reason: string}>;
+  accountMode: 'live' | 'demo';
 }
 
 export default function DashboardCharts({ 
@@ -57,7 +59,8 @@ export default function DashboardCharts({
   selectedSymbol, 
   onTimeframeChange, 
   orderbook = [], 
-  strategySignals = [] 
+  strategySignals = [],
+  accountMode
 }: DashboardChartsProps) {
   return (
     <div className="space-y-6">
@@ -70,8 +73,9 @@ export default function DashboardCharts({
             strategySignals={strategySignals}
           />
         </div>
-        <div className="col-span-1">
+        <div className="col-span-1 space-y-6">
           <OrderbookPanel orderbook={orderbook} symbol={selectedSymbol.replace('/', '')} />
+          <ManualTradingSettings accountMode={accountMode} />
         </div>
       </div>
 

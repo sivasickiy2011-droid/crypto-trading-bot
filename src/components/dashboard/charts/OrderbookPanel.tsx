@@ -63,7 +63,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
         orderType={orderType}
       />
       
-      <Card className="bg-card border-border flex flex-col" style={{ height: '542px' }}>
+      <Card className="bg-card border-border flex flex-col" style={{ height: '300px' }}>
         <CardHeader className="pb-2 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm">Стакан</CardTitle>

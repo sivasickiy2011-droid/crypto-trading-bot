@@ -320,6 +320,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   onTimeframeChange={setCurrentTimeframe}
                   orderbook={orderbook}
                   strategySignals={strategySignals}
+                  accountMode={accountMode}
                 />
 
                 <DashboardTabs
