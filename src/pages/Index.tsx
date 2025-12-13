@@ -308,26 +308,15 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   selectedSymbol={selectedSymbol}
                 />
 
-                <div className="grid grid-cols-3 gap-6">
-                  <DashboardCharts
-                    priceData={priceData}
-                    positions={displayPositions}
-                    closedTrades={mockClosedTrades}
-                    selectedSymbol={formatSymbolForDisplay(selectedSymbol)}
-                    onTimeframeChange={setCurrentTimeframe}
-                    orderbook={orderbook}
-                    strategySignals={strategySignals}
-                  />
-
-                  <DashboardSidePanels
-                    watchlist={watchlist}
-                    selectedStrategy={selectedStrategy}
-                    onStrategyChange={setSelectedStrategy}
-                    onConfigOpen={() => setConfigModalOpen(true)}
-                    onSymbolSelect={setSelectedSymbol}
-                    selectedSymbol={selectedSymbol}
-                  />
-                </div>
+                <DashboardCharts
+                  priceData={priceData}
+                  positions={displayPositions}
+                  closedTrades={mockClosedTrades}
+                  selectedSymbol={formatSymbolForDisplay(selectedSymbol)}
+                  onTimeframeChange={setCurrentTimeframe}
+                  orderbook={orderbook}
+                  strategySignals={strategySignals}
+                />
 
                 <DashboardTabs
                   closedTrades={mockClosedTrades}

@@ -90,6 +90,8 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
   const [showIndicators, setShowIndicators] = useState({ ma20: true, ma50: true });
   const [chartType, setChartType] = useState<'line' | 'candle'>('candle');
   const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
 
   const timeframes = [
     { label: '1 минута', value: '1' },
@@ -105,7 +107,23 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
     onTimeframeChange(tf);
   };
 
-  const chartData = priceData.map((point, idx) => {
+  const handleWheel = (e: any) => {
+    if (e && e.deltaY) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const newZoom = Math.max(0.5, Math.min(3, zoomLevel + delta));
+      setZoomLevel(newZoom);
+      
+      const dataLength = priceData.length;
+      const visibleCount = Math.floor(dataLength / newZoom);
+      const center = (visibleRange.start + visibleRange.end) / 2;
+      const newStart = Math.max(0, Math.floor(center - visibleCount / 2));
+      const newEnd = Math.min(dataLength, newStart + visibleCount);
+      setVisibleRange({ start: newStart, end: newEnd });
+    }
+  };
+
+  const chartData = priceData.slice(visibleRange.start, visibleRange.end).map((point, idx) => {
     const buySignals = strategySignals.filter(s => s.signal === 'buy');
     const sellSignals = strategySignals.filter(s => s.signal === 'sell');
     
@@ -204,7 +222,7 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="h-[450px]">
+        <div className="h-[450px]" onWheel={handleWheel}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>

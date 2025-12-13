@@ -60,7 +60,7 @@ export default function DashboardCharts({
   strategySignals = [] 
 }: DashboardChartsProps) {
   return (
-    <div className="col-span-2 space-y-6">
+    <div className="space-y-6">
       <div className="grid grid-cols-4 gap-6">
         <div className="col-span-3">
           <PriceChart 
