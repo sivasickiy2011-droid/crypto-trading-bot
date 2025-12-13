@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
+import StrategyConfigModal from '@/components/StrategyConfigModal';
+import BacktestPanel from '@/components/BacktestPanel';
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Legend 
@@ -54,6 +56,8 @@ const mockLogs = [
 export default function Index() {
   const [botStatus, setBotStatus] = useState(true);
   const [selectedStrategy, setSelectedStrategy] = useState('ma-crossover');
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   const totalPnL = mockPositions.reduce((sum, p) => sum + p.pnl, 0);
   const totalPnLPercent = (totalPnL / 10000) * 100;
@@ -66,13 +70,28 @@ export default function Index() {
             <Icon name="TrendingUp" size={24} className="text-primary-foreground" />
           </div>
           <Separator className="w-8" />
-          <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={`text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent ${activeTab === 'dashboard' ? 'bg-sidebar-accent text-primary' : ''}`}
+            onClick={() => setActiveTab('dashboard')}
+          >
             <Icon name="LayoutDashboard" size={20} />
           </Button>
-          <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={`text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent ${activeTab === 'backtest' ? 'bg-sidebar-accent text-primary' : ''}`}
+            onClick={() => setActiveTab('backtest')}
+          >
             <Icon name="LineChart" size={20} />
           </Button>
-          <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent"
+            onClick={() => setConfigModalOpen(true)}
+          >
             <Icon name="Settings" size={20} />
           </Button>
           <div className="flex-1" />
@@ -80,6 +99,8 @@ export default function Index() {
             <Icon name="LogOut" size={20} />
           </Button>
         </aside>
+
+        <StrategyConfigModal open={configModalOpen} onOpenChange={setConfigModalOpen} />
 
         <main className="flex-1">
           <header className="h-16 border-b border-border px-6 flex items-center justify-between bg-card">
@@ -105,6 +126,10 @@ export default function Index() {
           </header>
 
           <div className="p-6 space-y-6">
+            {activeTab === 'backtest' ? (
+              <BacktestPanel />
+            ) : (
+              <>
             <div className="grid grid-cols-4 gap-4">
               <Card className="bg-card border-border">
                 <CardHeader className="pb-3">
@@ -337,7 +362,7 @@ export default function Index() {
                       </div>
                     </div>
 
-                    <Button className="w-full" variant="outline">
+                    <Button className="w-full" variant="outline" onClick={() => setConfigModalOpen(true)}>
                       <Icon name="Settings" size={16} className="mr-2" />
                       Configure Strategy
                     </Button>
@@ -442,6 +467,8 @@ export default function Index() {
                 </Card>
               </TabsContent>
             </Tabs>
+            </>
+            )}
           </div>
         </main>
       </div>

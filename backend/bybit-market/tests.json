@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Get market tickers",
+      "method": "GET",
+      "path": "/?action=tickers&symbols=BTCUSDT,ETHUSDT",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "data": []
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get kline data",
+      "method": "GET",
+      "path": "/?action=kline&symbol=BTCUSDT&interval=15&limit=20",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "data": []
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
