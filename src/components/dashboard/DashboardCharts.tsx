@@ -3,8 +3,7 @@ import PriceChart from './charts/PriceChart';
 import OrderbookPanel from './charts/OrderbookPanel';
 import TradesPanel from './charts/TradesPanel';
 import ManualTradingSettings from './charts/ManualTradingSettings';
-import BotsPanel from './BotsPanel';
-import BotsLogsPanel, { BotLogEntry } from './BotsLogsPanel';
+import { BotLogEntry } from './BotsLogsPanel';
 
 interface Position {
   id: number;
@@ -90,11 +89,13 @@ export default function DashboardCharts({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        <BotsPanel onLogAdd={handleLogAdd} />
-        <BotsLogsPanel logs={botLogs} />
-        <TradesPanel positions={positions} closedTrades={closedTrades} strategySignals={strategySignals} />
-      </div>
+      <TradesPanel 
+        positions={positions} 
+        closedTrades={closedTrades} 
+        strategySignals={strategySignals}
+        botLogs={botLogs}
+        onLogAdd={handleLogAdd}
+      />
     </div>
   );
 }

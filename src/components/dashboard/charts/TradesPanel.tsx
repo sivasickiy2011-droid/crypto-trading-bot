@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
+import BotsPanel from '../BotsPanel';
+import BotsLogsPanel, { BotLogEntry } from '../BotsLogsPanel';
 
 interface Position {
   id: number;
@@ -41,9 +43,11 @@ interface TradesPanelProps {
   positions: Position[];
   closedTrades: ClosedTrade[];
   strategySignals: StrategySignal[];
+  botLogs: BotLogEntry[];
+  onLogAdd: (log: BotLogEntry) => void;
 }
 
-export default function TradesPanel({ positions, closedTrades, strategySignals }: TradesPanelProps) {
+export default function TradesPanel({ positions, closedTrades, strategySignals, botLogs, onLogAdd }: TradesPanelProps) {
   return (
     <Card className="bg-card border-border">
       <CardHeader>
@@ -51,7 +55,7 @@ export default function TradesPanel({ positions, closedTrades, strategySignals }
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="open" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="open" className="text-xs">
               <Icon name="CircleDot" size={14} className="mr-1.5" />
               Открытые ({positions.length})
@@ -63,6 +67,14 @@ export default function TradesPanel({ positions, closedTrades, strategySignals }
             <TabsTrigger value="signals" className="text-xs">
               <Icon name="Activity" size={14} className="mr-1.5" />
               Сигналы ({strategySignals.length})
+            </TabsTrigger>
+            <TabsTrigger value="bots" className="text-xs">
+              <Icon name="Bot" size={14} className="mr-1.5" />
+              Боты
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="text-xs">
+              <Icon name="ScrollText" size={14} className="mr-1.5" />
+              Логи ({botLogs.length})
             </TabsTrigger>
           </TabsList>
           
@@ -181,6 +193,14 @@ export default function TradesPanel({ positions, closedTrades, strategySignals }
                 })}
               </div>
             )}
+          </TabsContent>
+          
+          <TabsContent value="bots" className="mt-4">
+            <BotsPanel onLogAdd={onLogAdd} />
+          </TabsContent>
+          
+          <TabsContent value="logs" className="mt-4">
+            <BotsLogsPanel logs={botLogs} />
           </TabsContent>
         </Tabs>
       </CardContent>

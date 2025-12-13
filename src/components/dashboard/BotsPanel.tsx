@@ -229,16 +229,12 @@ export default function BotsPanel({ onLogAdd }: BotsPanelProps) {
   };
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <CardTitle className="text-sm">Автоматические боты</CardTitle>
-            <Badge variant="secondary" className="text-[10px]">
-              <Icon name="TestTube" size={10} className="mr-1" />
-              Только демо
-            </Badge>
-          </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Badge variant="secondary" className="text-xs">
+          <Icon name="TestTube" size={12} className="mr-1" />
+          Только демо
+        </Badge>
           <Dialog open={newBotOpen} onOpenChange={setNewBotOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="h-7 text-xs">
@@ -309,10 +305,9 @@ export default function BotsPanel({ onLogAdd }: BotsPanelProps) {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[200px]">
+      </div>
+      
+      <ScrollArea className="h-[300px]">
           <div className="space-y-3">
             {bots.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -378,7 +373,6 @@ export default function BotsPanel({ onLogAdd }: BotsPanelProps) {
             )}
           </div>
         </ScrollArea>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

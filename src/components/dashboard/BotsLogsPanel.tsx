@@ -53,17 +53,14 @@ export default function BotsLogsPanel({ logs }: BotsLogsPanelProps) {
   };
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm">Логи ботов</CardTitle>
-          <Badge variant="outline" className="text-[10px]">
-            {logs.length} записей
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[200px]">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Badge variant="outline" className="text-xs">
+          {logs.length} записей
+        </Badge>
+      </div>
+      
+      <ScrollArea className="h-[300px]">
           {logs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Icon name="FileText" size={32} className="mx-auto mb-2 opacity-30" />
@@ -123,7 +120,6 @@ export default function BotsLogsPanel({ logs }: BotsLogsPanelProps) {
             </div>
           )}
         </ScrollArea>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
