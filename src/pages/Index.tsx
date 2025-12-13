@@ -129,11 +129,23 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
         
         if (klines.length > 0) {
           const closes = klines.map(k => k.close);
-          const calculateMA = (prices: number[], period: number, index: number) => {
-            if (index < period - 1) return prices[index];
-            const slice = prices.slice(Math.max(0, index - period + 1), index + 1);
-            return slice.reduce((a, b) => a + b, 0) / slice.length;
+          
+          const calculateMA = (prices: number[], period: number): number[] => {
+            const ma: number[] = [];
+            for (let i = 0; i < prices.length; i++) {
+              if (i < period - 1) {
+                const slice = prices.slice(0, i + 1);
+                ma.push(slice.reduce((a, b) => a + b, 0) / slice.length);
+              } else {
+                const slice = prices.slice(i - period + 1, i + 1);
+                ma.push(slice.reduce((a, b) => a + b, 0) / slice.length);
+              }
+            }
+            return ma;
           };
+          
+          const ma20Values = calculateMA(closes, 20);
+          const ma50Values = calculateMA(closes, 50);
           
           const formattedData = klines.map((k, i) => {
             const date = new Date(parseInt(k.time));
@@ -145,8 +157,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
               low: k.low,
               close: k.close,
               volume: k.volume,
-              ma20: calculateMA(closes, 20, i),
-              ma50: calculateMA(closes, 50, i),
+              ma20: ma20Values[i],
+              ma50: ma50Values[i],
               signal: null
             };
           });
