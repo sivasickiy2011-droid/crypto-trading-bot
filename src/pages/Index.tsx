@@ -279,6 +279,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             onBotStatusChange={setBotStatus}
             username={username}
             userId={userId}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
           />
 
           <div className="p-6 space-y-6">

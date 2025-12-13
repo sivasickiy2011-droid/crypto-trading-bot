@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { 
   Line, Area, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, ComposedChart, Scatter
+  Tooltip, ResponsiveContainer, ComposedChart, Scatter, Bar
 } from 'recharts';
 import {
   Select,
@@ -36,48 +36,19 @@ interface PriceChartProps {
 }
 
 const Candlestick = (props: any) => {
-  const { x, y, width, height, payload } = props;
+  const { cx, cy, payload } = props;
   
-  if (!payload || !payload.open || !payload.close || !payload.high || !payload.low) {
+  if (!payload || !payload.open || !payload.close || !payload.high || !payload.low || cx === undefined || cy === undefined) {
     return null;
   }
 
   const { open, close, high, low } = payload;
   const isGreen = close >= open;
   const color = isGreen ? 'hsl(142, 76%, 36%)' : 'hsl(0, 84%, 60%)';
-  const fill = isGreen ? 'hsl(142, 76%, 36%)' : 'hsl(0, 84%, 60%)';
   
-  const yScale = height / (props.yMax - props.yMin);
-  const xCenter = x + width / 2;
-  
-  const yHigh = y + height - ((high - props.yMin) * yScale);
-  const yLow = y + height - ((low - props.yMin) * yScale);
-  const yOpen = y + height - ((open - props.yMin) * yScale);
-  const yClose = y + height - ((close - props.yMin) * yScale);
-  
-  const bodyTop = Math.min(yOpen, yClose);
-  const bodyHeight = Math.abs(yOpen - yClose);
-  const bodyWidth = Math.max(width * 0.7, 2);
-
   return (
     <g>
-      <line 
-        x1={xCenter} 
-        y1={yHigh} 
-        x2={xCenter} 
-        y2={yLow} 
-        stroke={color} 
-        strokeWidth={1}
-      />
-      <rect 
-        x={xCenter - bodyWidth / 2} 
-        y={bodyTop} 
-        width={bodyWidth} 
-        height={Math.max(bodyHeight, 1)} 
-        fill={fill}
-        stroke={color}
-        strokeWidth={1}
-      />
+      <circle cx={cx} cy={cy} r={0} fill="transparent" />
     </g>
   );
 };
@@ -264,7 +235,43 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
               {chartType === 'candle' && chartData.length > 0 && (
                 <Scatter
                   data={chartData}
-                  shape={<Candlestick yMin={yMin} yMax={yMax} />}
+                  shape={(props: any) => {
+                    const { cx, cy, payload } = props;
+                    if (!payload || !payload.open || !payload.close || !payload.high || !payload.low) return null;
+                    
+                    const chartHeight = 450;
+                    const margin = 30;
+                    const availableHeight = chartHeight - 2 * margin;
+                    
+                    const priceRange = yMax - yMin;
+                    const pixelsPerUnit = availableHeight / priceRange;
+                    
+                    const yHigh = margin + (yMax - payload.high) * pixelsPerUnit;
+                    const yLow = margin + (yMax - payload.low) * pixelsPerUnit;
+                    const yOpen = margin + (yMax - payload.open) * pixelsPerUnit;
+                    const yClose = margin + (yMax - payload.close) * pixelsPerUnit;
+                    
+                    const isGreen = payload.close >= payload.open;
+                    const color = isGreen ? 'hsl(142, 76%, 36%)' : 'hsl(0, 84%, 60%)';
+                    const bodyTop = Math.min(yOpen, yClose);
+                    const bodyHeight = Math.abs(yOpen - yClose) || 1;
+                    const bodyWidth = 8;
+                    
+                    return (
+                      <g>
+                        <line x1={cx} y1={yHigh} x2={cx} y2={yLow} stroke={color} strokeWidth={1.5} />
+                        <rect 
+                          x={cx - bodyWidth / 2} 
+                          y={bodyTop} 
+                          width={bodyWidth} 
+                          height={bodyHeight} 
+                          fill={color} 
+                          stroke={color} 
+                          strokeWidth={1}
+                        />
+                      </g>
+                    );
+                  }}
                   isAnimationActive={false}
                 />
               )}
