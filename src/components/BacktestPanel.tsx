@@ -29,7 +29,7 @@ export default function BacktestPanel() {
         strategy,
         initialCapital: parseFloat(initialCapital),
         positionSize: parseFloat(positionSize),
-        commission: 0.04,
+        commission: 0.055,
         leverage: parseFloat(leverage),
         stopLoss: parseFloat(stopLoss),
         takeProfit: parseFloat(takeProfit)
