@@ -74,28 +74,29 @@ export default function DashboardCharts({
   
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-4 gap-6">
-        <div className="col-span-3">
+      <div className="grid grid-cols-[1fr_280px] gap-6">
+        <div className="space-y-6">
           <PriceChart 
             priceData={priceData}
             selectedSymbol={selectedSymbol}
             onTimeframeChange={onTimeframeChange}
             strategySignals={strategySignals}
           />
+          
+          <TradesPanel 
+            positions={positions} 
+            closedTrades={closedTrades} 
+            strategySignals={strategySignals}
+            botLogs={botLogs}
+            onLogAdd={handleLogAdd}
+          />
         </div>
-        <div className="col-span-1 space-y-6">
+        
+        <div className="space-y-6">
           <OrderbookPanel orderbook={orderbook} symbol={selectedSymbol.replace('/', '')} />
           <ManualTradingSettings accountMode={accountMode} apiMode={apiMode} />
         </div>
       </div>
-
-      <TradesPanel 
-        positions={positions} 
-        closedTrades={closedTrades} 
-        strategySignals={strategySignals}
-        botLogs={botLogs}
-        onLogAdd={handleLogAdd}
-      />
     </div>
   );
 }

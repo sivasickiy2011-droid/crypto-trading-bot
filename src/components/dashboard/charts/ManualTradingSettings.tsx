@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 
@@ -11,11 +13,18 @@ interface ManualTradingSettingsProps {
 }
 
 export default function ManualTradingSettings({ accountMode, apiMode }: ManualTradingSettingsProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   return (
     <Card className="bg-card border-border">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xs">Ручная торговля</CardTitle>
+          <div className="flex items-center space-x-2">
+            <CardTitle className="text-xs">Ручная торговля</CardTitle>
+            <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
+              <Icon name={isExpanded ? 'ChevronUp' : 'ChevronDown'} size={14} />
+            </Button>
+          </div>
           <div className="flex items-center space-x-1">
             <Badge variant={apiMode === 'live' ? 'destructive' : 'secondary'} className="text-[10px] h-5">
               <Icon name={apiMode === 'live' ? 'Zap' : 'TestTube'} size={10} className="mr-1" />
@@ -28,7 +37,7 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 pt-2">
+      {isExpanded && (<CardContent className="space-y-3 pt-2">
         <div className="space-y-1.5">
           <Label className="text-[10px] text-muted-foreground">Режим входа</Label>
           <Select defaultValue="single">
@@ -126,7 +135,7 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
             </div>
           </div>
         </div>
-      </CardContent>
+      </CardContent>)}
     </Card>
   );
 }
