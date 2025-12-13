@@ -295,20 +295,22 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
               <BacktestPanel />
             ) : (
               <>
-                <DashboardMetrics
-                  totalPnL={totalPnL}
-                  totalPnLPercent={totalPnLPercent}
-                  openPositions={displayPositions.length}
-                  balance={balance}
-                  apiMode={apiMode}
-                  accountMode={accountMode}
-                />
+                <div className="grid grid-cols-[auto_1fr] gap-3 items-start">
+                  <DashboardMetrics
+                    totalPnL={totalPnL}
+                    totalPnLPercent={totalPnLPercent}
+                    openPositions={displayPositions.length}
+                    balance={balance}
+                    apiMode={apiMode}
+                    accountMode={accountMode}
+                  />
 
-                <DashboardWatchlist
-                  watchlist={watchlist}
-                  onSymbolSelect={setSelectedSymbol}
-                  selectedSymbol={selectedSymbol}
-                />
+                  <DashboardWatchlist
+                    watchlist={watchlist}
+                    onSymbolSelect={setSelectedSymbol}
+                    selectedSymbol={selectedSymbol}
+                  />
+                </div>
 
                 <DashboardCharts
                   priceData={priceData}
