@@ -1,3 +1,6 @@
 {
+  "strategy-config": "https://functions.poehali.dev/fcf2c4c4-a831-42be-b73d-06d909453b38",
+  "auth": "https://functions.poehali.dev/59cd39d3-4edd-4a58-9f7c-821efe138ccb",
+  "language-switcher": "https://functions.poehali.dev/c93d68f3-190d-4064-8eba-fe82eba4f04d",
   "bybit-market": "https://functions.poehali.dev/6312362e-43af-4142-b3d3-cc951ebd3d8b"
 }

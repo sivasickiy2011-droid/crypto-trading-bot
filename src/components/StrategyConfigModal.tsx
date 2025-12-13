@@ -8,14 +8,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { saveStrategyConfig, loadStrategyConfig } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface StrategyConfigModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  userId: number;
 }
 
-export default function StrategyConfigModal({ open, onOpenChange }: StrategyConfigModalProps) {
+export default function StrategyConfigModal({ open, onOpenChange, userId }: StrategyConfigModalProps) {
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
   const [maConfig, setMaConfig] = useState({
     enabled: true,
     shortPeriod: 20,
@@ -40,6 +45,49 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
     portfolioRisk: 20,
     dailyLossLimit: 500
   });
+
+  useEffect(() => {
+    if (open && userId) {
+      loadStrategyConfig(userId).then(result => {
+        if (result.success && result.configs) {
+          result.configs.forEach((cfg: any) => {
+            if (cfg.strategy_name === 'ma-crossover') {
+              setMaConfig(cfg.config);
+            } else if (cfg.strategy_name === 'martingale') {
+              setMartingaleConfig(cfg.config);
+            } else if (cfg.strategy_name === 'risk') {
+              setRiskConfig(cfg.config);
+            }
+          });
+        }
+      }).catch(() => {});
+    }
+  }, [open, userId]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await Promise.all([
+        saveStrategyConfig(userId, 'ma-crossover', maConfig),
+        saveStrategyConfig(userId, 'martingale', martingaleConfig),
+        saveStrategyConfig(userId, 'risk', riskConfig)
+      ]);
+      
+      toast({
+        title: 'Успешно',
+        description: 'Настройки стратегий сохранены',
+      });
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось сохранить настройки',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -385,12 +433,16 @@ export default function StrategyConfigModal({ open, onOpenChange }: StrategyConf
         </Tabs>
 
         <div className="flex items-center justify-end space-x-3 mt-6 pt-4 border-t border-border">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
             Отмена
           </Button>
-          <Button onClick={() => onOpenChange(false)}>
-            <Icon name="Save" size={16} className="mr-2" />
-            Сохранить
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? (
+              <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+            ) : (
+              <Icon name="Save" size={16} className="mr-2" />
+            )}
+            {isSaving ? 'Сохранение...' : 'Сохранить'}
           </Button>
         </div>
       </DialogContent>

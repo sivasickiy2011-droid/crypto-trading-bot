@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
 import StrategyConfigModal from '@/components/StrategyConfigModal';
 import BacktestPanel from '@/components/BacktestPanel';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Legend 
@@ -53,7 +54,13 @@ const mockLogs = [
   { time: '14:12:30', type: 'success', message: 'Закрыта позиция: SHORT ETH/USDT, PnL: +$30' },
 ];
 
-export default function Index() {
+interface IndexProps {
+  userId: number;
+  username: string;
+  onLogout: () => void;
+}
+
+export default function Index({ userId, username, onLogout }: IndexProps) {
   const [botStatus, setBotStatus] = useState(true);
   const [selectedStrategy, setSelectedStrategy] = useState('ma-crossover');
   const [configModalOpen, setConfigModalOpen] = useState(false);
@@ -95,12 +102,22 @@ export default function Index() {
             <Icon name="Settings" size={20} />
           </Button>
           <div className="flex-1" />
-          <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-sidebar-foreground hover:text-destructive hover:bg-sidebar-accent"
+            onClick={onLogout}
+            title="Выйти"
+          >
             <Icon name="LogOut" size={20} />
           </Button>
         </aside>
 
-        <StrategyConfigModal open={configModalOpen} onOpenChange={setConfigModalOpen} />
+        <StrategyConfigModal 
+          open={configModalOpen} 
+          onOpenChange={setConfigModalOpen}
+          userId={userId}
+        />
 
         <main className="flex-1">
           <header className="h-16 border-b border-border px-6 flex items-center justify-between bg-card">
@@ -112,6 +129,8 @@ export default function Index() {
               </Badge>
             </div>
             <div className="flex items-center space-x-4">
+              <LanguageSwitcher userId={userId} />
+              <Separator orientation="vertical" className="h-6" />
               <div className="text-sm">
                 <span className="text-muted-foreground">Сервер:</span>
                 <span className="ml-2 text-success font-medium">Подключен</span>
@@ -120,6 +139,8 @@ export default function Index() {
                 <span className="text-muted-foreground">Задержка:</span>
                 <span className="ml-2 font-mono text-foreground">12ms</span>
               </div>
+              <Separator orientation="vertical" className="h-6" />
+              <div className="text-sm text-muted-foreground">{username}</div>
               <Separator orientation="vertical" className="h-6" />
               <Switch checked={botStatus} onCheckedChange={setBotStatus} />
             </div>

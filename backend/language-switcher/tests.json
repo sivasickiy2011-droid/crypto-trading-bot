@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "Get user language",
+      "method": "GET",
+      "path": "/",
+      "headers": {
+        "X-User-Id": "1"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "language": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
