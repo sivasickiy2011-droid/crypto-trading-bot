@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
 import { BotLogEntry } from './BotsLogsPanel';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -33,9 +34,11 @@ interface Bot {
 interface BotsPanelProps {
   onLogAdd: (log: BotLogEntry) => void;
   onBotCountChange?: (count: number) => void;
+  onBotClick?: (pair: string) => void;
 }
 
-export default function BotsPanel({ onLogAdd, onBotCountChange }: BotsPanelProps) {
+export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick }: BotsPanelProps) {
+  const { toast } = useToast();
   const [bots, setBots] = useState<Bot[]>([
     {
       id: '1',
@@ -340,7 +343,15 @@ export default function BotsPanel({ onLogAdd, onBotCountChange }: BotsPanelProps
               bots.map(bot => (
                 <div 
                   key={bot.id}
-                  className={`p-3 rounded-lg border ${bot.active ? 'border-primary bg-primary/5' : 'border-border bg-secondary/30'}`}
+                  className={`p-3 rounded-lg border cursor-pointer transition-all hover:scale-[1.02] ${bot.active ? 'border-primary bg-primary/5 hover:bg-primary/10' : 'border-border bg-secondary/30 hover:bg-secondary/50'}`}
+                  onClick={() => {
+                    onBotClick?.(bot.pair.replace('/', ''));
+                    toast({
+                      title: "График переключен",
+                      description: `Открыт график для ${bot.pair}`,
+                      duration: 2000,
+                    });
+                  }}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">

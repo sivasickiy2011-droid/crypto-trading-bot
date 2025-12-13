@@ -424,6 +424,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   accountMode={accountMode}
                   apiMode={apiMode}
                   positionLevels={positionLevels}
+                  onSymbolChange={setSelectedSymbol}
                 />
 
                 <DashboardTabs
