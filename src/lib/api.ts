@@ -5,6 +5,7 @@ const AUTH_API_URL = 'https://functions.poehali.dev/59cd39d3-4edd-4a58-9f7c-821e
 const STRATEGY_API_URL = 'https://functions.poehali.dev/fcf2c4c4-a831-42be-b73d-06d909453b38';
 const LANGUAGE_API_URL = 'https://functions.poehali.dev/c93d68f3-190d-4064-8eba-fe82eba4f04d';
 const API_KEYS_URL = 'https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2';
+const STRATEGY_SIGNALS_URL = 'https://functions.poehali.dev/4b1221ec-86fd-4273-a7fe-2130d93a0e5b';
 
 export interface TickerData {
   symbol: string;
@@ -238,4 +239,39 @@ export async function getUserOrders(userId: number, testnet: boolean = false): P
   }
   
   throw new Error(data.error || 'Failed to fetch user orders');
+}
+
+export interface OrderbookEntry {
+  price: number;
+  bidSize: number;
+  askSize: number;
+}
+
+export async function getOrderbook(symbol: string, limit: number = 25): Promise<OrderbookEntry[]> {
+  const response = await fetch(`${BYBIT_API_URL}?action=orderbook&symbol=${symbol}&limit=${limit}`);
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.data;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch orderbook');
+}
+
+export interface StrategySignal {
+  strategy: string;
+  signal: 'buy' | 'sell' | 'neutral';
+  strength: number;
+  reason: string;
+}
+
+export async function getStrategySignals(symbol: string): Promise<StrategySignal[]> {
+  const response = await fetch(`${STRATEGY_SIGNALS_URL}?symbol=${symbol}`);
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.data;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch strategy signals');
 }

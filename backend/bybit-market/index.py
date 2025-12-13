@@ -126,6 +126,47 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'isBase64Encoded': False
                     }
             
+            elif action == 'orderbook':
+                symbol = params.get('symbol', 'BTCUSDT')
+                limit = params.get('limit', '25')
+                
+                url = f"{BYBIT_BASE_URL}/v5/market/orderbook?category=spot&symbol={symbol}&limit={limit}"
+                request = Request(url)
+                
+                with urlopen(request, timeout=10) as response:
+                    data = json.loads(response.read().decode('utf-8'))
+                
+                if data.get('retCode') == 0:
+                    orderbook_data = data.get('result', {})
+                    bids = orderbook_data.get('b', [])
+                    asks = orderbook_data.get('a', [])
+                    
+                    max_len = max(len(bids), len(asks))
+                    merged = []
+                    
+                    for i in range(max_len):
+                        bid_price = float(bids[i][0]) if i < len(bids) else 0
+                        bid_size = float(bids[i][1]) if i < len(bids) else 0
+                        ask_price = float(asks[i][0]) if i < len(asks) else 0
+                        ask_size = float(asks[i][1]) if i < len(asks) else 0
+                        
+                        price = ask_price if ask_price > 0 else bid_price
+                        merged.append({
+                            'price': price,
+                            'bidSize': bid_size,
+                            'askSize': ask_size
+                        })
+                    
+                    return {
+                        'statusCode': 200,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        'body': json.dumps({'success': True, 'data': merged}),
+                        'isBase64Encoded': False
+                    }
+            
             elif action == 'balance':
                 if not os.environ.get('BYBIT_API_KEY'):
                     return {

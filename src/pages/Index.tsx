@@ -8,7 +8,7 @@ import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import DashboardSidePanels from '@/components/dashboard/DashboardSidePanels';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
-import { getUserBalance, getUserPositions, UserBalanceData, UserPositionData, getMarketTickers, getKlineData, TickerData, KlineData } from '@/lib/api';
+import { getUserBalance, getUserPositions, UserBalanceData, UserPositionData, getMarketTickers, getKlineData, TickerData, KlineData, getOrderbook, OrderbookEntry, getStrategySignals, StrategySignal } from '@/lib/api';
 
 const generateMockPriceData = (basePrice: number) => Array.from({ length: 50 }, (_, i) => ({
   time: `${9 + Math.floor(i / 12)}:${(i % 12) * 5}`.padEnd(5, '0'),
@@ -53,6 +53,9 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [watchlist, setWatchlist] = useState(defaultWatchlist);
   const [priceData, setPriceData] = useState(generateMockPriceData(43580));
   const [logs, setLogs] = useState<Array<{time: string, type: string, message: string}>>([]);
+  const [orderbook, setOrderbook] = useState<OrderbookEntry[]>([]);
+  const [strategySignals, setStrategySignals] = useState<StrategySignal[]>([]);
+  const [currentTimeframe, setCurrentTimeframe] = useState('15');
 
   useEffect(() => {
     const loadMarketData = async () => {
@@ -119,7 +122,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   useEffect(() => {
     const loadPriceData = async () => {
       try {
-        const klines = await getKlineData(selectedSymbol, '15', 50);
+        const klines = await getKlineData(selectedSymbol, currentTimeframe, 50);
         
         if (klines.length > 0) {
           const formattedData = klines.map((k, i) => {
@@ -143,7 +146,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     loadPriceData();
     const priceInterval = setInterval(loadPriceData, 15000);
     return () => clearInterval(priceInterval);
-  }, [selectedSymbol, watchlist]);
+  }, [selectedSymbol, watchlist, currentTimeframe]);
 
   const totalPnL = positions.length > 0 
     ? positions.reduce((sum, p) => sum + p.unrealizedPnl, 0) 
@@ -216,6 +219,25 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     }, ...prev].slice(0, 50));
   };
 
+  useEffect(() => {
+    const loadOrderbookAndSignals = async () => {
+      try {
+        const [orderbookData, signalsData] = await Promise.all([
+          getOrderbook(selectedSymbol, 25).catch(() => []),
+          getStrategySignals(selectedSymbol).catch(() => [])
+        ]);
+        setOrderbook(orderbookData);
+        setStrategySignals(signalsData);
+      } catch (error) {
+        console.error('Failed to load orderbook or signals:', error);
+      }
+    };
+
+    loadOrderbookAndSignals();
+    const interval = setInterval(loadOrderbookAndSignals, 5000);
+    return () => clearInterval(interval);
+  }, [selectedSymbol]);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="flex">
@@ -264,6 +286,9 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                     priceData={priceData}
                     positions={displayPositions}
                     selectedSymbol={formatSymbolForDisplay(selectedSymbol)}
+                    onTimeframeChange={setCurrentTimeframe}
+                    orderbook={orderbook}
+                    strategySignals={strategySignals}
                   />
 
                   <DashboardSidePanels
