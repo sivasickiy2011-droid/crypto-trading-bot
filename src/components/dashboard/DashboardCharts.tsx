@@ -1,6 +1,5 @@
 import PriceChart from './charts/PriceChart';
 import OrderbookPanel from './charts/OrderbookPanel';
-import StrategySignalsPanel from './charts/StrategySignalsPanel';
 import TradesPanel from './charts/TradesPanel';
 
 interface Position {
@@ -76,9 +75,7 @@ export default function DashboardCharts({
         </div>
       </div>
 
-      <TradesPanel positions={positions} closedTrades={closedTrades} />
-
-      <StrategySignalsPanel strategySignals={strategySignals} />
+      <TradesPanel positions={positions} closedTrades={closedTrades} strategySignals={strategySignals} />
     </div>
   );
 }

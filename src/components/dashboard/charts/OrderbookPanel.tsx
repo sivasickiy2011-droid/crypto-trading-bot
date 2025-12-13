@@ -27,25 +27,28 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
 
   if (orderbook.length === 0) {
     return (
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-base">Стакан ордеров</CardTitle>
+      <Card className="bg-card border-border h-full">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Стакан</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center text-muted-foreground py-12">
-            <Icon name="BookOpen" size={36} className="mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Загрузка стакана...</p>
+            <Icon name="BookOpen" size={32} className="mx-auto mb-2 opacity-30" />
+            <p className="text-xs">Загрузка...</p>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const asks = orderbook.filter(o => o.askSize > 0).sort((a, b) => b.price - a.price).slice(0, 10);
-  const bids = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 10);
+  const asks = orderbook.filter(o => o.askSize > 0).sort((a, b) => b.price - a.price).slice(0, 15);
+  const bids = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 15);
   
-  const maxAskSize = Math.max(...asks.map(o => o.askSize), 1);
-  const maxBidSize = Math.max(...bids.map(o => o.bidSize), 1);
+  const maxSize = Math.max(
+    ...asks.map(o => o.askSize),
+    ...bids.map(o => o.bidSize),
+    1
+  );
 
   const spreadPrice = asks.length > 0 && bids.length > 0 ? asks[asks.length - 1].price - bids[0].price : 0;
   const spreadPercent = asks.length > 0 && bids.length > 0 ? (spreadPrice / bids[0].price) * 100 : 0;
@@ -60,42 +63,46 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
         orderType={orderType}
       />
       
-      <Card className="bg-card border-border h-full">
-        <CardHeader className="pb-3">
+      <Card className="bg-card border-border h-full flex flex-col">
+        <CardHeader className="pb-2 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Стакан ордеров</CardTitle>
-            <div className="text-xs text-muted-foreground">
-              Клик по цене для ордера
+            <CardTitle className="text-sm">Стакан</CardTitle>
+            <div className="text-[10px] text-muted-foreground">
+              Клик = ордер
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-1">
-          <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground mb-2 pb-2 border-b border-border">
-            <div className="w-28 text-left">Цена (USDT)</div>
-            <div className="flex-1 text-right">Объём</div>
+        <CardContent className="flex-1 overflow-hidden flex flex-col p-0 px-3 pb-3">
+          <div className="grid grid-cols-3 gap-1 text-[10px] font-semibold text-muted-foreground px-1 py-2 border-b border-border">
+            <div className="text-left">Цена</div>
+            <div className="text-right">Объём</div>
+            <div className="text-right">Сумма</div>
           </div>
 
-          <div className="space-y-px">
+          <div className="flex-1 overflow-y-auto space-y-[1px] py-1">
             {asks.map((order, idx) => {
-              const percent = (order.askSize / maxAskSize) * 100;
-              const isLarge = order.askSize > maxAskSize * 0.5;
+              const percent = (order.askSize / maxSize) * 100;
+              const cumulative = asks.slice(idx).reduce((sum, o) => sum + o.askSize, 0);
               
               return (
                 <div 
                   key={`ask-${idx}`} 
-                  className="flex items-center justify-between text-xs font-mono hover:bg-destructive/10 transition-colors cursor-pointer"
+                  className="relative h-5 flex items-center hover:bg-destructive/10 transition-colors cursor-pointer rounded-sm"
                   onClick={() => handlePriceClick(order.price, 'sell')}
                 >
-                  <div className="w-28 font-semibold text-destructive py-1">
-                    {order.price.toFixed(2)}
-                  </div>
-                  <div className="flex-1 relative h-6">
-                    <div 
-                      className="absolute right-0 top-0 h-full bg-destructive/15"
-                      style={{ width: `${percent}%` }}
-                    />
-                    <div className={`relative z-10 text-right pr-2 py-1 ${isLarge ? 'text-destructive font-semibold' : 'text-destructive/80'}`}>
-                      {order.askSize.toFixed(4)}
+                  <div 
+                    className="absolute right-0 top-0 h-full bg-destructive/20"
+                    style={{ width: `${percent}%` }}
+                  />
+                  <div className="relative z-10 grid grid-cols-3 gap-1 w-full px-1 text-[11px] font-mono">
+                    <div className="text-destructive font-semibold">
+                      {order.price.toFixed(2)}
+                    </div>
+                    <div className="text-right text-foreground/80">
+                      {order.askSize.toFixed(3)}
+                    </div>
+                    <div className="text-right text-muted-foreground text-[10px]">
+                      {cumulative.toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -104,37 +111,40 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
           </div>
 
           {spreadPrice > 0 && (
-            <div className="flex items-center justify-center py-2 my-1 bg-secondary/50 rounded-md border border-border">
+            <div className="flex items-center justify-center py-1.5 my-1 bg-secondary/50 rounded border border-border flex-shrink-0">
               <div className="text-center">
-                <div className="text-xs text-muted-foreground">Спред</div>
-                <div className="text-sm font-mono font-semibold">
-                  {spreadPrice.toFixed(2)} <span className="text-xs text-muted-foreground">({spreadPercent.toFixed(3)}%)</span>
+                <div className="text-[10px] text-muted-foreground">Спред</div>
+                <div className="text-xs font-mono font-semibold">
+                  {spreadPrice.toFixed(2)} <span className="text-[9px] text-muted-foreground">({spreadPercent.toFixed(3)}%)</span>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="space-y-px">
+          <div className="flex-1 overflow-y-auto space-y-[1px] py-1">
             {bids.map((order, idx) => {
-              const percent = (order.bidSize / maxBidSize) * 100;
-              const isLarge = order.bidSize > maxBidSize * 0.5;
+              const percent = (order.bidSize / maxSize) * 100;
+              const cumulative = bids.slice(0, idx + 1).reduce((sum, o) => sum + o.bidSize, 0);
               
               return (
                 <div 
                   key={`bid-${idx}`} 
-                  className="flex items-center justify-between text-xs font-mono hover:bg-success/10 transition-colors cursor-pointer"
+                  className="relative h-5 flex items-center hover:bg-success/10 transition-colors cursor-pointer rounded-sm"
                   onClick={() => handlePriceClick(order.price, 'buy')}
                 >
-                  <div className="w-28 font-semibold text-success py-1">
-                    {order.price.toFixed(2)}
-                  </div>
-                  <div className="flex-1 relative h-6">
-                    <div 
-                      className="absolute right-0 top-0 h-full bg-success/15"
-                      style={{ width: `${percent}%` }}
-                    />
-                    <div className={`relative z-10 text-right pr-2 py-1 ${isLarge ? 'text-success font-semibold' : 'text-success/80'}`}>
-                      {order.bidSize.toFixed(4)}
+                  <div 
+                    className="absolute right-0 top-0 h-full bg-success/20"
+                    style={{ width: `${percent}%` }}
+                  />
+                  <div className="relative z-10 grid grid-cols-3 gap-1 w-full px-1 text-[11px] font-mono">
+                    <div className="text-success font-semibold">
+                      {order.price.toFixed(2)}
+                    </div>
+                    <div className="text-right text-foreground/80">
+                      {order.bidSize.toFixed(3)}
+                    </div>
+                    <div className="text-right text-muted-foreground text-[10px]">
+                      {cumulative.toFixed(2)}
                     </div>
                   </div>
                 </div>
