@@ -321,6 +321,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   orderbook={orderbook}
                   strategySignals={strategySignals}
                   accountMode={accountMode}
+                  apiMode={apiMode}
                 />
 
                 <DashboardTabs

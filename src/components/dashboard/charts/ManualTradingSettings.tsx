@@ -7,18 +7,25 @@ import Icon from '@/components/ui/icon';
 
 interface ManualTradingSettingsProps {
   accountMode: 'live' | 'demo';
+  apiMode: 'live' | 'testnet';
 }
 
-export default function ManualTradingSettings({ accountMode }: ManualTradingSettingsProps) {
+export default function ManualTradingSettings({ accountMode, apiMode }: ManualTradingSettingsProps) {
   return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xs">Настройки ручной торговли</CardTitle>
-          <Badge variant={accountMode === 'live' ? 'destructive' : 'secondary'} className="text-[10px] h-5">
-            <Icon name={accountMode === 'live' ? 'Zap' : 'TestTube'} size={10} className="mr-1" />
-            {accountMode === 'live' ? 'Боевой' : 'Демо'}
-          </Badge>
+          <CardTitle className="text-xs">Ручная торговля</CardTitle>
+          <div className="flex items-center space-x-1">
+            <Badge variant={apiMode === 'live' ? 'destructive' : 'secondary'} className="text-[10px] h-5">
+              <Icon name={apiMode === 'live' ? 'Zap' : 'TestTube'} size={10} className="mr-1" />
+              API: {apiMode === 'live' ? 'Боевой' : 'Тестовый'}
+            </Badge>
+            <Badge variant={accountMode === 'live' ? 'default' : 'outline'} className="text-[10px] h-5">
+              <Icon name="Wallet" size={10} className="mr-1" />
+              {accountMode === 'live' ? 'Боевой' : 'Демо'}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3 pt-2">
