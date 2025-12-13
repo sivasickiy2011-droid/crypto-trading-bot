@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
 import { saveStrategyConfig, loadStrategyConfig } from '@/lib/api';
@@ -21,6 +22,8 @@ interface StrategyConfigModalProps {
 export default function StrategyConfigModal({ open, onOpenChange, userId }: StrategyConfigModalProps) {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [tradingMode, setTradingMode] = useState<'live' | 'backtest'>('backtest');
+  
   const [maConfig, setMaConfig] = useState({
     enabled: true,
     shortPeriod: 20,
@@ -57,6 +60,8 @@ export default function StrategyConfigModal({ open, onOpenChange, userId }: Stra
               setMartingaleConfig(cfg.config);
             } else if (cfg.strategy_name === 'risk') {
               setRiskConfig(cfg.config);
+            } else if (cfg.strategy_name === 'trading-mode') {
+              setTradingMode(cfg.config.mode || 'backtest');
             }
           });
         }
@@ -70,7 +75,8 @@ export default function StrategyConfigModal({ open, onOpenChange, userId }: Stra
       await Promise.all([
         saveStrategyConfig(userId, 'ma-crossover', maConfig),
         saveStrategyConfig(userId, 'martingale', martingaleConfig),
-        saveStrategyConfig(userId, 'risk', riskConfig)
+        saveStrategyConfig(userId, 'risk', riskConfig),
+        saveStrategyConfig(userId, 'trading-mode', { mode: tradingMode })
       ]);
       
       toast({
@@ -93,9 +99,35 @@ export default function StrategyConfigModal({ open, onOpenChange, userId }: Stra
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Настройка стратегий</DialogTitle>
+          <DialogTitle className="text-2xl flex items-center justify-between">
+            <span>Настройка стратегий</span>
+            <div className="flex items-center space-x-2">
+              <Label className="text-sm font-normal text-muted-foreground">Режим:</Label>
+              <Button
+                variant={tradingMode === 'backtest' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTradingMode('backtest')}
+                className="h-7"
+              >
+                <Icon name="TestTube" size={14} className="mr-1" />
+                Бектест
+              </Button>
+              <Button
+                variant={tradingMode === 'live' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTradingMode('live')}
+                className="h-7"
+              >
+                <Icon name="Zap" size={14} className="mr-1" />
+                Боевой
+              </Button>
+            </div>
+          </DialogTitle>
           <DialogDescription>
-            Настройте торговые стратегии, управление рисками и параметры исполнения
+            {tradingMode === 'backtest' 
+              ? '🧪 Тестовый режим: используется Bybit Testnet API для безопасного тестирования'
+              : '⚡ Боевой режим: торговля на реальном счёте Bybit с реальными средствами'
+            }
           </DialogDescription>
         </DialogHeader>
 

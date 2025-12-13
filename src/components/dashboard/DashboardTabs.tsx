@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 
 interface ClosedTrade {
@@ -36,9 +37,26 @@ interface DashboardTabsProps {
   closedTrades: ClosedTrade[];
   logs: LogEntry[];
   watchlist: WatchlistItem[];
+  onAddPair: (symbol: string) => void;
+  onRemovePair: (symbol: string) => void;
 }
 
-export default function DashboardTabs({ closedTrades, logs, watchlist }: DashboardTabsProps) {
+export default function DashboardTabs({ closedTrades, logs, watchlist, onAddPair, onRemovePair }: DashboardTabsProps) {
+  const [newPairInput, setNewPairInput] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddPair = () => {
+    if (newPairInput.trim()) {
+      const symbol = newPairInput.toUpperCase().replace('/', '').replace('-', '');
+      if (!symbol.includes('USDT')) {
+        onAddPair(symbol + 'USDT');
+      } else {
+        onAddPair(symbol);
+      }
+      setNewPairInput('');
+      setIsAdding(false);
+    }
+  };
   return (
     <Tabs defaultValue="history" className="space-y-4">
       <TabsList className="grid w-full grid-cols-3 max-w-md">
@@ -120,17 +138,45 @@ export default function DashboardTabs({ closedTrades, logs, watchlist }: Dashboa
             <CardTitle>Управление торговыми парами</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3">
-              {watchlist.map((item) => (
-                <div key={item.symbol} className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary">
-                  <span className="font-semibold text-sm">{item.symbol.replace('USDT', '/USDT')}</span>
-                  <Switch defaultChecked />
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-3">
+                {watchlist.map((item) => (
+                  <div key={item.symbol} className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary group">
+                    <span className="font-semibold text-sm">{item.symbol.replace('USDT', '/USDT')}</span>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => onRemovePair(item.symbol)}
+                    >
+                      <Icon name="X" size={14} className="text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              
+              {isAdding ? (
+                <div className="flex space-x-2">
+                  <Input
+                    placeholder="BTC, ETH, BTCUSDT..."
+                    value={newPairInput}
+                    onChange={(e) => setNewPairInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddPair()}
+                    autoFocus
+                  />
+                  <Button onClick={handleAddPair}>
+                    <Icon name="Check" size={16} />
+                  </Button>
+                  <Button variant="outline" onClick={() => { setIsAdding(false); setNewPairInput(''); }}>
+                    <Icon name="X" size={16} />
+                  </Button>
                 </div>
-              ))}
-              <Button variant="outline" className="h-auto py-3">
-                <Icon name="Plus" size={16} className="mr-2" />
-                Добавить пару
-              </Button>
+              ) : (
+                <Button variant="outline" className="w-full" onClick={() => setIsAdding(true)}>
+                  <Icon name="Plus" size={16} className="mr-2" />
+                  Добавить пару
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

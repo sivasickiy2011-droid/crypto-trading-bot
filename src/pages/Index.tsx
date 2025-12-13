@@ -170,6 +170,52 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     return symbol.replace('USDT', '/USDT');
   };
 
+  const handleAddPair = (symbol: string) => {
+    if (watchlist.some(w => w.symbol === symbol)) {
+      const now = new Date();
+      const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      setLogs(prev => [{
+        time: timeStr,
+        type: 'warning',
+        message: `Пара ${symbol} уже добавлена в список`
+      }, ...prev].slice(0, 50));
+      return;
+    }
+
+    setWatchlist(prev => [...prev, {
+      symbol,
+      price: 0,
+      change: 0,
+      volume: '0',
+      signal: 'neutral'
+    }]);
+
+    const now = new Date();
+    const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    setLogs(prev => [{
+      time: timeStr,
+      type: 'success',
+      message: `Добавлена пара ${symbol.replace('USDT', '/USDT')}`
+    }, ...prev].slice(0, 50));
+  };
+
+  const handleRemovePair = (symbol: string) => {
+    setWatchlist(prev => prev.filter(w => w.symbol !== symbol));
+    
+    if (selectedSymbol === symbol && watchlist.length > 1) {
+      const remaining = watchlist.filter(w => w.symbol !== symbol);
+      setSelectedSymbol(remaining[0].symbol);
+    }
+
+    const now = new Date();
+    const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    setLogs(prev => [{
+      time: timeStr,
+      type: 'info',
+      message: `Удалена пара ${symbol.replace('USDT', '/USDT')}`
+    }, ...prev].slice(0, 50));
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="flex">
@@ -234,6 +280,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   closedTrades={mockClosedTrades}
                   logs={logs}
                   watchlist={watchlist}
+                  onAddPair={handleAddPair}
+                  onRemovePair={handleRemovePair}
                 />
               </>
             )}
