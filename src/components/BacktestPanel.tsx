@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -6,44 +6,59 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
+import { getKlineData } from '@/lib/api';
+import { runBacktest, BacktestResults, BacktestConfig } from '@/lib/backtest';
 import { 
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
 
-const mockBacktestResults = Array.from({ length: 30 }, (_, i) => ({
-  day: `День ${i + 1}`,
-  pnl: Math.random() * 400 - 100,
-  equity: 10000 + (Math.random() * 3000 - 500) * i,
-  trades: Math.floor(Math.random() * 10) + 5
-}));
 
-const mockTradeDistribution = [
-  { range: '-10% to -5%', count: 3, color: '#ef4444' },
-  { range: '-5% to 0%', count: 8, color: '#f97316' },
-  { range: '0% to 5%', count: 15, color: '#22c55e' },
-  { range: '5% to 10%', count: 12, color: '#10b981' },
-  { range: '10%+', count: 5, color: '#059669' }
-];
-
-const mockMonthlyStats = [
-  { month: 'Янв', profit: 1240, loss: -320, winRate: 72 },
-  { month: 'Фев', profit: 980, loss: -450, winRate: 65 },
-  { month: 'Мар', profit: 1560, loss: -280, winRate: 78 },
-  { month: 'Апр', profit: 1120, loss: -390, winRate: 68 },
-  { month: 'Май', profit: 1680, loss: -210, winRate: 82 },
-  { month: 'Июн', profit: 1340, loss: -520, winRate: 61 }
-];
 
 export default function BacktestPanel() {
-  const [strategy, setStrategy] = useState('ma-crossover');
-  const [timeframe, setTimeframe] = useState('3m');
+  const [strategy, setStrategy] = useState<'ma-crossover' | 'rsi' | 'bollinger' | 'macd'>('ma-crossover');
+  const [timeframe, setTimeframe] = useState('500');
+  const [initialCapital, setInitialCapital] = useState('10000');
+  const [symbol, setSymbol] = useState('BTCUSDT');
+  const [positionSize, setPositionSize] = useState('10');
+  const [leverage, setLeverage] = useState('1');
+  const [stopLoss, setStopLoss] = useState('2');
+  const [takeProfit, setTakeProfit] = useState('5');
   const [isRunning, setIsRunning] = useState(false);
+  const [results, setResults] = useState<BacktestResults | null>(null);
 
-  const totalPnL = mockBacktestResults.reduce((sum, d) => sum + d.pnl, 0);
-  const totalTrades = mockBacktestResults.reduce((sum, d) => sum + d.trades, 0);
-  const winningTrades = Math.floor(totalTrades * 0.68);
-  const losingTrades = totalTrades - winningTrades;
+  const handleRunBacktest = async () => {
+    setIsRunning(true);
+    try {
+      const klines = await getKlineData(symbol, '15', parseInt(timeframe));
+      
+      const config: BacktestConfig = {
+        strategy,
+        initialCapital: parseFloat(initialCapital),
+        positionSize: parseFloat(positionSize),
+        commission: 0.1,
+        leverage: parseFloat(leverage),
+        stopLoss: parseFloat(stopLoss),
+        takeProfit: parseFloat(takeProfit)
+      };
+
+      const backtestResults = runBacktest(klines, config);
+      setResults(backtestResults);
+    } catch (error) {
+      console.error('Backtest error:', error);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const tradeDistribution = results ? [
+    { range: '-10% и ниже', count: results.trades.filter(t => t.pnlPercent < -10).length, color: '#dc2626' },
+    { range: '-10% to -5%', count: results.trades.filter(t => t.pnlPercent >= -10 && t.pnlPercent < -5).length, color: '#ef4444' },
+    { range: '-5% to 0%', count: results.trades.filter(t => t.pnlPercent >= -5 && t.pnlPercent < 0).length, color: '#f97316' },
+    { range: '0% to 5%', count: results.trades.filter(t => t.pnlPercent >= 0 && t.pnlPercent < 5).length, color: '#22c55e' },
+    { range: '5% to 10%', count: results.trades.filter(t => t.pnlPercent >= 5 && t.pnlPercent < 10).length, color: '#10b981' },
+    { range: '10% и выше', count: results.trades.filter(t => t.pnlPercent >= 10).length, color: '#059669' }
+  ] : [];
 
   return (
     <div className="space-y-6">
@@ -70,31 +85,46 @@ export default function BacktestPanel() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ma-crossover">Пересечение MA</SelectItem>
-                  <SelectItem value="martingale">Мартингейл</SelectItem>
-                  <SelectItem value="combined">Комбинированная</SelectItem>
+                  <SelectItem value="ma-crossover">Пересечение MA (20/50)</SelectItem>
+                  <SelectItem value="rsi">RSI (30/70)</SelectItem>
+                  <SelectItem value="bollinger">Bollinger Bands</SelectItem>
+                  <SelectItem value="macd">MACD</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Таймфрейм</Label>
+              <Label>Торговая пара</Label>
+              <Select value={symbol} onValueChange={setSymbol}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BTCUSDT">BTC/USDT</SelectItem>
+                  <SelectItem value="ETHUSDT">ETH/USDT</SelectItem>
+                  <SelectItem value="SOLUSDT">SOL/USDT</SelectItem>
+                  <SelectItem value="BNBUSDT">BNB/USDT</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Количество свечей</Label>
               <Select value={timeframe} onValueChange={setTimeframe}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1m">Последний месяц</SelectItem>
-                  <SelectItem value="3m">Последние 3 месяца</SelectItem>
-                  <SelectItem value="6m">Последние 6 месяцев</SelectItem>
-                  <SelectItem value="1y">Последний год</SelectItem>
+                  <SelectItem value="200">200 свечей (~2 дня)</SelectItem>
+                  <SelectItem value="500">500 свечей (~5 дней)</SelectItem>
+                  <SelectItem value="1000">1000 свечей (~10 дней)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Начальный капитал</Label>
-              <Select defaultValue="10000">
+              <Label>Начальный капитал ($)</Label>
+              <Select value={initialCapital} onValueChange={setInitialCapital}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -107,13 +137,70 @@ export default function BacktestPanel() {
               </Select>
             </div>
 
+            <div className="space-y-2">
+              <Label>Размер позиции (%)</Label>
+              <Select value={positionSize} onValueChange={setPositionSize}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5% капитала</SelectItem>
+                  <SelectItem value="10">10% капитала</SelectItem>
+                  <SelectItem value="20">20% капитала</SelectItem>
+                  <SelectItem value="50">50% капитала</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Плечо</Label>
+              <Select value={leverage} onValueChange={setLeverage}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1x (без плеча)</SelectItem>
+                  <SelectItem value="2">2x</SelectItem>
+                  <SelectItem value="5">5x</SelectItem>
+                  <SelectItem value="10">10x</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Стоп-лосс (%)</Label>
+              <Select value={stopLoss} onValueChange={setStopLoss}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1%</SelectItem>
+                  <SelectItem value="2">2%</SelectItem>
+                  <SelectItem value="3">3%</SelectItem>
+                  <SelectItem value="5">5%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Тейк-профит (%)</Label>
+              <Select value={takeProfit} onValueChange={setTakeProfit}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3">3%</SelectItem>
+                  <SelectItem value="5">5%</SelectItem>
+                  <SelectItem value="10">10%</SelectItem>
+                  <SelectItem value="15">15%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-end">
               <Button 
                 className="w-full" 
-                onClick={() => {
-                  setIsRunning(true);
-                  setTimeout(() => setIsRunning(false), 3000);
-                }}
+                onClick={handleRunBacktest}
                 disabled={isRunning}
               >
                 <Icon name={isRunning ? "Loader2" : "Play"} size={16} className={`mr-2 ${isRunning ? 'animate-spin' : ''}`} />
@@ -133,8 +220,11 @@ export default function BacktestPanel() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Общий PnL</p>
-                <p className="text-xl font-bold font-mono text-success">
-                  +${totalPnL.toFixed(2)}
+                <p className={`text-xl font-bold font-mono ${results && results.totalPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {results ? `${results.totalPnL >= 0 ? '+' : ''}$${results.totalPnL.toFixed(2)}` : '$0.00'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {results ? `${results.totalPnLPercent >= 0 ? '+' : ''}${results.totalPnLPercent.toFixed(2)}%` : '0%'}
                 </p>
               </div>
             </div>
@@ -150,7 +240,10 @@ export default function BacktestPanel() {
               <div>
                 <p className="text-xs text-muted-foreground">Винрейт</p>
                 <p className="text-xl font-bold font-mono">
-                  {((winningTrades / totalTrades) * 100).toFixed(1)}%
+                  {results ? results.winRate.toFixed(1) : '0.0'}%
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {results ? `${results.winningTrades}/${results.trades.length}` : '0/0'}
                 </p>
               </div>
             </div>
@@ -165,7 +258,10 @@ export default function BacktestPanel() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Всего сделок</p>
-                <p className="text-xl font-bold font-mono">{totalTrades}</p>
+                <p className="text-xl font-bold font-mono">{results ? results.trades.length : 0}</p>
+                <p className="text-xs text-muted-foreground">
+                  Profit Factor: {results && results.profitFactor !== Infinity ? results.profitFactor.toFixed(2) : '0.00'}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -179,7 +275,12 @@ export default function BacktestPanel() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Макс. просадка</p>
-                <p className="text-xl font-bold font-mono text-destructive">-8.3%</p>
+                <p className="text-xl font-bold font-mono text-destructive">
+                  {results ? `-${results.maxDrawdownPercent.toFixed(2)}%` : '0%'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Sharpe: {results ? results.sharpeRatio.toFixed(2) : '0.00'}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -194,8 +295,20 @@ export default function BacktestPanel() {
             </CardHeader>
             <CardContent>
               <div className="h-[350px]">
+                {!results ? (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <Icon name="BarChart3" size={48} className="mx-auto mb-3 opacity-30" />
+                      <p>Запустите бэктест для просмотра результатов</p>
+                    </div>
+                  </div>
+                ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={mockBacktestResults}>
+                  <AreaChart data={results.equityCurve.map((e, i) => ({ 
+                    time: new Date(parseInt(e.time)).toLocaleString('ru', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    equity: e.equity,
+                    pnl: e.pnl
+                  }))}>
                     <defs>
                       <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0.3}/>
@@ -204,7 +317,7 @@ export default function BacktestPanel() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 20%)" />
                     <XAxis 
-                      dataKey="day" 
+                      dataKey="time" 
                       stroke="hsl(220, 9%, 65%)" 
                       style={{ fontSize: '12px' }}
                     />
@@ -229,21 +342,29 @@ export default function BacktestPanel() {
                     />
                   </AreaChart>
                 </ResponsiveContainer>
-              </div>
+                )}
             </CardContent>
           </Card>
 
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle>Распределение дневного PnL</CardTitle>
+              <CardTitle>Последние 20 сделок</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[250px]">
+                {!results ? (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <p className="text-sm">Запустите бэктест</p>
+                  </div>
+                ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={mockBacktestResults.slice(0, 15)}>
+                  <BarChart data={results.trades.slice(-20).map((t, i) => ({
+                    trade: `#${results.trades.length - 20 + i + 1}`,
+                    pnl: t.pnl
+                  }))}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 20%)" />
                     <XAxis 
-                      dataKey="day" 
+                      dataKey="trade" 
                       stroke="hsl(220, 9%, 65%)" 
                       style={{ fontSize: '11px' }}
                     />
@@ -266,6 +387,7 @@ export default function BacktestPanel() {
                     />
                   </BarChart>
                 </ResponsiveContainer>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -280,29 +402,29 @@ export default function BacktestPanel() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Прибыльные сделки</span>
-                  <span className="font-mono font-semibold text-success">{winningTrades}</span>
+                  <span className="font-mono font-semibold text-success">{results ? results.winningTrades : 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Убыточные сделки</span>
-                  <span className="font-mono font-semibold text-destructive">{losingTrades}</span>
+                  <span className="font-mono font-semibold text-destructive">{results ? results.losingTrades : 0}</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Сред. прибыль</span>
-                  <span className="font-mono font-semibold text-success">+$124.50</span>
+                  <span className="font-mono font-semibold text-success">{results ? `+$${results.avgWin.toFixed(2)}` : '$0.00'}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Сред. убыток</span>
-                  <span className="font-mono font-semibold text-destructive">-$67.30</span>
+                  <span className="font-mono font-semibold text-destructive">{results ? `-$${results.avgLoss.toFixed(2)}` : '$0.00'}</span>
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Фактор прибыли</span>
-                  <span className="font-mono font-semibold">1.85</span>
+                  <span className="font-mono font-semibold">{results && results.profitFactor !== Infinity ? results.profitFactor.toFixed(2) : '0.00'}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Коэффициент Шарпа</span>
-                  <span className="font-mono font-semibold">2.34</span>
+                  <span className="font-mono font-semibold">{results ? results.sharpeRatio.toFixed(2) : '0.00'}</span>
                 </div>
               </div>
             </CardContent>
@@ -314,7 +436,7 @@ export default function BacktestPanel() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {mockTradeDistribution.map((item, i) => (
+                {tradeDistribution.map((item, i) => (
                   <div key={i}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-muted-foreground">{item.range}</span>
@@ -324,7 +446,7 @@ export default function BacktestPanel() {
                       <div 
                         className="h-full transition-all duration-300"
                         style={{ 
-                          width: `${(item.count / 43) * 100}%`,
+                          width: results && results.trades.length > 0 ? `${(item.count / results.trades.length) * 100}%` : '0%',
                           backgroundColor: item.color
                         }}
                       />
@@ -341,8 +463,13 @@ export default function BacktestPanel() {
             </CardHeader>
             <CardContent>
               <div className="h-[200px]">
+                {!results || results.monthlyStats.length === 0 ? (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    <p className="text-sm">Запустите бэктест</p>
+                  </div>
+                ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={mockMonthlyStats}>
+                  <BarChart data={results.monthlyStats}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 20%)" />
                     <XAxis 
                       dataKey="month" 
@@ -364,6 +491,7 @@ export default function BacktestPanel() {
                     <Bar dataKey="loss" fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
+                )}
               </div>
             </CardContent>
           </Card>
