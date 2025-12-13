@@ -29,15 +29,16 @@ interface DashboardChartsProps {
     signal: string | null;
   }>;
   positions: Position[];
+  selectedSymbol: string;
 }
 
-export default function DashboardCharts({ priceData, positions }: DashboardChartsProps) {
+export default function DashboardCharts({ priceData, positions, selectedSymbol }: DashboardChartsProps) {
   return (
     <div className="col-span-2 space-y-6">
       <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>BTC/USDT</CardTitle>
+            <CardTitle>{selectedSymbol}</CardTitle>
             <div className="flex items-center space-x-3">
               <Badge variant="outline" className="text-xs">1m</Badge>
               <Badge variant="outline" className="text-xs">5m</Badge>
@@ -103,13 +104,14 @@ export default function DashboardCharts({ priceData, positions }: DashboardChart
         </CardContent>
       </Card>
 
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle>Открытые позиции</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {positions.map((position) => (
+      {positions.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle>Открытые позиции</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {positions.map((position) => (
               <div key={position.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border">
                 <div className="flex items-center space-x-4">
                   <Badge variant={position.side === 'LONG' ? 'default' : 'destructive'} className="w-16 justify-center">
@@ -143,10 +145,11 @@ export default function DashboardCharts({ priceData, positions }: DashboardChart
                   </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

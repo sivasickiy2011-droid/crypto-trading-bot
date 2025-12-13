@@ -123,7 +123,7 @@ export default function DashboardTabs({ closedTrades, logs, watchlist }: Dashboa
             <div className="grid grid-cols-3 gap-3">
               {watchlist.map((item) => (
                 <div key={item.symbol} className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary">
-                  <span className="font-semibold text-sm">{item.symbol}</span>
+                  <span className="font-semibold text-sm">{item.symbol.replace('USDT', '/USDT')}</span>
                   <Switch defaultChecked />
                 </div>
               ))}

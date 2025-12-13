@@ -21,13 +21,17 @@ interface DashboardSidePanelsProps {
   selectedStrategy: string;
   onStrategyChange: (strategy: string) => void;
   onConfigOpen: () => void;
+  onSymbolSelect: (symbol: string) => void;
+  selectedSymbol: string;
 }
 
 export default function DashboardSidePanels({
   watchlist,
   selectedStrategy,
   onStrategyChange,
-  onConfigOpen
+  onConfigOpen,
+  onSymbolSelect,
+  selectedSymbol
 }: DashboardSidePanelsProps) {
   return (
     <div className="space-y-6">
@@ -39,23 +43,28 @@ export default function DashboardSidePanels({
           <ScrollArea className="h-[300px]">
             <div className="space-y-2">
               {watchlist.map((item) => (
-                <div key={item.symbol} className="p-2.5 rounded hover:bg-secondary transition-colors cursor-pointer">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm">{item.symbol}</span>
+                <div 
+                  key={item.symbol} 
+                  onClick={() => onSymbolSelect(item.symbol)}
+                  className={`p-2 rounded hover:bg-secondary transition-colors cursor-pointer ${
+                    selectedSymbol === item.symbol ? 'bg-secondary border border-primary' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="font-semibold text-xs">{item.symbol.replace('USDT', '/USDT')}</span>
                     <Badge 
                       variant={item.signal === 'buy' ? 'default' : item.signal === 'sell' ? 'destructive' : 'secondary'}
-                      className="text-xs px-1.5 py-0"
+                      className="text-[10px] px-1 py-0 h-4"
                     >
                       {item.signal}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-sm">${item.price}</span>
-                    <span className={`text-xs font-medium ${item.change >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {item.change >= 0 ? '+' : ''}{item.change}%
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-mono">${item.price.toLocaleString()}</span>
+                    <span className={`font-medium ${item.change >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}%
                     </span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">Vol: {item.volume}</div>
                 </div>
               ))}
             </div>
