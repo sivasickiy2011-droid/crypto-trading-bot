@@ -87,7 +87,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export default function PriceChart({ priceData, selectedSymbol, onTimeframeChange, strategySignals = [] }: PriceChartProps) {
   const [activeTimeframe, setActiveTimeframe] = useState('15');
-  const [showIndicators, setShowIndicators] = useState({ ma20: true, ma50: true, signals: true });
+  const [showIndicators, setShowIndicators] = useState({ ma20: true, ma50: true });
   const [chartType, setChartType] = useState<'line' | 'candle'>('candle');
   const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
 
@@ -199,14 +199,6 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
               >
                 MA50
               </Badge>
-              <Badge 
-                variant={showIndicators.signals ? 'default' : 'outline'}
-                className="text-xs cursor-pointer h-6 px-2"
-                onClick={() => setShowIndicators(prev => ({ ...prev, signals: !prev.signals }))}
-              >
-                <Icon name="Activity" size={12} className="mr-1" />
-                Сигналы
-              </Badge>
             </div>
           </div>
         </div>
@@ -317,49 +309,7 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
                 />
               )}
               
-              {showIndicators.signals && (
-                <>
-                  <Scatter
-                    dataKey="buySignal"
-                    fill="hsl(142, 76%, 36%)"
-                    shape={(props: any) => {
-                      const { cx, cy } = props;
-                      if (cy === undefined || cx === undefined) return null;
-                      return (
-                        <g>
-                          <circle cx={cx} cy={cy} r={10} fill="hsl(142, 76%, 36%)" opacity={0.2} />
-                          <circle cx={cx} cy={cy} r={6} fill="hsl(142, 76%, 36%)" />
-                          <polygon 
-                            points={`${cx},${cy - 14} ${cx + 6},${cy - 22} ${cx - 6},${cy - 22}`} 
-                            fill="hsl(142, 76%, 36%)"
-                          />
-                        </g>
-                      );
-                    }}
-                    isAnimationActive={false}
-                  />
-                  
-                  <Scatter
-                    dataKey="sellSignal"
-                    fill="hsl(0, 84%, 60%)"
-                    shape={(props: any) => {
-                      const { cx, cy } = props;
-                      if (cy === undefined || cx === undefined) return null;
-                      return (
-                        <g>
-                          <circle cx={cx} cy={cy} r={10} fill="hsl(0, 84%, 60%)" opacity={0.2} />
-                          <circle cx={cx} cy={cy} r={6} fill="hsl(0, 84%, 60%)" />
-                          <polygon 
-                            points={`${cx},${cy + 14} ${cx + 6},${cy + 22} ${cx - 6},${cy + 22}`} 
-                            fill="hsl(0, 84%, 60%)"
-                          />
-                        </g>
-                      );
-                    }}
-                    isAnimationActive={false}
-                  />
-                </>
-              )}
+
             </ComposedChart>
           </ResponsiveContainer>
         </div>

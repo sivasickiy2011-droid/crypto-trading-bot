@@ -58,7 +58,7 @@ export default function DashboardCharts({
       <PositionsList positions={positions} />
 
       <div className="grid grid-cols-2 gap-6">
-        <OrderbookPanel orderbook={orderbook} />
+        <OrderbookPanel orderbook={orderbook} symbol={selectedSymbol.replace('/', '')} />
         <StrategySignalsPanel strategySignals={strategySignals} />
       </div>
     </div>
