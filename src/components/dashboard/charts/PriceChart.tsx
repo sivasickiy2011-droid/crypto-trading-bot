@@ -107,9 +107,11 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
     onTimeframeChange(tf);
   };
 
-  const handleWheel = (e: any) => {
-    if (e && e.deltaY) {
-      e.preventDefault();
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.deltaY) {
       const delta = e.deltaY > 0 ? -0.1 : 0.1;
       const newZoom = Math.max(0.5, Math.min(3, zoomLevel + delta));
       setZoomLevel(newZoom);
