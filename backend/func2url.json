@@ -1,4 +1,5 @@
 {
+  "bots-manager": "https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13",
   "telegram-notify": "https://functions.poehali.dev/3e081d1f-2d3b-429a-8490-942983a3d17d",
   "strategy-signals": "https://functions.poehali.dev/4b1221ec-86fd-4273-a7fe-2130d93a0e5b",
   "bybit-testnet": "https://functions.poehali.dev/8e6e4bb5-a1d4-4f21-a966-94935f8ff8ba",

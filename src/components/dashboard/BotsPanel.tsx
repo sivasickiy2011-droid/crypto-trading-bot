@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
 import { BotLogEntry } from './BotsLogsPanel';
 import { useToast } from '@/hooks/use-toast';
-import { sendTelegramNotification } from '@/lib/api';
+import { sendTelegramNotification, getUserBots, createBot, updateBot, deleteBot } from '@/lib/api';
 import {
   Dialog,
   DialogContent,
@@ -38,29 +38,13 @@ interface BotsPanelProps {
   onBotClick?: (pair: string) => void;
   userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number}>;
   accountMode?: 'live' | 'demo';
+  userId: number;
 }
 
-export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, userPositions = [], accountMode = 'demo' }: BotsPanelProps) {
+export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, userPositions = [], accountMode = 'demo', userId }: BotsPanelProps) {
   const { toast } = useToast();
-  const [bots, setBots] = useState<Bot[]>([
-    {
-      id: '1',
-      pair: 'BTC/USDT',
-      market: 'futures',
-      strategy: 'MA Crossover',
-      status: 'searching',
-      active: true,
-      entrySignal: 'MA20 пересекла MA50 снизу вверх'
-    },
-    {
-      id: '2',
-      pair: 'ETH/USDT',
-      market: 'futures',
-      strategy: 'Мартингейл',
-      status: 'searching',
-      active: true
-    }
-  ]);
+  const [bots, setBots] = useState<Bot[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [newBotOpen, setNewBotOpen] = useState(false);
   const [newBot, setNewBot] = useState({
@@ -68,6 +52,23 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
     market: 'futures' as 'spot' | 'futures',
     strategy: 'ma-crossover'
   });
+
+  useEffect(() => {
+    const loadBots = async () => {
+      try {
+        const loadedBots = await getUserBots(userId);
+        setBots(loadedBots.map(b => ({
+          ...b,
+          status: b.active ? 'searching' as const : 'stopped' as const
+        })));
+      } catch (error) {
+        console.error('Failed to load bots:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadBots();
+  }, [userId]);
 
   useEffect(() => {
     const updatedBots = bots.map(bot => {
@@ -129,36 +130,51 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
     onBotCountChange?.(activeCount);
   }, [userPositions, bots, onBotCountChange, accountMode, onLogAdd]);
 
-  const toggleBot = (id: string) => {
-    setBots(prev => {
-      const updated = prev.map(bot => {
-      if (bot.id === id) {
-        const newActive = !bot.active;
-        const newStatus = newActive ? 'searching' as const : 'stopped' as const;
-        
-        const now = new Date();
-        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-        
-        onLogAdd({
-          id: Date.now().toString(),
-          botId: bot.id,
-          botName: `${bot.pair} (${bot.strategy})`,
-          timestamp: timeStr,
-          type: 'info',
-          message: newActive ? 'Бот запущен и начал поиск точки входа' : 'Бот остановлен'
+  const toggleBot = async (id: string) => {
+    const bot = bots.find(b => b.id === id);
+    if (!bot) return;
+    
+    const newActive = !bot.active;
+    
+    try {
+      await updateBot(userId, id, newActive);
+      
+      setBots(prev => {
+        const updated = prev.map(b => {
+          if (b.id === id) {
+            const newStatus = newActive ? 'searching' as const : 'stopped' as const;
+            
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            
+            onLogAdd({
+              id: Date.now().toString(),
+              botId: b.id,
+              botName: `${b.pair} (${b.strategy})`,
+              timestamp: timeStr,
+              type: 'info',
+              message: newActive ? 'Бот запущен и начал поиск точки входа' : 'Бот остановлен'
+            });
+            
+            return { ...b, active: newActive, status: newStatus };
+          }
+          return b;
         });
-        
-        return { ...bot, active: newActive, status: newStatus };
-      }
-        return bot;
+        const activeCount = updated.filter(b => b.active).length;
+        onBotCountChange?.(activeCount);
+        return updated;
       });
-      const activeCount = updated.filter(b => b.active).length;
-      onBotCountChange?.(activeCount);
-      return updated;
-    });
+    } catch (error) {
+      console.error('Failed to toggle bot:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось обновить статус бота',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const addBot = () => {
+  const addBot = async () => {
     const strategies: { [key: string]: string } = {
       'ma-crossover': 'MA Crossover',
       'martingale': 'Мартингейл',
@@ -175,31 +191,46 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
       active: true
     };
 
-    setBots(prev => {
-      const updated = [...prev, newBotData];
-      const activeCount = updated.filter(b => b.active).length;
-      onBotCountChange?.(activeCount);
-      return updated;
-    });
-    
-    const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-    
-    onLogAdd({
-      id: Date.now().toString(),
-      botId: newBotData.id,
-      botName: `${newBotData.pair} (${newBotData.strategy})`,
-      timestamp: timeStr,
-      type: 'info',
-      message: `Бот создан и запущен на ${newBotData.market === 'spot' ? 'споте' : 'фьючерсах'}`
-    });
-    
-    setNewBotOpen(false);
+    try {
+      await createBot(userId, newBotData);
+      
+      setBots(prev => {
+        const updated = [...prev, newBotData];
+        const activeCount = updated.filter(b => b.active).length;
+        onBotCountChange?.(activeCount);
+        return updated;
+      });
+      
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      
+      onLogAdd({
+        id: Date.now().toString(),
+        botId: newBotData.id,
+        botName: `${newBotData.pair} (${newBotData.strategy})`,
+        timestamp: timeStr,
+        type: 'info',
+        message: `Бот создан и запущен на ${newBotData.market === 'spot' ? 'споте' : 'фьючерсах'}`
+      });
+      
+      setNewBotOpen(false);
+    } catch (error) {
+      console.error('Failed to create bot:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось создать бота',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const removeBot = (id: string) => {
+  const removeBot = async (id: string) => {
     const bot = bots.find(b => b.id === id);
-    if (bot) {
+    if (!bot) return;
+    
+    try {
+      await deleteBot(userId, id);
+      
       const now = new Date();
       const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
       
@@ -211,13 +242,21 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
         type: 'info',
         message: 'Бот удалён'
       });
+      
+      setBots(prev => {
+        const updated = prev.filter(b => b.id !== id);
+        const activeCount = updated.filter(b => b.active).length;
+        onBotCountChange?.(activeCount);
+        return updated;
+      });
+    } catch (error) {
+      console.error('Failed to delete bot:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось удалить бота',
+        variant: 'destructive'
+      });
     }
-    setBots(prev => {
-      const updated = prev.filter(bot => bot.id !== id);
-      const activeCount = updated.filter(b => b.active).length;
-      onBotCountChange?.(activeCount);
-      return updated;
-    });
   };
   
 

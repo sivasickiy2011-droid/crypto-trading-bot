@@ -433,6 +433,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   positionLevels={positionLevels}
                   onSymbolChange={setSelectedSymbol}
                   userPositions={userPositionsForBots}
+                  userId={userId}
                 />
 
                 <DashboardTabs

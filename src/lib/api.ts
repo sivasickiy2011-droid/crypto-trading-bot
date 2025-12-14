@@ -7,6 +7,7 @@ const LANGUAGE_API_URL = 'https://functions.poehali.dev/c93d68f3-190d-4064-8eba-
 const API_KEYS_URL = 'https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2';
 const STRATEGY_SIGNALS_URL = 'https://functions.poehali.dev/4b1221ec-86fd-4273-a7fe-2130d93a0e5b';
 const TELEGRAM_NOTIFY_URL = 'https://functions.poehali.dev/3e081d1f-2d3b-429a-8490-942983a3d17d';
+const BOTS_MANAGER_URL = 'https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13';
 
 export interface TickerData {
   symbol: string;
@@ -296,4 +297,84 @@ export async function sendTelegramNotification(
   }
   
   throw new Error(data.error || 'Failed to send notification');
+}
+
+export interface BotData {
+  id: string;
+  pair: string;
+  market: 'spot' | 'futures';
+  strategy: string;
+  active: boolean;
+  entrySignal?: string;
+  status?: 'searching' | 'in_position' | 'stopped';
+}
+
+export async function getUserBots(userId: number): Promise<BotData[]> {
+  const response = await fetch(BOTS_MANAGER_URL, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.data;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch bots');
+}
+
+export async function createBot(userId: number, bot: BotData): Promise<{ success: boolean }> {
+  const response = await fetch(BOTS_MANAGER_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': userId.toString()
+    },
+    body: JSON.stringify({
+      bot_id: bot.id,
+      pair: bot.pair,
+      market: bot.market,
+      strategy: bot.strategy,
+      active: bot.active,
+      entrySignal: bot.entrySignal
+    })
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data;
+  }
+  
+  throw new Error(data.error || 'Failed to create bot');
+}
+
+export async function updateBot(userId: number, botId: string, active: boolean): Promise<{ success: boolean }> {
+  const response = await fetch(BOTS_MANAGER_URL, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': userId.toString()
+    },
+    body: JSON.stringify({ bot_id: botId, active })
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data;
+  }
+  
+  throw new Error(data.error || 'Failed to update bot');
+}
+
+export async function deleteBot(userId: number, botId: string): Promise<{ success: boolean }> {
+  const response = await fetch(`${BOTS_MANAGER_URL}?bot_id=${botId}`, {
+    method: 'DELETE',
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data;
+  }
+  
+  throw new Error(data.error || 'Failed to delete bot');
 }

@@ -63,6 +63,7 @@ interface DashboardChartsProps {
   positionLevels?: PositionLevel[];
   onSymbolChange?: (symbol: string) => void;
   userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number}>;
+  userId: number;
 }
 
 export default function DashboardCharts({ 
@@ -77,7 +78,8 @@ export default function DashboardCharts({
   apiMode,
   positionLevels = [],
   onSymbolChange,
-  userPositions
+  userPositions,
+  userId
 }: DashboardChartsProps) {
   const [botLogs, setBotLogs] = useState<BotLogEntry[]>([]);
   const [activeBotCount, setActiveBotCount] = useState(0);
@@ -109,6 +111,7 @@ export default function DashboardCharts({
             onBotClick={onSymbolChange}
             userPositions={userPositions}
             accountMode={accountMode}
+            userId={userId}
           />
         </div>
         
