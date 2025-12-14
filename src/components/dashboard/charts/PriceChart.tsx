@@ -114,8 +114,8 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
   const currentPrice = chartData.length > 0 ? (chartData[chartData.length - 1]?.close || chartData[chartData.length - 1]?.price) : 0;
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-3">
+    <Card className="bg-black/90 border-zinc-800">
+      <CardHeader className="pb-2">
         <PriceChartHeader
           selectedSymbol={selectedSymbol}
           currentPrice={currentPrice}
@@ -129,10 +129,10 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
           setShowIndicators={setShowIndicators}
         />
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 pb-4">
         <div 
           ref={chartContainerRef}
-          className="h-[450px] overflow-hidden" 
+          className="h-[480px] overflow-hidden bg-black/50 rounded-md" 
           style={{ touchAction: 'none' }}
         >
           <PriceChartMain

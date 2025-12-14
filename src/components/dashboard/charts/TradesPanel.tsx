@@ -91,10 +91,10 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
     : positions;
 
   return (
-    <Card className="bg-card border-border">
+    <Card className="bg-black/90 border-zinc-800">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-base">Сделки</CardTitle>
-        <div className="flex items-center gap-2 bg-secondary/50 rounded-lg p-1">
+        <CardTitle className="text-base text-white">Сделки</CardTitle>
+        <div className="flex items-center gap-2 bg-zinc-900/50 rounded-lg p-1">
           <Button
             size="sm"
             variant={tradeMode === 'live' ? 'default' : 'ghost'}

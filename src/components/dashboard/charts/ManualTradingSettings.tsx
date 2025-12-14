@@ -16,11 +16,11 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
   const [isExpanded, setIsExpanded] = useState(false);
   
   return (
-    <Card className="bg-card border-border">
+    <Card className="bg-black/90 border-zinc-800">
       <CardHeader className="pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <CardTitle className="text-xs">Ручная торговля</CardTitle>
+            <CardTitle className="text-xs text-white">Ручная торговля</CardTitle>
             <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
               <Icon name={isExpanded ? 'ChevronUp' : 'ChevronDown'} size={14} />
             </Button>

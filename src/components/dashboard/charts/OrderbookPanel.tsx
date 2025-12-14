@@ -63,19 +63,19 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
         orderType={orderType}
       />
       
-      <Card className="bg-card border-border flex flex-col" style={{ height: '545px' }}>
+      <Card className="bg-black/90 border-zinc-800 flex flex-col" style={{ height: '545px' }}>
         <CardHeader className="pb-2 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm">Стакан</CardTitle>
-            <div className="text-[10px] text-muted-foreground">
-              Клик = ордер
+            <CardTitle className="text-sm text-white">Стакан ордеров</CardTitle>
+            <div className="text-[10px] text-zinc-500">
+              0.01
             </div>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 overflow-hidden flex flex-col p-0 px-3 pb-3">
-          <div className="grid grid-cols-3 gap-1 text-[10px] font-semibold text-muted-foreground px-1 py-2 border-b border-border">
-            <div className="text-left">Цена</div>
-            <div className="text-right">Объём</div>
+        <CardContent className="flex-1 overflow-hidden flex flex-col p-0 px-3 pb-3 bg-black/50">
+          <div className="grid grid-cols-3 gap-1 text-[10px] font-medium text-zinc-500 px-1 py-2 border-b border-zinc-800/50">
+            <div className="text-left">Цена(USDT)</div>
+            <div className="text-right">Кол-во</div>
             <div className="text-right">Сумма</div>
           </div>
 
@@ -87,21 +87,21 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
               return (
                 <div 
                   key={`ask-${idx}`} 
-                  className="relative h-5 flex items-center hover:bg-destructive/10 transition-colors cursor-pointer rounded-sm"
+                  className="relative h-5 flex items-center hover:bg-red-500/5 transition-colors cursor-pointer"
                   onClick={() => handlePriceClick(order.price, 'sell')}
                 >
                   <div 
-                    className="absolute right-0 top-0 h-full bg-destructive/20"
+                    className="absolute right-0 top-0 h-full bg-red-500/10"
                     style={{ width: `${percent}%` }}
                   />
                   <div className="relative z-10 grid grid-cols-3 gap-1 w-full px-1 text-[11px] font-mono">
-                    <div className="text-destructive font-semibold">
+                    <div className="text-red-400 font-medium">
                       {order.price.toFixed(2)}
                     </div>
-                    <div className="text-right text-foreground/80">
+                    <div className="text-right text-zinc-400">
                       {order.askSize.toFixed(3)}
                     </div>
-                    <div className="text-right text-muted-foreground text-[10px]">
+                    <div className="text-right text-zinc-600 text-[10px]">
                       {cumulative.toFixed(2)}
                     </div>
                   </div>
@@ -111,11 +111,13 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
           </div>
 
           {spreadPrice > 0 && (
-            <div className="flex items-center justify-center py-1.5 my-1 bg-secondary/50 rounded border border-border flex-shrink-0">
+            <div className="flex items-center justify-center py-2 my-1 bg-zinc-900/50 flex-shrink-0">
               <div className="text-center">
-                <div className="text-[10px] text-muted-foreground">Спред</div>
-                <div className="text-xs font-mono font-semibold">
-                  {spreadPrice.toFixed(2)} <span className="text-[9px] text-muted-foreground">({spreadPercent.toFixed(3)}%)</span>
+                <div className="text-lg font-mono font-bold text-green-400">
+                  {bids[0].price.toFixed(2)}
+                </div>
+                <div className="text-[9px] text-zinc-600 mt-0.5">
+                  ↕ {spreadPrice.toFixed(2)} ({spreadPercent.toFixed(3)}%)
                 </div>
               </div>
             </div>
@@ -129,21 +131,21 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
               return (
                 <div 
                   key={`bid-${idx}`} 
-                  className="relative h-5 flex items-center hover:bg-success/10 transition-colors cursor-pointer rounded-sm"
+                  className="relative h-5 flex items-center hover:bg-green-500/5 transition-colors cursor-pointer"
                   onClick={() => handlePriceClick(order.price, 'buy')}
                 >
                   <div 
-                    className="absolute right-0 top-0 h-full bg-success/20"
+                    className="absolute right-0 top-0 h-full bg-green-500/10"
                     style={{ width: `${percent}%` }}
                   />
                   <div className="relative z-10 grid grid-cols-3 gap-1 w-full px-1 text-[11px] font-mono">
-                    <div className="text-success font-semibold">
+                    <div className="text-green-400 font-medium">
                       {order.price.toFixed(2)}
                     </div>
-                    <div className="text-right text-foreground/80">
+                    <div className="text-right text-zinc-400">
                       {order.bidSize.toFixed(3)}
                     </div>
-                    <div className="text-right text-muted-foreground text-[10px]">
+                    <div className="text-right text-zinc-600 text-[10px]">
                       {cumulative.toFixed(2)}
                     </div>
                   </div>
