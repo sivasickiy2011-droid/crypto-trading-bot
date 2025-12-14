@@ -49,11 +49,13 @@ export default function PriceChartIndicators({ chartData, showRSI, showMACD, sho
               />
               <Tooltip 
                 contentStyle={{
-                  backgroundColor: 'rgba(0,0,0,0.9)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  backgroundColor: 'rgba(0,0,0,0.95)',
+                  border: '1px solid rgba(255,255,255,0.2)',
                   borderRadius: '6px',
-                  color: '#fff'
+                  color: '#ffffff'
                 }}
+                labelStyle={{ color: '#ffffff' }}
+                itemStyle={{ color: '#ffffff' }}
                 formatter={(value: number) => [value.toFixed(2), 'Объем']}
               />
               <Bar 
@@ -112,11 +114,13 @@ export default function PriceChartIndicators({ chartData, showRSI, showMACD, sho
               />
               <Tooltip 
                 contentStyle={{
-                  backgroundColor: 'rgba(0,0,0,0.9)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  backgroundColor: 'rgba(0,0,0,0.95)',
+                  border: '1px solid rgba(255,255,255,0.2)',
                   borderRadius: '6px',
-                  color: '#fff'
+                  color: '#ffffff'
                 }}
+                labelStyle={{ color: '#ffffff' }}
+                itemStyle={{ color: '#ffffff' }}
                 formatter={(value: number) => [value.toFixed(2), 'RSI']}
               />
               <Line 
