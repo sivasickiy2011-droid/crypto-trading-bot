@@ -144,11 +144,11 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
         <div className="flex items-start space-x-3">
           <Icon name="Info" size={20} className="text-primary mt-0.5" />
           <div className="text-sm">
-            <p className="font-medium mb-1">Как получить API ключи{isTestnet ? ' для Testnet' : ''}:</p>
+            <p className="font-medium mb-1">Как получить API ключи{isTestnet ? ' для демо-счета' : ''}:</p>
             <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-              <li>Войди на {isTestnet ? 'testnet.bybit.com' : 'Bybit.com'} → Профиль → API</li>
-              <li>Создай новый API ключ</li>
-              <li>Разрешения: "Чтение" и "Торговля"</li>
+              <li>Войди на Bybit.com{isTestnet ? ' → Переключись в "Demo Trading" (правый верхний угол)' : ''}</li>
+              <li>Наведи на аватар → нажми "API"</li>
+              <li>Создай новый API ключ с правами "Чтение" и "Торговля"</li>
               <li>Скопируй API Key и Secret Key</li>
             </ol>
           </div>
@@ -232,11 +232,11 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="live">
               <Icon name="Zap" size={16} className="mr-2" />
-              Боевой аккаунт
+              Реальный счет
             </TabsTrigger>
             <TabsTrigger value="testnet">
               <Icon name="TestTube" size={16} className="mr-2" />
-              Тестовый аккаунт
+              Демо-счет
             </TabsTrigger>
           </TabsList>
 

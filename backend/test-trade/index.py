@@ -9,17 +9,17 @@ from urllib.request import Request, urlopen
 from typing import Dict, Any
 import psycopg2
 
-BYBIT_API_URL = "https://api.bybit.com"
+BYBIT_DEMO_URL = "https://api-demo.bybit.com"
 
 def get_db_connection():
     return psycopg2.connect(os.environ['DATABASE_URL'])
 
 def get_user_api_keys(user_id: int) -> tuple[str, str]:
-    """Get user's Bybit API keys (for demo account)"""
+    """Get user's Bybit demo account API keys"""
     conn = get_db_connection()
     cur = conn.cursor()
     
-    query = f"SELECT api_key, api_secret FROM user_api_keys WHERE user_id = {user_id} AND exchange = 'bybit'"
+    query = f"SELECT api_key, api_secret FROM user_api_keys WHERE user_id = {user_id} AND exchange = 'bybit-testnet'"
     cur.execute(query)
     
     result = cur.fetchone()
@@ -27,7 +27,7 @@ def get_user_api_keys(user_id: int) -> tuple[str, str]:
     conn.close()
     
     if not result:
-        raise Exception(f'Bybit API keys not found for user {user_id}')
+        raise Exception(f'Demo account API keys not found. Create API keys in Demo Trading mode on Bybit.com')
     
     api_key = base64.b64decode(result[0]).decode('utf-8')
     api_secret = base64.b64decode(result[1]).decode('utf-8')
@@ -62,7 +62,7 @@ def bybit_request(endpoint: str, api_key: str, api_secret: str, params: Dict[str
     
     signature = generate_signature(sign_payload, api_secret)
     
-    url = f"{BYBIT_API_URL}{endpoint}"
+    url = f"{BYBIT_DEMO_URL}{endpoint}"
     if method == 'GET' and param_str:
         url += f"?{param_str}"
     

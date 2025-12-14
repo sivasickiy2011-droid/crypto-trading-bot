@@ -73,8 +73,8 @@ export default function TestTrade() {
               <div className="text-sm">
                 <p className="font-medium mb-1 text-blue-600 dark:text-blue-500">Используется демо-счет Bybit</p>
                 <p className="text-muted-foreground">
-                  Торговля идет на виртуальном балансе через <strong>bybit.com</strong> (демо-режим). 
-                  Убедись, что в настройках API добавлены ключи на вкладке "Боевой аккаунт" с правами Read и Trade.
+                  Торговля на виртуальном балансе (18,420 USDT). 
+                  Создай API ключи в режиме <strong>Demo Trading</strong> на Bybit и добавь их на вкладке "Демо-счет" в настройках.
                 </p>
               </div>
             </div>
