@@ -1,4 +1,5 @@
 {
+  "auto-trader": "https://functions.poehali.dev/646ab114-b395-4b2b-9d1f-b2e89e74b47c",
   "gpt-assistant": "https://functions.poehali.dev/7874ace6-6bc4-4991-9d28-55b333c47b7b",
   "pair-analyzer": "https://functions.poehali.dev/79d0e27c-f6b2-4735-b88a-9e3fa48e6c4a",
   "bot-executor": "https://functions.poehali.dev/e2dd154c-dde5-456b-a4c6-1200070fcc75",
