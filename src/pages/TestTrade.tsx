@@ -67,18 +67,19 @@ export default function TestTrade() {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Тестовая торговля SOL/USDT</h1>
+          <h1 className="text-3xl font-bold mb-2">🎮 Виртуальный симулятор торговли</h1>
           <p className="text-muted-foreground">
-            Демо-счет Bybit • Виртуальный баланс • Без риска
+            Реальные цены • Виртуальные сделки • Без риска
           </p>
-          <div className="mt-4 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+          <div className="mt-4 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
             <div className="flex items-start space-x-3">
-              <Icon name="Info" size={20} className="text-blue-500 mt-0.5" />
+              <Icon name="Gamepad2" size={20} className="text-green-500 mt-0.5" />
               <div className="text-sm">
-                <p className="font-medium mb-1 text-blue-600 dark:text-blue-500">Используется демо-счет Bybit</p>
+                <p className="font-medium mb-1 text-green-600 dark:text-green-500">Виртуальный симулятор (не реальные деньги)</p>
                 <p className="text-muted-foreground">
-                  Торговля на виртуальном балансе (18,420 USDT). 
-                  Создай API ключи в режиме <strong>Demo Trading</strong> на Bybit и добавь их на вкладке "Демо-счет" в настройках.
+                  Цены берутся с реального рынка Bybit, но сделки виртуальные. 
+                  Отличный способ протестировать стратегии без финансового риска.
+                  Позиции и PnL сохраняются в базе данных.
                 </p>
               </div>
             </div>

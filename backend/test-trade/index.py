@@ -1,121 +1,17 @@
 import json
 import os
 import time
-import hmac
-import hashlib
-import base64
-from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from typing import Dict, Any
 import psycopg2
 
-BYBIT_API_URL = "https://api.bybit.com"
-
 def get_db_connection():
     return psycopg2.connect(os.environ['DATABASE_URL'])
 
-def get_user_api_keys(user_id: int) -> tuple[str, str]:
-    """Get user's Bybit demo account API keys"""
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    query = f"SELECT api_key, api_secret FROM user_api_keys WHERE user_id = {user_id} AND exchange = 'bybit-testnet'"
-    cur.execute(query)
-    
-    result = cur.fetchone()
-    cur.close()
-    conn.close()
-    
-    if not result:
-        raise Exception(f'Demo account API keys not found. Create API keys in Demo Trading mode on Bybit.com')
-    
-    api_key = base64.b64decode(result[0]).decode('utf-8')
-    api_secret = base64.b64decode(result[1]).decode('utf-8')
-    
-    print(f'API key length: {len(api_key)}, starts with: {api_key[:5]}...')
-    print(f'API secret length: {len(api_secret)}, starts with: {api_secret[:5]}...')
-    
-    return api_key, api_secret
-
-def generate_signature(params: str, secret: str) -> str:
-    """Generate HMAC SHA256 signature for Bybit V5 API"""
-    return hmac.new(
-        secret.encode('utf-8'),
-        params.encode('utf-8'),
-        hashlib.sha256
-    ).hexdigest()
-
-def bybit_request(endpoint: str, api_key: str, api_secret: str, params: Dict[str, Any] = None, method: str = 'GET') -> Dict[str, Any]:
-    """Make authenticated request to Bybit V5 API (demo account)"""
-    if not params:
-        params = {}
-    
-    timestamp = str(int(time.time() * 1000))
-    recv_window = '5000'
-    
-    if method == 'GET':
-        param_str = urlencode(sorted(params.items())) if params else ''
-        sign_payload = f"{timestamp}{api_key}{recv_window}{param_str}"
-    else:
-        param_str = json.dumps(params) if params else ''
-        sign_payload = f"{timestamp}{api_key}{recv_window}{param_str}"
-    
-    signature = generate_signature(sign_payload, api_secret)
-    
-    url = f"{BYBIT_API_URL}{endpoint}"
-    if method == 'GET' and param_str:
-        url += f"?{param_str}"
-    
-    headers = {
-        'X-BAPI-API-KEY': api_key,
-        'X-BAPI-SIGN': signature,
-        'X-BAPI-TIMESTAMP': timestamp,
-        'X-BAPI-RECV-WINDOW': recv_window,
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json',
-        'Accept-Language': 'en-US,en;q=0.9'
-    }
-    
-    data = None
-    if method == 'POST' and param_str:
-        data = param_str.encode('utf-8')
-    
-    request = Request(url, data=data, headers=headers, method=method)
-    
-    print(f'Making {method} request to {url}')
-    print(f'Payload: {param_str}')
-    
-    try:
-        with urlopen(request, timeout=10) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            print(f'Response: {result}')
-            return result
-    except Exception as e:
-        error_msg = str(e)
-        print(f'Bybit API error: {error_msg}')
-        print(f'Request URL: {url}')
-        print(f'Request method: {method}')
-        print(f'Request payload: {param_str}')
-        
-        # Try to read error response body
-        if hasattr(e, 'read'):
-            try:
-                error_body = e.read().decode('utf-8')
-                print(f'Error response body: {error_body}')
-                return json.loads(error_body)
-            except:
-                pass
-        
-        raise
-
 def get_current_price(symbol: str) -> float:
-    """Get current market price"""
-    url = f"https://api.bybit.com/v5/market/tickers"
-    params = {'category': 'linear', 'symbol': symbol}
-    full_url = f"{url}?{urlencode(params)}"
-    
-    request = Request(full_url)
+    """Get current market price from Bybit"""
+    url = f"https://api.bybit.com/v5/market/tickers?category=linear&symbol={symbol}"
+    request = Request(url)
     with urlopen(request, timeout=10) as response:
         data = json.loads(response.read().decode('utf-8'))
         if data.get('retCode') == 0:
@@ -124,59 +20,74 @@ def get_current_price(symbol: str) -> float:
                 return float(tickers[0]['lastPrice'])
     return 0.0
 
-def get_wallet_balance(api_key: str, api_secret: str) -> Dict[str, Any]:
-    """Get wallet balance"""
-    result = bybit_request(
-        '/v5/account/wallet-balance',
-        api_key,
-        api_secret,
-        {'accountType': 'UNIFIED'},
-        'GET'
-    )
-    return result
-
-def get_current_position(api_key: str, api_secret: str, symbol: str) -> Dict[str, Any] | None:
-    """Get current position for symbol"""
-    result = bybit_request(
-        '/v5/position/list',
-        api_key,
-        api_secret,
-        {'category': 'linear', 'symbol': symbol},
-        'GET'
-    )
+def get_open_position(user_id: int, symbol: str) -> Dict[str, Any] | None:
+    """Get user's open virtual position"""
+    conn = get_db_connection()
+    cur = conn.cursor()
     
-    if result.get('retCode') == 0:
-        positions = result.get('result', {}).get('list', [])
-        for pos in positions:
-            size = float(pos.get('size', 0))
-            if size > 0:
-                return {
-                    'side': pos.get('side', ''),
-                    'size': size,
-                    'entryPrice': float(pos.get('avgPrice', 0)),
-                    'unrealizedPnl': float(pos.get('unrealisedPnl', 0)),
-                    'leverage': pos.get('leverage', '1')
-                }
+    query = f"SELECT id, side, quantity, entry_price, leverage, opened_at FROM virtual_trades WHERE user_id = {user_id} AND symbol = '{symbol}' AND status = 'open' ORDER BY opened_at DESC LIMIT 1"
+    cur.execute(query)
+    
+    result = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    if result:
+        return {
+            'id': result[0],
+            'side': result[1],
+            'quantity': float(result[2]),
+            'entry_price': float(result[3]),
+            'leverage': result[4],
+            'opened_at': result[5]
+        }
     return None
 
-def place_order(api_key: str, api_secret: str, symbol: str, side: str, qty: float) -> Dict[str, Any]:
-    """Place market order"""
-    params = {
-        'category': 'linear',
-        'symbol': symbol,
-        'side': side,
-        'orderType': 'Market',
-        'qty': str(qty),
-        'timeInForce': 'GTC'
-    }
+def open_virtual_position(user_id: int, symbol: str, side: str, quantity: float, price: float, leverage: int) -> int:
+    """Open new virtual position"""
+    conn = get_db_connection()
+    cur = conn.cursor()
     
-    result = bybit_request('/v5/order/create', api_key, api_secret, params, 'POST')
-    return result
+    query = f"INSERT INTO virtual_trades (user_id, symbol, side, quantity, entry_price, leverage, status) VALUES ({user_id}, '{symbol}', '{side}', {quantity}, {price}, {leverage}, 'open') RETURNING id"
+    cur.execute(query)
+    
+    trade_id = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return trade_id
 
-def close_position(api_key: str, api_secret: str, symbol: str, side: str, qty: float) -> Dict[str, Any]:
-    """Close position"""
-    close_side = 'Sell' if side == 'Buy' else 'Buy'
-    return place_order(api_key, api_secret, symbol, close_side, qty)
+def close_virtual_position(trade_id: int, close_price: float) -> float:
+    """Close virtual position and calculate PnL"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Get position details
+    query = f"SELECT side, quantity, entry_price, leverage FROM virtual_trades WHERE id = {trade_id}"
+    cur.execute(query)
+    result = cur.fetchone()
+    
+    side = result[0]
+    quantity = float(result[1])
+    entry_price = float(result[2])
+    leverage = result[3]
+    
+    # Calculate PnL
+    if side == 'Buy':
+        pnl = (close_price - entry_price) * quantity * leverage
+    else:
+        pnl = (entry_price - close_price) * quantity * leverage
+    
+    # Update position
+    update_query = f"UPDATE virtual_trades SET status = 'closed', closed_at = CURRENT_TIMESTAMP, close_price = {close_price}, pnl = {pnl} WHERE id = {trade_id}"
+    cur.execute(update_query)
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return pnl
 
 def send_telegram(message: str):
     """Send Telegram notification"""
@@ -189,17 +100,12 @@ def send_telegram(message: str):
     except Exception as e:
         print(f'Telegram error: {e}')
 
-def get_api_key_permissions(api_key: str, api_secret: str) -> Dict[str, Any]:
-    """Check API key permissions"""
-    result = bybit_request('/v5/user/query-api', api_key, api_secret, {}, 'GET')
-    return result
-
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Тестовая торговля на демо-счете Bybit (виртуальные деньги)
-    Открывает/закрывает позицию по SOL/USDT на демо-счете
-    Args: event - HTTP запрос с user_id и action (open/close/status/diagnose)
-    Returns: Отчет о тестовой сделке с балансом и PnL
+    Виртуальный симулятор торговли (без реальных денег)
+    Открывает/закрывает виртуальные позиции по SOL/USDT с реальными ценами рынка
+    Args: event - HTTP запрос с user_id и action (open/close/status)
+    Returns: Отчет о виртуальной сделке с балансом и PnL
     '''
     method = event.get('httpMethod', 'POST')
     
@@ -219,63 +125,59 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
         body = json.loads(event.get('body', '{}'))
         user_id = body.get('user_id', 2)
-        action = body.get('action', 'open')
+        action = body.get('action', 'status')
         symbol = 'SOLUSDT'
-        
-        api_key, api_secret = get_user_api_keys(user_id)
         
         steps = []
         
-        # Диагностика: показываем настройки API
-        if action == 'diagnose':
-            steps.append(f'🔧 API URL: {BYBIT_API_URL}')
-            steps.append(f'🔑 API Key: {api_key[:8]}...{api_key[-4:]}')
+        # Get current market price
+        current_price = get_current_price(symbol)
+        if current_price == 0:
+            return {
+                'statusCode': 500,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'success': False, 'error': 'Failed to get market price'}),
+                'isBase64Encoded': False
+            }
+        
+        steps.append(f'📊 Текущая цена SOL: ${current_price:.2f}')
+        
+        # Get open position
+        position = get_open_position(user_id, symbol)
+        
+        if action == 'status' or action == 'diagnose':
+            steps.append('🔧 Режим: Виртуальный симулятор (без реальных денег)')
+            steps.append(f'🌐 Цены с рынка: Bybit API (реальные)')
             
-            # Проверяем права API ключа
-            permissions = get_api_key_permissions(api_key, api_secret)
-            if permissions.get('retCode') == 0:
-                perm_data = permissions.get('result', {})
-                steps.append(f'✅ API подключен успешно')
-                steps.append(f'📋 Права: {json.dumps(perm_data, indent=2)}')
+            if position:
+                entry_price = position['entry_price']
+                quantity = position['quantity']
+                leverage = position['leverage']
+                
+                if position['side'] == 'Buy':
+                    unrealized_pnl = (current_price - entry_price) * quantity * leverage
+                else:
+                    unrealized_pnl = (entry_price - current_price) * quantity * leverage
+                
+                pnl_percent = (unrealized_pnl / (entry_price * quantity)) * 100
+                
+                steps.append(f'📍 Открытая позиция: {position["side"]} {quantity} SOL')
+                steps.append(f'💰 Цена входа: ${entry_price:.2f}')
+                steps.append(f'📈 Плечо: {leverage}x')
+                steps.append(f'💵 Текущий PnL: {unrealized_pnl:.2f} USDT ({pnl_percent:+.2f}%)')
             else:
-                steps.append(f'❌ Ошибка проверки прав: {permissions.get("retMsg")}')
+                steps.append('⚪ Нет открытых позиций')
             
             return {
                 'statusCode': 200,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'success': True, 'steps': steps, 'api_url': BYBIT_API_URL}),
+                'body': json.dumps({'success': True, 'steps': steps}),
                 'isBase64Encoded': False
             }
-        
-        steps = []
-        
-        # Шаг 1: Проверяем баланс
-        balance_data = get_wallet_balance(api_key, api_secret)
-        print(f'Balance API response: {balance_data}')
-        
-        if balance_data.get('retCode') == 0:
-            coins = balance_data.get('result', {}).get('list', [{}])[0].get('coin', [])
-            usdt_balance = 0
-            for coin in coins:
-                if coin.get('coin') == 'USDT':
-                    usdt_balance = float(coin.get('walletBalance', 0))
-                    break
-            steps.append(f'💰 Баланс: {usdt_balance:.2f} USDT')
-        else:
-            error_msg = balance_data.get('retMsg', 'Failed to get balance')
-            return {
-                'statusCode': 400,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'success': False, 'error': f'Bybit API error: {error_msg}', 'details': balance_data}),
-                'isBase64Encoded': False
-            }
-        
-        # Шаг 2: Проверяем текущую позицию
-        position = get_current_position(api_key, api_secret, symbol)
         
         if action == 'open':
             if position:
-                steps.append(f'⚠️ Позиция уже открыта: {position["side"]} {position["size"]} SOL')
+                steps.append(f'⚠️ Позиция уже открыта: {position["side"]} {position["quantity"]} SOL')
                 return {
                     'statusCode': 200,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
@@ -283,27 +185,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             
-            # Открываем позицию
-            current_price = get_current_price(symbol)
-            steps.append(f'📊 Текущая цена SOL: ${current_price:.2f}')
+            # Open new position
+            quantity = 0.1
+            leverage = 10
+            trade_id = open_virtual_position(user_id, symbol, 'Buy', quantity, current_price, leverage)
             
-            qty = 0.1
-            order_result = place_order(api_key, api_secret, symbol, 'Buy', qty)
+            steps.append(f'✅ Открыта виртуальная позиция #{trade_id}')
+            steps.append(f'📈 Направление: LONG (Buy)')
+            steps.append(f'📦 Объем: {quantity} SOL')
+            steps.append(f'💰 Цена входа: ${current_price:.2f}')
+            steps.append(f'⚡ Плечо: {leverage}x')
+            steps.append(f'💵 Размер контракта: ${quantity * current_price * leverage:.2f}')
             
-            if order_result.get('retCode') == 0:
-                steps.append(f'✅ Открыта позиция: BUY {qty} SOL')
-                send_telegram(f'🧪 ТЕСТ ОТКРЫТИЕ\n\nПара: SOL/USDT\nНаправление: LONG\nОбъем: {qty} SOL\nЦена: ${current_price:.2f}\n\nРежим: Testnet Demo')
-            else:
-                error_msg = order_result.get('retMsg', 'Unknown error')
-                steps.append(f'❌ Ошибка открытия: {error_msg}')
-                return {
-                    'statusCode': 400,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'success': False, 'steps': steps, 'error': error_msg}),
-                    'isBase64Encoded': False
-                }
+            send_telegram(f'🎮 ВИРТУАЛЬНАЯ СДЕЛКА\n\nОткрыта: LONG\nПара: SOL/USDT\nОбъем: {quantity} SOL\nЦена: ${current_price:.2f}\nПлечо: {leverage}x\n\n⚠️ Это симулятор (не реальные деньги)')
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'success': True, 'steps': steps}),
+                'isBase64Encoded': False
+            }
         
-        elif action == 'close':
+        if action == 'close':
             if not position:
                 steps.append('⚠️ Нет открытой позиции для закрытия')
                 return {
@@ -313,42 +216,33 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             
-            # Закрываем позицию
-            pnl = position['unrealizedPnl']
-            close_result = close_position(api_key, api_secret, symbol, position['side'], position['size'])
+            # Close position
+            pnl = close_virtual_position(position['id'], current_price)
+            pnl_percent = (pnl / (position['entry_price'] * position['quantity'])) * 100
             
-            if close_result.get('retCode') == 0:
-                steps.append(f'✅ Закрыта позиция: {position["side"]} {position["size"]} SOL')
-                steps.append(f'💵 PnL: {pnl:.2f} USDT')
-                send_telegram(f'🧪 ТЕСТ ЗАКРЫТИЕ\n\nПара: SOL/USDT\nPnL: {pnl:.2f} USDT\n\nРежим: Testnet Demo')
-            else:
-                error_msg = close_result.get('retMsg', 'Unknown error')
-                steps.append(f'❌ Ошибка закрытия: {error_msg}')
-                return {
-                    'statusCode': 400,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'success': False, 'steps': steps, 'error': error_msg}),
-                    'isBase64Encoded': False
-                }
-        
-        elif action == 'status':
-            if position:
-                steps.append(f'📍 Открыта позиция:')
-                steps.append(f'  - Направление: {position["side"]}')
-                steps.append(f'  - Объем: {position["size"]} SOL')
-                steps.append(f'  - Цена входа: ${position["entryPrice"]:.2f}')
-                steps.append(f'  - PnL: {position["unrealizedPnl"]:.2f} USDT')
-            else:
-                steps.append('✅ Нет открытых позиций')
+            steps.append(f'✅ Закрыта виртуальная позиция #{position["id"]}')
+            steps.append(f'📉 Цена выхода: ${current_price:.2f}')
+            steps.append(f'💵 PnL: {pnl:+.2f} USDT ({pnl_percent:+.2f}%)')
+            
+            emoji = '🟢' if pnl > 0 else '🔴'
+            send_telegram(f'{emoji} ВИРТУАЛЬНАЯ СДЕЛКА ЗАКРЫТА\n\nПара: SOL/USDT\nВход: ${position["entry_price"]:.2f}\nВыход: ${current_price:.2f}\nPnL: {pnl:+.2f} USDT ({pnl_percent:+.2f}%)\n\n⚠️ Это симулятор (не реальные деньги)')
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'success': True, 'steps': steps}),
+                'isBase64Encoded': False
+            }
         
         return {
-            'statusCode': 200,
+            'statusCode': 400,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'success': True, 'steps': steps}),
+            'body': json.dumps({'success': False, 'error': 'Invalid action'}),
             'isBase64Encoded': False
         }
-    
+        
     except Exception as e:
+        print(f'Error: {str(e)}')
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
