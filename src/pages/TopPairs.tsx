@@ -2,44 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { toast } from 'sonner';
-
-interface TopPair {
-  symbol: string;
-  price: number;
-  volume24h: number;
-  priceChange24h: number;
-  volatility: {
-    value: number;
-    score: number;
-    level: string;
-  };
-  liquidity: {
-    volume24h: number;
-    turnover24h: number;
-    score: number;
-    level: string;
-  };
-  trend: {
-    direction: string;
-    strength: number;
-    score: number;
-  };
-  reliability: {
-    score: number;
-    level: string;
-  };
-  totalScore: number;
-  recommendation: string;
-}
+import TopPairsHeader from '@/components/top-pairs/TopPairsHeader';
+import TopPairCard, { TopPair } from '@/components/top-pairs/TopPairCard';
+import TopPairActionDialog from '@/components/top-pairs/TopPairActionDialog';
 
 interface TopPairsResponse {
   success: boolean;
@@ -94,36 +59,6 @@ export default function TopPairs() {
     }
   };
 
-  const getRecommendationBadge = (recommendation: string) => {
-    const variants = {
-      excellent: { text: 'Отлично', variant: 'default' as const },
-      good: { text: 'Хорошо', variant: 'secondary' as const },
-      moderate: { text: 'Средне', variant: 'outline' as const },
-      avoid: { text: 'Избегать', variant: 'destructive' as const },
-    };
-    
-    const config = variants[recommendation as keyof typeof variants] || variants.moderate;
-    return <Badge variant={config.variant}>{config.text}</Badge>;
-  };
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'high': return 'text-green-500';
-      case 'optimal': return 'text-blue-500';
-      case 'medium': return 'text-yellow-500';
-      case 'low': return 'text-gray-500';
-      default: return 'text-gray-400';
-    }
-  };
-
-  const getTrendIcon = (direction: string) => {
-    switch (direction) {
-      case 'uptrend': return <Icon name="TrendingUp" className="text-green-500" size={16} />;
-      case 'downtrend': return <Icon name="TrendingDown" className="text-red-500" size={16} />;
-      default: return <Icon name="Minus" className="text-gray-500" size={16} />;
-    }
-  };
-
   const toggleFavorite = (symbol: string) => {
     setFavorites(prev => 
       prev.includes(symbol) 
@@ -140,6 +75,11 @@ export default function TopPairs() {
     } else {
       setPairs(allPairs.slice(0, 20));
     }
+  };
+
+  const handlePairSelect = (pair: TopPair) => {
+    setSelectedPair(pair);
+    setActionDialogOpen(true);
   };
 
   if (loading) {
@@ -174,44 +114,12 @@ export default function TopPairs() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Лучшие пары для трейдинга</h1>
-              <p className="text-muted-foreground">
-                Автоматический анализ по волатильности, ликвидности и надёжности рынка
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant={viewMode === 'favorites' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('favorites')}
-              >
-                <Icon name="Star" className="mr-2" size={16} />
-                Избранные ({favorites.length})
-              </Button>
-              <Button 
-                variant={viewMode === 'top10' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('top10')}
-              >
-                Топ-10
-              </Button>
-              <Button 
-                variant={viewMode === 'top20' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('top20')}
-              >
-                Топ-20
-              </Button>
-              <Button onClick={loadTopPairs} variant="outline" size="sm">
-                <Icon name="RotateCw" className="mr-2" size={16} />
-                Обновить
-              </Button>
-            </div>
-          </div>
-        </div>
+        <TopPairsHeader
+          viewMode={viewMode}
+          favoritesCount={favorites.length}
+          onViewModeChange={setViewMode}
+          onRefresh={loadTopPairs}
+        />
 
         <div className="space-y-4">
           {pairs.length === 0 && viewMode === 'favorites' ? (
@@ -227,284 +135,24 @@ export default function TopPairs() {
             </Card>
           ) : (
             pairs.map((pair, index) => (
-              <Card 
-                key={pair.symbol} 
-                className="p-6 hover:shadow-lg transition-shadow"
-              >
-              <div className="grid grid-cols-12 gap-4 items-center">
-                {/* Звездочка избранное */}
-                <div className="col-span-1 flex justify-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(pair.symbol);
-                    }}
-                  >
-                    <Icon 
-                      name={favorites.includes(pair.symbol) ? "Star" : "StarOff"} 
-                      size={20} 
-                      className={favorites.includes(pair.symbol) ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground'}
-                    />
-                  </Button>
-                </div>
-                {/* Ранг и символ */}
-                <div 
-                  className="col-span-2 cursor-pointer"
-                  onClick={() => {
-                    setSelectedPair(pair);
-                    setActionDialogOpen(true);
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <p className="font-bold text-lg">{pair.symbol.replace('USDT', '')}</p>
-                      <p className="text-xs text-muted-foreground">USDT</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Цена и изменение */}
-                <div 
-                  className="col-span-2 cursor-pointer"
-                  onClick={() => {
-                    setSelectedPair(pair);
-                    setActionDialogOpen(true);
-                  }}
-                >
-                  <p className="font-mono font-bold">${pair.price.toFixed(4)}</p>
-                  <p className={`text-sm ${pair.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {pair.priceChange24h >= 0 ? '+' : ''}{pair.priceChange24h.toFixed(2)}%
-                  </p>
-                </div>
-
-                {/* Общий скор */}
-                <div 
-                  className="col-span-2 cursor-pointer"
-                  onClick={() => {
-                    setSelectedPair(pair);
-                    setActionDialogOpen(true);
-                  }}
-                >
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-primary">{pair.totalScore}</p>
-                    <p className="text-xs text-muted-foreground">Общий балл</p>
-                  </div>
-                </div>
-
-                {/* Метрики */}
-                <div 
-                  className="col-span-3 grid grid-cols-2 gap-3 text-sm cursor-pointer"
-                  onClick={() => {
-                    setSelectedPair(pair);
-                    setActionDialogOpen(true);
-                  }}
-                >
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      <Icon name="Activity" size={14} />
-                      <span className="text-muted-foreground">Волатильность:</span>
-                    </div>
-                    <p className={`font-semibold ${getLevelColor(pair.volatility.level)}`}>
-                      {pair.volatility.value.toFixed(2)}% ({pair.volatility.score.toFixed(0)})
-                    </p>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      <Icon name="Droplets" size={14} />
-                      <span className="text-muted-foreground">Ликвидность:</span>
-                    </div>
-                    <p className={`font-semibold ${getLevelColor(pair.liquidity.level)}`}>
-                      ${(pair.liquidity.turnover24h / 1e6).toFixed(1)}M ({pair.liquidity.score.toFixed(0)})
-                    </p>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      {getTrendIcon(pair.trend.direction)}
-                      <span className="text-muted-foreground">Тренд:</span>
-                    </div>
-                    <p className="font-semibold">
-                      {pair.trend.direction === 'uptrend' ? 'Рост' : pair.trend.direction === 'downtrend' ? 'Падение' : 'Боковик'} ({pair.trend.score.toFixed(0)})
-                    </p>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-1 mb-1">
-                      <Icon name="Shield" size={14} />
-                      <span className="text-muted-foreground">Надёжность:</span>
-                    </div>
-                    <p className={`font-semibold ${getLevelColor(pair.reliability.level)}`}>
-                      {pair.reliability.score.toFixed(0)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Рекомендация */}
-                <div className="col-span-2 text-right">
-                  {getRecommendationBadge(pair.recommendation)}
-                </div>
-              </div>
-            </Card>
-          ))
+              <TopPairCard
+                key={pair.symbol}
+                pair={pair}
+                index={index}
+                isFavorite={favorites.includes(pair.symbol)}
+                onToggleFavorite={toggleFavorite}
+                onSelect={handlePairSelect}
+              />
+            ))
           )}
         </div>
 
-        {/* Диалог действий с парой */}
-        <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-2xl">
-                {selectedPair?.symbol.replace('USDT', '/USDT')}
-              </DialogTitle>
-              <DialogDescription>
-                Общий балл: {selectedPair?.totalScore} | {' '}
-                {selectedPair && getRecommendationBadge(selectedPair.recommendation)}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-3 mt-4">
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => {
-                  if (selectedPair) {
-                    window.parent.postMessage(
-                      { 
-                        type: 'addToWatchlist', 
-                        symbol: selectedPair.symbol 
-                      }, 
-                      '*'
-                    );
-                    toast.success(`${selectedPair.symbol} добавлен в избранное`);
-                    setActionDialogOpen(false);
-                  }
-                }}
-                disabled={actionLoading}
-              >
-                <Icon name="Star" size={18} className="mr-3" />
-                Добавить в избранное
-              </Button>
-
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => {
-                  if (selectedPair) {
-                    window.parent.postMessage(
-                      { 
-                        type: 'createBot', 
-                        symbol: selectedPair.symbol 
-                      }, 
-                      '*'
-                    );
-                    toast.success(`Создаю бота для ${selectedPair.symbol}`);
-                    setActionDialogOpen(false);
-                  }
-                }}
-                disabled={actionLoading}
-              >
-                <Icon name="Bot" size={18} className="mr-3" />
-                Создать бота для пары
-              </Button>
-
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => {
-                  if (selectedPair) {
-                    window.parent.postMessage(
-                      { 
-                        type: 'runAutoTrading', 
-                        symbol: selectedPair.symbol 
-                      }, 
-                      '*'
-                    );
-                    toast.success('Запускаю автотрейдинг...');
-                    setActionDialogOpen(false);
-                  }
-                }}
-                disabled={actionLoading}
-              >
-                <Icon name="Play" size={18} className="mr-3" />
-                Запустить автотрейдинг
-              </Button>
-
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => {
-                  if (selectedPair) {
-                    window.parent.postMessage(
-                      { 
-                        type: 'runBacktest', 
-                        symbol: selectedPair.symbol 
-                      }, 
-                      '*'
-                    );
-                    toast.success('Запускаю бэктест...');
-                    setActionDialogOpen(false);
-                  }
-                }}
-                disabled={actionLoading}
-              >
-                <Icon name="BarChart3" size={18} className="mr-3" />
-                Провести анализ бэктеста
-              </Button>
-
-              <Button
-                className="w-full justify-start"
-                variant="outline"
-                onClick={() => {
-                  if (selectedPair) {
-                    window.parent.postMessage(
-                      { 
-                        type: 'askAssistant', 
-                        symbol: selectedPair.symbol,
-                        question: `Расскажи про пару ${selectedPair.symbol.replace('USDT', '/USDT')} - стоит ли торговать, какие риски?`
-                      }, 
-                      '*'
-                    );
-                    toast.success('Спрашиваю у ассистента...');
-                    setActionDialogOpen(false);
-                  }
-                }}
-                disabled={actionLoading}
-              >
-                <Icon name="MessageCircle" size={18} className="mr-3" />
-                Задать вопрос ассистенту
-              </Button>
-            </div>
-
-            <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <p className="text-muted-foreground">Волатильность</p>
-                  <p className="font-semibold">{selectedPair?.volatility.value.toFixed(2)}%</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Ликвидность</p>
-                  <p className="font-semibold">${(selectedPair?.liquidity.turnover24h ?? 0 / 1e6).toFixed(1)}M</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Тренд</p>
-                  <p className="font-semibold">
-                    {selectedPair?.trend.direction === 'uptrend' ? 'Рост' : selectedPair?.trend.direction === 'downtrend' ? 'Падение' : 'Боковик'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Надёжность</p>
-                  <p className="font-semibold">{selectedPair?.reliability.score.toFixed(0)}</p>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <TopPairActionDialog
+          pair={selectedPair}
+          open={actionDialogOpen}
+          onOpenChange={setActionDialogOpen}
+          actionLoading={actionLoading}
+        />
       </div>
     </div>
   );
