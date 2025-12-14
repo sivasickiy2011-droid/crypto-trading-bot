@@ -54,38 +54,24 @@ export default function DevConsole({ userId }: DevConsoleProps) {
   const availableModels: AIModel[] = [
     {
       id: 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
-      name: 'DeepSeek R1 Distill Llama 70B',
-      description: 'Лучшая точность и понимание контекста',
-      speed: 'Быстрая',
-      quality: 'Отличная'
-    },
-    {
-      id: 'Qwen/Qwen2.5-Coder-32B-Instruct',
-      name: 'Qwen 2.5 Coder 32B',
-      description: 'Специализация на коде и алгоритмах',
+      name: 'Llama 3.1 70B Versatile',
+      description: 'Лучший баланс скорости и качества (Groq)',
       speed: 'Очень быстрая',
       quality: 'Отличная'
     },
     {
-      id: 'meta-llama/Meta-Llama-3.1-70B-Instruct',
-      name: 'Meta Llama 3.1 70B',
-      description: 'Универсальная модель от Meta',
-      speed: 'Быстрая',
+      id: 'meta-llama/Meta-Llama-3.1-8B-Instruct',
+      name: 'Llama 3.1 8B Instant',
+      description: 'Мгновенные ответы для простых задач',
+      speed: 'Молниеносная',
       quality: 'Хорошая'
     },
     {
       id: 'mistralai/Mistral-Large-Instruct-2407',
-      name: 'Mistral Large 2 (123B)',
-      description: 'Большая модель для сложных задач',
-      speed: 'Средняя',
+      name: 'Mixtral 8x7B',
+      description: 'Модель Mixtral для сложных задач',
+      speed: 'Быстрая',
       quality: 'Отличная'
-    },
-    {
-      id: 'meta-llama/Meta-Llama-3.1-8B-Instruct',
-      name: 'Meta Llama 3.1 8B',
-      description: 'Быстрая модель для простых задач',
-      speed: 'Молниеносная',
-      quality: 'Хорошая'
     }
   ];
 
@@ -303,7 +289,7 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
                   onClick={() => setShowModels(!showModels)}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                 >
-                  {availableModels.find(m => m.id === selectedModel)?.name || 'DeepSeek R1'} • Nebius
+                  {availableModels.find(m => m.id === selectedModel)?.name || 'Llama 3.1 70B'} • Groq (без VPN)
                   <Icon name={showModels ? 'ChevronUp' : 'ChevronDown'} size={14} />
                 </button>
                 
