@@ -169,7 +169,7 @@ export function usePriceData(
     };
 
     loadPriceData();
-    const priceInterval = setInterval(loadPriceData, 15000);
+    const priceInterval = setInterval(loadPriceData, 30000);
     return () => clearInterval(priceInterval);
   }, [selectedSymbol, watchlist, currentTimeframe, enabled]);
 

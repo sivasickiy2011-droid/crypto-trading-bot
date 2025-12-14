@@ -65,7 +65,7 @@ export function useOrderbookAndSignals(
     };
 
     loadOrderbookAndSignals();
-    const interval = setInterval(loadOrderbookAndSignals, 5000);
+    const interval = setInterval(loadOrderbookAndSignals, 10000);
     return () => clearInterval(interval);
   }, [selectedSymbol, apiMode, signalsEnabled]);
 

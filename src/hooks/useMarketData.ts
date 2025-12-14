@@ -73,7 +73,7 @@ export function useMarketData() {
     };
 
     loadMarketData();
-    const marketInterval = setInterval(loadMarketData, 10000);
+    const marketInterval = setInterval(loadMarketData, 30000);
     return () => clearInterval(marketInterval);
   }, [watchlist]);
 
