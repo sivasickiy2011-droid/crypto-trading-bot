@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import SetPassword from "./pages/SetPassword";
 import TopPairs from "./pages/TopPairs";
 import DevConsole from "./pages/DevConsole";
+import TestTrade from "./pages/TestTrade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -121,6 +122,10 @@ const App = () => {
                   <Navigate to="/login" replace />
                 )
               }
+            />
+            <Route 
+              path="/test-trade" 
+              element={<TestTrade />}
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

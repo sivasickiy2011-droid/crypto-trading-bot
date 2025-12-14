@@ -1,0 +1,19 @@
+{
+  "tests": [
+    {
+      "name": "Test trade - check status",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "user_id": 2,
+        "action": "status"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "steps": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

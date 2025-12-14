@@ -58,6 +58,15 @@ export default function DashboardHeader({
             <Icon name="LineChart" size={16} className="mr-1.5" />
             Бэктест
           </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => window.open('/test-trade', '_blank')}
+            className="h-8"
+          >
+            <Icon name="TestTube2" size={16} className="mr-1.5" />
+            Тест
+          </Button>
         </div>
       </div>
       <div className="flex items-center space-x-4">
