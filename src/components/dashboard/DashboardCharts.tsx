@@ -3,6 +3,7 @@ import PriceChart from './charts/PriceChart';
 import OrderbookPanel from './charts/OrderbookPanel';
 import TradesPanel from './charts/TradesPanel';
 import ManualTradingSettings from './charts/ManualTradingSettings';
+import StrategySignalsPanel from './charts/StrategySignalsPanel';
 import { BotLogEntry } from './BotsLogsPanel';
 
 interface Position {
@@ -129,6 +130,7 @@ export default function DashboardCharts({
         
         <div className="space-y-6">
           <OrderbookPanel orderbook={orderbook} symbol={selectedSymbol.replace('/', '')} />
+          <StrategySignalsPanel strategySignals={strategySignals} />
           <ManualTradingSettings accountMode={accountMode} apiMode={apiMode} />
         </div>
       </div>
