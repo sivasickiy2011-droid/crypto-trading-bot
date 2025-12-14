@@ -58,7 +58,7 @@ def open_virtual_position(user_id: int, symbol: str, side: str, quantity: float,
     
     return trade_id
 
-def close_virtual_position(trade_id: int, close_price: float) -> float:
+def close_virtual_position(trade_id: int, close_price: float, user_id: int) -> float:
     """Close virtual position and calculate PnL"""
     conn = get_db_connection()
     cur = conn.cursor()
@@ -82,6 +82,21 @@ def close_virtual_position(trade_id: int, close_price: float) -> float:
     # Update position
     update_query = f"UPDATE virtual_trades SET status = 'closed', closed_at = CURRENT_TIMESTAMP, close_price = {close_price}, pnl = {pnl} WHERE id = {trade_id}"
     cur.execute(update_query)
+    
+    # Update user balance
+    is_win = pnl > 0
+    win_col = 'winning_trades' if is_win else 'losing_trades'
+    
+    balance_query = f"""
+    UPDATE virtual_balances 
+    SET balance = balance + {pnl},
+        total_pnl = total_pnl + {pnl},
+        total_trades = total_trades + 1,
+        {win_col} = {win_col} + 1,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE user_id = {user_id}
+    """
+    cur.execute(balance_query)
     
     conn.commit()
     cur.close()
@@ -217,7 +232,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             # Close position
-            pnl = close_virtual_position(position['id'], current_price)
+            pnl = close_virtual_position(position['id'], current_price, user_id)
             pnl_percent = (pnl / (position['entry_price'] * position['quantity'])) * 100
             
             steps.append(f'✅ Закрыта виртуальная позиция #{position["id"]}')

@@ -1,13 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
+interface BalanceData {
+  balance: number;
+  initial_balance: number;
+  total_pnl: number;
+  total_trades: number;
+  winning_trades: number;
+  losing_trades: number;
+  winrate: number;
+  roi: number;
+}
+
 export default function TestTrade() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string[]>([]);
   const [apiKeyInfo, setApiKeyInfo] = useState<string>('');
+  const [balance, setBalance] = useState<BalanceData | null>(null);
+
+  const loadBalance = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/425d3539-8920-4981-84ac-2ea05fd5ec7c', {
+        headers: { 'X-User-Id': '2' }
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setBalance(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to load balance:', error);
+    }
+  };
 
   const checkApiKey = async () => {
     try {
@@ -50,6 +77,11 @@ export default function TestTrade() {
         }
         setResult(steps);
         toast.success(`Действие ${action} выполнено`);
+        
+        // Reload balance after trade action
+        if (action === 'open' || action === 'close') {
+          await loadBalance();
+        }
       } else {
         setResult([`❌ Ошибка: ${data.error}`, JSON.stringify(data.details || {}, null, 2)]);
         toast.error(`Ошибка: ${data.error}`);
@@ -62,6 +94,11 @@ export default function TestTrade() {
       setLoading(false);
     }
   };
+
+  // Load balance on mount
+  useEffect(() => {
+    loadBalance();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -85,6 +122,37 @@ export default function TestTrade() {
             </div>
           </div>
         </div>
+
+        {balance && (
+          <Card className="p-6 mb-6 bg-gradient-to-br from-green-500/5 to-blue-500/5">
+            <h2 className="text-lg font-bold mb-4">💰 Виртуальный баланс</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Баланс</p>
+                <p className="text-2xl font-bold">${balance.balance.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">PnL</p>
+                <p className={`text-2xl font-bold ${balance.total_pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {balance.total_pnl >= 0 ? '+' : ''}{balance.total_pnl.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">ROI</p>
+                <p className={`text-2xl font-bold ${balance.roi >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {balance.roi >= 0 ? '+' : ''}{balance.roi.toFixed(1)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Винрейт</p>
+                <p className="text-2xl font-bold">{balance.winrate.toFixed(0)}%</p>
+                <p className="text-xs text-muted-foreground">
+                  {balance.winning_trades}W / {balance.losing_trades}L
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
 
         <Card className="p-6 mb-6">
           <div className="space-y-4">
