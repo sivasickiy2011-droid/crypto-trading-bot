@@ -49,15 +49,32 @@ interface TopPairsResponse {
 
 export default function TopPairs() {
   const [pairs, setPairs] = useState<TopPair[]>([]);
+  const [allPairs, setAllPairs] = useState<TopPair[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPair, setSelectedPair] = useState<TopPair | null>(null);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'favorites' | 'top10' | 'top20'>(() => {
+    return (localStorage.getItem('top_pairs_view_mode') as 'favorites' | 'top10' | 'top20') || 'top10';
+  });
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    const saved = localStorage.getItem('top_pairs_favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     loadTopPairs();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('top_pairs_view_mode', viewMode);
+    filterPairs();
+  }, [viewMode, allPairs, favorites]);
+
+  useEffect(() => {
+    localStorage.setItem('top_pairs_favorites', JSON.stringify(favorites));
+  }, [favorites]);
 
   const loadTopPairs = async () => {
     try {
@@ -66,7 +83,7 @@ export default function TopPairs() {
       const data: TopPairsResponse = await response.json();
       
       if (data.success) {
-        setPairs(data.topPairs.slice(0, 20));
+        setAllPairs(data.topPairs.slice(0, 20));
       } else {
         setError('Не удалось загрузить данные');
       }
@@ -104,6 +121,24 @@ export default function TopPairs() {
       case 'uptrend': return <Icon name="TrendingUp" className="text-green-500" size={16} />;
       case 'downtrend': return <Icon name="TrendingDown" className="text-red-500" size={16} />;
       default: return <Icon name="Minus" className="text-gray-500" size={16} />;
+    }
+  };
+
+  const toggleFavorite = (symbol: string) => {
+    setFavorites(prev => 
+      prev.includes(symbol) 
+        ? prev.filter(s => s !== symbol)
+        : [...prev, symbol]
+    );
+  };
+
+  const filterPairs = () => {
+    if (viewMode === 'favorites') {
+      setPairs(allPairs.filter(p => favorites.includes(p.symbol)));
+    } else if (viewMode === 'top10') {
+      setPairs(allPairs.slice(0, 10));
+    } else {
+      setPairs(allPairs.slice(0, 20));
     }
   };
 
@@ -147,26 +182,81 @@ export default function TopPairs() {
                 Автоматический анализ по волатильности, ликвидности и надёжности рынка
               </p>
             </div>
-            <Button onClick={loadTopPairs} variant="outline">
-              <Icon name="RotateCw" className="mr-2" size={16} />
-              Обновить
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant={viewMode === 'favorites' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('favorites')}
+              >
+                <Icon name="Star" className="mr-2" size={16} />
+                Избранные ({favorites.length})
+              </Button>
+              <Button 
+                variant={viewMode === 'top10' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('top10')}
+              >
+                Топ-10
+              </Button>
+              <Button 
+                variant={viewMode === 'top20' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('top20')}
+              >
+                Топ-20
+              </Button>
+              <Button onClick={loadTopPairs} variant="outline" size="sm">
+                <Icon name="RotateCw" className="mr-2" size={16} />
+                Обновить
+              </Button>
+            </div>
           </div>
         </div>
 
         <div className="space-y-4">
-          {pairs.map((pair, index) => (
-            <Card 
-              key={pair.symbol} 
-              className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => {
-                setSelectedPair(pair);
-                setActionDialogOpen(true);
-              }}
-            >
+          {pairs.length === 0 && viewMode === 'favorites' ? (
+            <Card className="p-12 text-center">
+              <Icon name="Star" size={48} className="mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-bold mb-2">Нет избранных пар</h3>
+              <p className="text-muted-foreground mb-4">
+                Нажми на звездочку возле любой пары, чтобы добавить её в избранное
+              </p>
+              <Button onClick={() => setViewMode('top10')}>
+                Посмотреть топ-10
+              </Button>
+            </Card>
+          ) : (
+            pairs.map((pair, index) => (
+              <Card 
+                key={pair.symbol} 
+                className="p-6 hover:shadow-lg transition-shadow"
+              >
               <div className="grid grid-cols-12 gap-4 items-center">
+                {/* Звездочка избранное */}
+                <div className="col-span-1 flex justify-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(pair.symbol);
+                    }}
+                  >
+                    <Icon 
+                      name={favorites.includes(pair.symbol) ? "Star" : "StarOff"} 
+                      size={20} 
+                      className={favorites.includes(pair.symbol) ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground'}
+                    />
+                  </Button>
+                </div>
                 {/* Ранг и символ */}
-                <div className="col-span-2">
+                <div 
+                  className="col-span-2 cursor-pointer"
+                  onClick={() => {
+                    setSelectedPair(pair);
+                    setActionDialogOpen(true);
+                  }}
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
                       {index + 1}
@@ -179,7 +269,13 @@ export default function TopPairs() {
                 </div>
 
                 {/* Цена и изменение */}
-                <div className="col-span-2">
+                <div 
+                  className="col-span-2 cursor-pointer"
+                  onClick={() => {
+                    setSelectedPair(pair);
+                    setActionDialogOpen(true);
+                  }}
+                >
                   <p className="font-mono font-bold">${pair.price.toFixed(4)}</p>
                   <p className={`text-sm ${pair.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                     {pair.priceChange24h >= 0 ? '+' : ''}{pair.priceChange24h.toFixed(2)}%
@@ -187,7 +283,13 @@ export default function TopPairs() {
                 </div>
 
                 {/* Общий скор */}
-                <div className="col-span-2">
+                <div 
+                  className="col-span-2 cursor-pointer"
+                  onClick={() => {
+                    setSelectedPair(pair);
+                    setActionDialogOpen(true);
+                  }}
+                >
                   <div className="text-center">
                     <p className="text-2xl font-bold text-primary">{pair.totalScore}</p>
                     <p className="text-xs text-muted-foreground">Общий балл</p>
@@ -195,7 +297,13 @@ export default function TopPairs() {
                 </div>
 
                 {/* Метрики */}
-                <div className="col-span-4 grid grid-cols-2 gap-3 text-sm">
+                <div 
+                  className="col-span-3 grid grid-cols-2 gap-3 text-sm cursor-pointer"
+                  onClick={() => {
+                    setSelectedPair(pair);
+                    setActionDialogOpen(true);
+                  }}
+                >
                   <div>
                     <div className="flex items-center gap-1 mb-1">
                       <Icon name="Activity" size={14} />
@@ -243,7 +351,8 @@ export default function TopPairs() {
                 </div>
               </div>
             </Card>
-          ))}
+          ))
+          )}
         </div>
 
         {/* Диалог действий с парой */}
