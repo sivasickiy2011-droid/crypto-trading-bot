@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import QuickOrderModal from '@/components/QuickOrderModal';
@@ -41,18 +41,29 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
     );
   }
 
-  const asks = orderbook.filter(o => o.askSize > 0).sort((a, b) => a.price - b.price).slice(0, 20);
-  const bids = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
-  
-  const maxSize = Math.max(
-    ...asks.map(o => o.askSize),
-    ...bids.map(o => o.bidSize),
-    1
-  );
+  const { asks, bids, maxSize, spreadPrice, spreadPercent, bestAskPrice } = useMemo(() => {
+    const asksData = orderbook.filter(o => o.askSize > 0).sort((a, b) => a.price - b.price).slice(0, 20);
+    const bidsData = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
+    
+    const maxSizeValue = Math.max(
+      ...asksData.map(o => o.askSize),
+      ...bidsData.map(o => o.bidSize),
+      1
+    );
 
-  const spreadPrice = asks.length > 0 && bids.length > 0 ? asks[asks.length - 1].price - bids[0].price : 0;
-  const spreadPercent = asks.length > 0 && bids.length > 0 ? (spreadPrice / bids[0].price) * 100 : 0;
-  const bestAskPrice = asks.length > 0 ? asks[asks.length - 1].price : 0;
+    const spreadPriceValue = asksData.length > 0 && bidsData.length > 0 ? asksData[asksData.length - 1].price - bidsData[0].price : 0;
+    const spreadPercentValue = asksData.length > 0 && bidsData.length > 0 ? (spreadPriceValue / bidsData[0].price) * 100 : 0;
+    const bestAskPriceValue = asksData.length > 0 ? asksData[asksData.length - 1].price : 0;
+
+    return {
+      asks: asksData,
+      bids: bidsData,
+      maxSize: maxSizeValue,
+      spreadPrice: spreadPriceValue,
+      spreadPercent: spreadPercentValue,
+      bestAskPrice: bestAskPriceValue
+    };
+  }, [orderbook]);
 
   return (
     <>
@@ -87,12 +98,12 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
               
               return (
                 <div 
-                  key={`ask-${idx}`} 
+                  key={`ask-${order.price}-${idx}`} 
                   className="relative h-5 flex items-center hover:bg-red-500/5 transition-colors cursor-pointer"
                   onClick={() => handlePriceClick(order.price, 'sell')}
                 >
                   <div 
-                    className="absolute right-0 top-0 h-full bg-red-500/10"
+                    className="absolute right-0 top-0 h-full bg-red-500/10 transition-all duration-200"
                     style={{ width: `${percent}%` }}
                   />
                   <div className="relative z-10 grid grid-cols-3 gap-1 w-full px-1 text-[11px] font-mono">
@@ -134,12 +145,12 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
               
               return (
                 <div 
-                  key={`bid-${idx}`} 
+                  key={`bid-${order.price}-${idx}`} 
                   className="relative h-5 flex items-center hover:bg-green-500/5 transition-colors cursor-pointer"
                   onClick={() => handlePriceClick(order.price, 'buy')}
                 >
                   <div 
-                    className="absolute right-0 top-0 h-full bg-green-500/10"
+                    className="absolute right-0 top-0 h-full bg-green-500/10 transition-all duration-200"
                     style={{ width: `${percent}%` }}
                   />
                   <div className="relative z-10 grid grid-cols-3 gap-1 w-full px-1 text-[11px] font-mono">
