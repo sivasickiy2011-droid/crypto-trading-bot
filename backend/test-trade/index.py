@@ -32,6 +32,9 @@ def get_user_api_keys(user_id: int) -> tuple[str, str]:
     api_key = base64.b64decode(result[0]).decode('utf-8')
     api_secret = base64.b64decode(result[1]).decode('utf-8')
     
+    print(f'API key length: {len(api_key)}, starts with: {api_key[:5]}...')
+    print(f'API secret length: {len(api_secret)}, starts with: {api_secret[:5]}...')
+    
     return api_key, api_secret
 
 def generate_signature(params: str, secret: str) -> str:
@@ -194,6 +197,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         # Шаг 1: Проверяем баланс
         balance_data = get_wallet_balance(api_key, api_secret)
+        print(f'Balance API response: {balance_data}')
+        
         if balance_data.get('retCode') == 0:
             coins = balance_data.get('result', {}).get('list', [{}])[0].get('coin', [])
             usdt_balance = 0
@@ -203,10 +208,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     break
             steps.append(f'💰 Баланс: {usdt_balance:.2f} USDT')
         else:
+            error_msg = balance_data.get('retMsg', 'Failed to get balance')
             return {
                 'statusCode': 400,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'success': False, 'error': 'Failed to get balance'}),
+                'body': json.dumps({'success': False, 'error': f'Bybit API error: {error_msg}', 'details': balance_data}),
                 'isBase64Encoded': False
             }
         

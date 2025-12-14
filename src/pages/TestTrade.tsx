@@ -7,6 +7,28 @@ import { toast } from 'sonner';
 export default function TestTrade() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string[]>([]);
+  const [apiKeyInfo, setApiKeyInfo] = useState<string>('');
+
+  const checkApiKey = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2?exchange=bybit-testnet', {
+        headers: { 'X-User-Id': '2' }
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        const key = data.api_key || '';
+        setApiKeyInfo(`Ключ: ${key.substring(0, 5)}...${key.substring(key.length - 3)} (${key.length} символов)`);
+      } else {
+        setApiKeyInfo('Ключ не найден');
+      }
+    } catch (error) {
+      setApiKeyInfo('Ошибка проверки');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const runTest = async (action: 'open' | 'close' | 'status') => {
     try {
@@ -25,7 +47,7 @@ export default function TestTrade() {
         setResult(data.steps || ['Успешно']);
         toast.success(`Действие ${action} выполнено`);
       } else {
-        setResult([`❌ Ошибка: ${data.error}`]);
+        setResult([`❌ Ошибка: ${data.error}`, JSON.stringify(data.details || {}, null, 2)]);
         toast.error(`Ошибка: ${data.error}`);
       }
     } catch (error) {
@@ -49,6 +71,22 @@ export default function TestTrade() {
 
         <Card className="p-6 mb-6">
           <div className="space-y-4">
+            <Button
+              onClick={checkApiKey}
+              disabled={loading}
+              className="w-full"
+              variant="secondary"
+              size="sm"
+            >
+              <Icon name="Key" className="mr-2" size={16} />
+              Проверить API ключ
+            </Button>
+            {apiKeyInfo && (
+              <div className="text-sm text-muted-foreground font-mono bg-secondary/50 p-2 rounded">
+                {apiKeyInfo}
+              </div>
+            )}
+            
             <Button
               onClick={() => runTest('status')}
               disabled={loading}
