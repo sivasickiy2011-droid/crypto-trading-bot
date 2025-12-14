@@ -93,8 +93,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             method='POST'
         )
         
-        with urlopen(req, timeout=60) as response:
-            ai_response = json.loads(response.read().decode('utf-8'))
+        try:
+            with urlopen(req, timeout=60) as response:
+                ai_response = json.loads(response.read().decode('utf-8'))
+        except Exception as api_error:
+            error_msg = str(api_error)
+            if '403' in error_msg or 'Forbidden' in error_msg:
+                raise Exception(f'Nebius API: неверный API ключ или доступ запрещён. Проверьте ключ на tokenfactory.nebius.com')
+            raise Exception(f'Nebius API error: {error_msg}')
             
             if 'choices' in ai_response and len(ai_response['choices']) > 0:
                 ai_message = ai_response['choices'][0]['message']['content']
