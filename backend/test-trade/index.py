@@ -9,7 +9,7 @@ from urllib.request import Request, urlopen
 from typing import Dict, Any
 import psycopg2
 
-BYBIT_DEMO_URL = "https://api-demo.bybit.com"
+BYBIT_API_URL = "https://api.bybit.com"
 
 def get_db_connection():
     return psycopg2.connect(os.environ['DATABASE_URL'])
@@ -62,7 +62,7 @@ def bybit_request(endpoint: str, api_key: str, api_secret: str, params: Dict[str
     
     signature = generate_signature(sign_payload, api_secret)
     
-    url = f"{BYBIT_DEMO_URL}{endpoint}"
+    url = f"{BYBIT_API_URL}{endpoint}"
     if method == 'GET' and param_str:
         url += f"?{param_str}"
     
