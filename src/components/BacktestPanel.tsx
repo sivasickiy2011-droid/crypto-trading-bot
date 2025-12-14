@@ -12,7 +12,7 @@ export default function BacktestPanel() {
   const [strategy, setStrategy] = useState<'ma-crossover' | 'rsi' | 'bollinger' | 'macd'>('ma-crossover');
   const [candleInterval, setCandleInterval] = useState('1h');
   const [candleCount, setCandleCount] = useState('1000');
-  const [initialCapital, setInitialCapital] = useState('10000');
+  const [initialCapital, setInitialCapital] = useState('100');
   const [symbol, setSymbol] = useState('BTCUSDT');
   const [positionSize, setPositionSize] = useState('20');
   const [leverage, setLeverage] = useState('2');
