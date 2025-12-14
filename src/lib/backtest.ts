@@ -344,7 +344,7 @@ export function runBacktest(klines: KlineData[], config: BacktestConfig): Backte
   }
 
   const winningTrades = trades.filter(t => t.pnl > 0);
-  const losingTrades = trades.filter(t => t.pnl <= 0);
+  const losingTrades = trades.filter(t => t.pnl < 0);
   const winRate = trades.length > 0 ? (winningTrades.length / trades.length) * 100 : 0;
   
   const totalWins = winningTrades.reduce((sum, t) => sum + t.pnl, 0);
@@ -378,7 +378,7 @@ export function runBacktest(klines: KlineData[], config: BacktestConfig): Backte
   Object.keys(monthlyData).sort().forEach(monthKey => {
     const monthTrades = monthlyData[monthKey];
     const wins = monthTrades.filter(t => t.pnl > 0);
-    const losses = monthTrades.filter(t => t.pnl <= 0);
+    const losses = monthTrades.filter(t => t.pnl < 0);
     
     monthlyStats.push({
       month: monthKey,
