@@ -9,7 +9,7 @@ import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import DashboardWatchlist from '@/components/dashboard/DashboardWatchlist';
 import DevConsole from '@/pages/DevConsole';
-import AutoTradingControl from '@/components/AutoTradingControl';
+
 import { useMarketData } from '@/hooks/useMarketData';
 import { useUserData } from '@/hooks/useUserData';
 import { usePriceData } from '@/hooks/usePriceData';
@@ -154,8 +154,6 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                     selectedSymbol={selectedSymbol}
                   />
                 </div>
-
-                <AutoTradingControl userId={userId} />
 
                 <DashboardCharts
                   priceData={priceData}
