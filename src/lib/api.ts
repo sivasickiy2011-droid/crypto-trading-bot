@@ -6,6 +6,7 @@ const STRATEGY_API_URL = 'https://functions.poehali.dev/fcf2c4c4-a831-42be-b73d-
 const LANGUAGE_API_URL = 'https://functions.poehali.dev/c93d68f3-190d-4064-8eba-fe82eba4f04d';
 const API_KEYS_URL = 'https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2';
 const STRATEGY_SIGNALS_URL = 'https://functions.poehali.dev/4b1221ec-86fd-4273-a7fe-2130d93a0e5b';
+const TELEGRAM_NOTIFY_URL = 'https://functions.poehali.dev/3e081d1f-2d3b-429a-8490-942983a3d17d';
 
 export interface TickerData {
   symbol: string;
@@ -274,4 +275,25 @@ export async function getStrategySignals(symbol: string): Promise<StrategySignal
   }
   
   throw new Error(data.error || 'Failed to fetch strategy signals');
+}
+
+export async function sendTelegramNotification(
+  symbol: string,
+  side: string,
+  market: string,
+  mode: string,
+  entryPrice: number
+): Promise<{ success: boolean }> {
+  const response = await fetch(TELEGRAM_NOTIFY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ symbol, side, market, mode, entryPrice })
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data;
+  }
+  
+  throw new Error(data.error || 'Failed to send notification');
 }

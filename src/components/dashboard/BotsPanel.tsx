@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
 import { BotLogEntry } from './BotsLogsPanel';
 import { useToast } from '@/hooks/use-toast';
+import { sendTelegramNotification } from '@/lib/api';
 import {
   Dialog,
   DialogContent,
@@ -36,9 +37,10 @@ interface BotsPanelProps {
   onBotCountChange?: (count: number) => void;
   onBotClick?: (pair: string) => void;
   userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number}>;
+  accountMode?: 'live' | 'demo';
 }
 
-export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, userPositions = [] }: BotsPanelProps) {
+export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, userPositions = [], accountMode = 'demo' }: BotsPanelProps) {
   const { toast } = useToast();
   const [bots, setBots] = useState<Bot[]>([
     {
@@ -72,7 +74,34 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
       const pairSymbol = bot.pair.replace('/', '');
       const position = userPositions.find(p => p.symbol === pairSymbol);
       
+      const wasSearching = bot.status === 'searching';
+      
       if (position && bot.active) {
+        if (wasSearching) {
+          sendTelegramNotification(
+            pairSymbol,
+            position.side,
+            bot.market,
+            accountMode,
+            position.entryPrice
+          ).catch(err => console.error('Failed to send Telegram notification:', err));
+          
+          const now = new Date();
+          const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+          
+          onLogAdd({
+            id: Date.now().toString() + Math.random(),
+            botId: bot.id,
+            botName: `${bot.pair} (${bot.strategy})`,
+            timestamp: timeStr,
+            type: 'entry',
+            message: `Открыта позиция ${position.side}`,
+            details: {
+              price: position.entryPrice
+            }
+          });
+        }
+        
         return {
           ...bot,
           status: 'in_position' as const,
@@ -98,7 +127,7 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
     
     const activeCount = updatedBots.filter(b => b.active).length;
     onBotCountChange?.(activeCount);
-  }, [userPositions, bots, onBotCountChange]);
+  }, [userPositions, bots, onBotCountChange, accountMode, onLogAdd]);
 
   const toggleBot = (id: string) => {
     setBots(prev => {

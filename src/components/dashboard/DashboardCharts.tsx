@@ -108,6 +108,7 @@ export default function DashboardCharts({
             onBotCountChange={setActiveBotCount}
             onBotClick={onSymbolChange}
             userPositions={userPositions}
+            accountMode={accountMode}
           />
         </div>
         
