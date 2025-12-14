@@ -23,7 +23,7 @@ export interface LogEntry {
   message: string;
 }
 
-export function useMarketData() {
+export function useMarketData(enabled: boolean = true) {
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>(() => {
     const saved = localStorage.getItem('user_watchlist');
     return saved ? JSON.parse(saved) : defaultWatchlist;
@@ -35,6 +35,10 @@ export function useMarketData() {
   }, [watchlist]);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const loadMarketData = async () => {
       try {
         const symbols = watchlist.map(w => w.symbol);
@@ -75,7 +79,7 @@ export function useMarketData() {
     loadMarketData();
     const marketInterval = setInterval(loadMarketData, 30000);
     return () => clearInterval(marketInterval);
-  }, [watchlist]);
+  }, [watchlist, enabled]);
 
   const handleAddPair = (symbol: string) => {
     if (watchlist.some(w => w.symbol === symbol)) {

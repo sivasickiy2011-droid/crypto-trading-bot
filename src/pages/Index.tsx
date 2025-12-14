@@ -42,8 +42,9 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [currentTimeframe, setCurrentTimeframe] = useState('15');
   const [chartsEnabled, setChartsEnabled] = useState(true);
   const [signalsMode, setSignalsMode] = useState<'disabled' | 'bots_only' | 'top10'>('bots_only');
+  const [apiRequestsEnabled, setApiRequestsEnabled] = useState(false);
 
-  const { watchlist, logs, handleAddPair, handleRemovePair } = useMarketData();
+  const { watchlist, logs, handleAddPair, handleRemovePair } = useMarketData(apiRequestsEnabled);
 
   // Load user settings
   useEffect(() => {
@@ -65,9 +66,9 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
       setSelectedSymbol(watchlist[0].symbol);
     }
   }, [watchlist, selectedSymbol]);
-  const { balance, positions } = useUserData(userId, apiMode);
-  const { priceData } = usePriceData(selectedSymbol, watchlist, currentTimeframe, chartsEnabled);
-  const { orderbook, strategySignals } = useOrderbookAndSignals(selectedSymbol, apiMode, signalsMode !== 'disabled');
+  const { balance, positions } = useUserData(userId, apiMode, apiRequestsEnabled);
+  const { priceData } = usePriceData(selectedSymbol, watchlist, currentTimeframe, chartsEnabled && apiRequestsEnabled);
+  const { orderbook, strategySignals } = useOrderbookAndSignals(selectedSymbol, apiMode, signalsMode !== 'disabled' && apiRequestsEnabled);
   const { savedRequests } = useApiRequestCounter(chartsEnabled, signalsMode !== 'disabled');
 
   const handleChartsEnabledChange = async (enabled: boolean) => {
@@ -226,6 +227,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             signalsMode={signalsMode}
             onSignalsModeChange={handleSignalsModeChange}
             savedRequests={savedRequests}
+            apiRequestsEnabled={apiRequestsEnabled}
+            onApiRequestsEnabledChange={setApiRequestsEnabled}
           />
 
           <div className="p-6 space-y-6">
