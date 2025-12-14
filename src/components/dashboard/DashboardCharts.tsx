@@ -94,6 +94,8 @@ export default function DashboardCharts({
   const currentMarketPrice = asks.length > 0 && bids.length > 0 
     ? (asks[0].price + bids[0].price) / 2 
     : undefined;
+  const bestAsk = asks.length > 0 ? asks[0].price : undefined;
+  const bestBid = bids.length > 0 ? bids[0].price : undefined;
   
   return (
     <div className="space-y-6">
@@ -106,6 +108,8 @@ export default function DashboardCharts({
             strategySignals={strategySignals}
             positionLevels={positionLevels}
             currentMarketPrice={currentMarketPrice}
+            bestAsk={bestAsk}
+            bestBid={bestBid}
           />
           
           <TradesPanel 

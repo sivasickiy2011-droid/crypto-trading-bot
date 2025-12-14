@@ -38,9 +38,11 @@ interface PriceChartProps {
   strategySignals?: Array<{strategy: string, signal: 'buy' | 'sell' | 'neutral', strength: number, reason: string}>;
   positionLevels?: PositionLevel[];
   currentMarketPrice?: number;
+  bestAsk?: number;
+  bestBid?: number;
 }
 
-export default function PriceChart({ priceData, selectedSymbol, onTimeframeChange, strategySignals = [], positionLevels = [], currentMarketPrice }: PriceChartProps) {
+export default function PriceChart({ priceData, selectedSymbol, onTimeframeChange, strategySignals = [], positionLevels = [], currentMarketPrice, bestAsk, bestBid }: PriceChartProps) {
   const [activeTimeframe, setActiveTimeframe] = useState('15');
   const [showIndicators, setShowIndicators] = useState({ 
     ema9: false, 
@@ -143,6 +145,8 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
             yMax={yMax}
             positionLevels={positionLevels}
             currentMarketPrice={currentMarketPrice}
+            bestAsk={bestAsk}
+            bestBid={bestBid}
           />
         </div>
         

@@ -44,9 +44,11 @@ interface PriceChartMainProps {
   yMax: number;
   positionLevels?: PositionLevel[];
   currentMarketPrice?: number;
+  bestAsk?: number;
+  bestBid?: number;
 }
 
-export default function PriceChartMain({ chartData, chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice }: PriceChartMainProps) {
+export default function PriceChartMain({ chartData, chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice, bestAsk, bestBid }: PriceChartMainProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart data={chartData} margin={{ top: 15, right: 50, left: 0, bottom: 10 }}>
@@ -65,12 +67,13 @@ export default function PriceChartMain({ chartData, chartType, showIndicators, y
           axisLine={false}
         />
         <YAxis 
-          stroke="rgba(255,255,255,0.3)" 
-          tick={{ fontSize: 10, fontFamily: 'Roboto Mono', fill: 'rgba(255,255,255,0.4)' }}
+          stroke="rgba(255,255,255,0.1)" 
+          tick={{ fontSize: 11, fontFamily: 'Roboto Mono', fill: 'rgba(255,255,255,0.5)' }}
           tickLine={false}
-          axisLine={false}
+          axisLine={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
           domain={['auto', 'auto']}
           orientation="right"
+          width={60}
         />
         <Tooltip content={<CustomTooltip />} />
         
@@ -195,21 +198,55 @@ export default function PriceChartMain({ chartData, chartType, showIndicators, y
           </>
         )}
 
+        {bestAsk && (
+          <ReferenceLine 
+            y={bestAsk} 
+            stroke="#ef4444" 
+            strokeWidth={1.5}
+            label={{ 
+              value: `${bestAsk.toFixed(2)}`, 
+              position: 'right',
+              fill: '#fff',
+              fontSize: 11,
+              fontWeight: 700,
+              fontFamily: 'Roboto Mono',
+              style: { 
+                backgroundColor: '#ef4444',
+                padding: '2px 6px',
+                borderRadius: '3px'
+              }
+            }}
+          />
+        )}
+
+        {bestBid && (
+          <ReferenceLine 
+            y={bestBid} 
+            stroke="#16a34a" 
+            strokeWidth={1.5}
+            label={{ 
+              value: `${bestBid.toFixed(2)}`, 
+              position: 'right',
+              fill: '#fff',
+              fontSize: 11,
+              fontWeight: 700,
+              fontFamily: 'Roboto Mono',
+              style: { 
+                backgroundColor: '#16a34a',
+                padding: '2px 6px',
+                borderRadius: '3px'
+              }
+            }}
+          />
+        )}
+
         {currentMarketPrice && (
           <ReferenceLine 
             y={currentMarketPrice} 
             stroke="#fbbf24" 
-            strokeWidth={1.5}
-            strokeDasharray="5 5"
-            label={{ 
-              value: `${currentMarketPrice.toFixed(2)}`, 
-              position: 'insideTopRight',
-              fill: '#fbbf24',
-              fontSize: 11,
-              fontWeight: 600,
-              fontFamily: 'Roboto Mono',
-              offset: 10
-            }}
+            strokeWidth={1}
+            strokeDasharray="3 3"
+            strokeOpacity={0.6}
           />
         )}
 
