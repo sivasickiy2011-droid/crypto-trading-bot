@@ -359,12 +359,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             symbol = pair.replace('/', '')
             
+            # Преобразуем человеко-читаемое название стратегии в технический ключ
+            strategy_map = {
+                'EMA 9/21/55 (тренд + кросс)': 'ma-crossover',
+                'RSI 14 + EMA 50': 'rsi',
+                'Bollinger Bands + EMA 50': 'bollinger',
+                'MACD + EMA 200': 'macd',
+                'Мартингейл': 'martingale'
+            }
+            strategy_key = strategy_map.get(strategy, strategy.lower())
+            
             klines = get_kline_data(symbol, '15', 200)
             if not klines:
                 actions.append(f'Bot {bot_id}: No kline data')
                 continue
             
-            signal = analyze_strategy(klines, strategy)
+            signal = analyze_strategy(klines, strategy_key)
+            print(f'Bot {bot_id} ({symbol}): strategy={strategy_key}, signal={signal}')
             
             position = get_current_position(api_key, api_secret, symbol)
             
