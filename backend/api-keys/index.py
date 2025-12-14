@@ -55,8 +55,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             exchange = params.get('exchange', 'bybit')
             
             cursor.execute(
-                "SELECT api_key, api_secret FROM user_api_keys WHERE user_id = %s AND exchange = %s",
-                (int(user_id), exchange)
+                f"SELECT api_key, api_secret FROM user_api_keys WHERE user_id = {int(user_id)} AND exchange = '{exchange}'"
             )
             result = cursor.fetchone()
             
@@ -102,14 +101,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             api_secret_encoded = base64.b64encode(api_secret.encode('utf-8')).decode('utf-8')
             
             cursor.execute(
-                """
+                f"""
                 INSERT INTO user_api_keys (user_id, exchange, api_key, api_secret) 
-                VALUES (%s, %s, %s, %s)
+                VALUES ({int(user_id)}, '{exchange}', '{api_key_encoded}', '{api_secret_encoded}')
                 ON CONFLICT (user_id, exchange) 
                 DO UPDATE SET api_key = EXCLUDED.api_key, api_secret = EXCLUDED.api_secret, updated_at = CURRENT_TIMESTAMP
                 RETURNING id
-                """,
-                (int(user_id), exchange, api_key_encoded, api_secret_encoded)
+                """
             )
             key_id = cursor.fetchone()[0]
             conn.commit()
@@ -126,8 +124,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             exchange = params.get('exchange', 'bybit')
             
             cursor.execute(
-                "DELETE FROM user_api_keys WHERE user_id = %s AND exchange = %s RETURNING id",
-                (int(user_id), exchange)
+                f"DELETE FROM user_api_keys WHERE user_id = {int(user_id)} AND exchange = '{exchange}' RETURNING id"
             )
             result = cursor.fetchone()
             

@@ -145,37 +145,34 @@ export async function setPassword(userId: number, newPassword: string): Promise<
 }
 
 export async function saveApiKeys(userId: number, apiKey: string, apiSecret: string, exchange: string = 'bybit'): Promise<any> {
-  const response = await fetch(BOTS_MANAGER_URL, {
+  const response = await fetch(API_KEYS_URL, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
       'X-User-Id': userId.toString()
     },
-    body: JSON.stringify({ action: 'save_keys', apiKey, apiSecret })
+    body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret, exchange })
   });
   return await response.json();
 }
 
 export async function getApiKeys(userId: number, exchange: string = 'bybit'): Promise<any> {
-  const response = await fetch(BOTS_MANAGER_URL, {
-    method: 'POST',
+  const response = await fetch(`${API_KEYS_URL}?exchange=${exchange}`, {
+    method: 'GET',
     headers: { 
-      'Content-Type': 'application/json',
       'X-User-Id': userId.toString() 
-    },
-    body: JSON.stringify({ action: 'check_keys' })
+    }
   });
-  return await response.json();
+  const data = await response.json();
+  return { ...data, hasKeys: data.success };
 }
 
 export async function deleteApiKeys(userId: number, exchange: string = 'bybit'): Promise<any> {
-  const response = await fetch(BOTS_MANAGER_URL, {
-    method: 'POST',
+  const response = await fetch(`${API_KEYS_URL}?exchange=${exchange}`, {
+    method: 'DELETE',
     headers: { 
-      'Content-Type': 'application/json',
       'X-User-Id': userId.toString()
-    },
-    body: JSON.stringify({ action: 'delete_keys' })
+    }
   });
   return await response.json();
 }

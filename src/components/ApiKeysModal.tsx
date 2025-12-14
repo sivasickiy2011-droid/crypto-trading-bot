@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,40 +14,52 @@ interface ApiKeysModalProps {
   userId: number;
 }
 
+interface KeysState {
+  apiKey: string;
+  apiSecret: string;
+  hasKeys: boolean;
+}
+
 export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModalProps) {
   const { toast } = useToast();
-  const [apiKey, setApiKey] = useState('');
-  const [apiSecret, setApiSecret] = useState('');
-  const [hasKeys, setHasKeys] = useState(false);
+  const [liveKeys, setLiveKeys] = useState<KeysState>({ apiKey: '', apiSecret: '', hasKeys: false });
+  const [testKeys, setTestKeys] = useState<KeysState>({ apiKey: '', apiSecret: '', hasKeys: false });
   const [isLoading, setIsLoading] = useState(false);
   const [showSecrets, setShowSecrets] = useState(false);
+
+  const loadKeys = async (exchange: 'bybit' | 'bybit-testnet') => {
+    try {
+      const result = await getApiKeys(userId, exchange);
+      const keys: KeysState = {
+        apiKey: result.success ? result.api_key || '' : '',
+        apiSecret: result.success ? result.api_secret || '' : '',
+        hasKeys: result.success
+      };
+      
+      if (exchange === 'bybit') {
+        setLiveKeys(keys);
+      } else {
+        setTestKeys(keys);
+      }
+    } catch (error) {
+      console.error(`Failed to load ${exchange} keys`, error);
+    }
+  };
 
   useEffect(() => {
     if (open && userId) {
       setIsLoading(true);
-      getApiKeys(userId, 'bybit')
-        .then((result) => {
-          if (result.success && result.hasKeys) {
-            setApiKey(result.api_key || '');
-            setApiSecret(result.api_secret || '***hidden***');
-            setHasKeys(true);
-          } else {
-            setApiKey('');
-            setApiSecret('');
-            setHasKeys(false);
-          }
-        })
-        .catch(() => {
-          setHasKeys(false);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      Promise.all([
+        loadKeys('bybit'),
+        loadKeys('bybit-testnet')
+      ]).finally(() => setIsLoading(false));
     }
   }, [open, userId]);
 
-  const handleSave = async () => {
-    if (!apiKey || !apiSecret) {
+  const handleSave = async (exchange: 'bybit' | 'bybit-testnet') => {
+    const keys = exchange === 'bybit' ? liveKeys : testKeys;
+    
+    if (!keys.apiKey || !keys.apiSecret) {
       toast({
         title: 'Ошибка',
         description: 'Заполни оба поля',
@@ -57,13 +70,17 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
 
     setIsLoading(true);
     try {
-      const result = await saveApiKeys(userId, apiKey, apiSecret);
+      const result = await saveApiKeys(userId, keys.apiKey, keys.apiSecret, exchange);
       
       if (result.success) {
-        setHasKeys(true);
+        if (exchange === 'bybit') {
+          setLiveKeys({ ...keys, hasKeys: true });
+        } else {
+          setTestKeys({ ...keys, hasKeys: true });
+        }
         toast({
           title: 'Успешно',
-          description: 'API ключи сохранены',
+          description: `API ключи ${exchange === 'bybit' ? 'боевого' : 'тестового'} аккаунта сохранены`
         });
       } else {
         toast({
@@ -83,20 +100,20 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
     }
   };
 
-
-
-  const handleDelete = async () => {
+  const handleDelete = async (exchange: 'bybit' | 'bybit-testnet') => {
     setIsLoading(true);
     try {
-      const result = await deleteApiKeys(userId);
+      const result = await deleteApiKeys(userId, exchange);
       
       if (result.success) {
-        setApiKey('');
-        setApiSecret('');
-        setHasKeys(false);
+        if (exchange === 'bybit') {
+          setLiveKeys({ apiKey: '', apiSecret: '', hasKeys: false });
+        } else {
+          setTestKeys({ apiKey: '', apiSecret: '', hasKeys: false });
+        }
         toast({
           title: 'Успешно',
-          description: 'API ключи удалены',
+          description: `API ключи ${exchange === 'bybit' ? 'боевого' : 'тестового'} аккаунта удалены`
         });
       } else {
         toast({
@@ -116,19 +133,13 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
     }
   };
 
-  const renderKeyInputs = (
-    keyValue: string,
-    secretValue: string,
-    showSecret: boolean,
-    onKeyChange: (value: string) => void,
-    onSecretChange: (value: string) => void,
-    onToggleShow: () => void,
-    onSave: () => void,
-    onDelete: () => void,
-    hasKeysValue: boolean,
-    isTestnet: boolean = false
+  const renderKeysTab = (
+    exchange: 'bybit' | 'bybit-testnet',
+    keys: KeysState,
+    setKeys: (keys: KeysState) => void,
+    isTestnet: boolean
   ) => (
-    <>
+    <div className="space-y-6">
       <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
         <div className="flex items-start space-x-3">
           <Icon name="Info" size={20} className="text-primary mt-0.5" />
@@ -149,10 +160,10 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
           <Label>API Key</Label>
           <div className="relative">
             <Input
-              type={showSecret ? "text" : "password"}
+              type={showSecrets ? "text" : "password"}
               placeholder="Вставь API ключ"
-              value={keyValue}
-              onChange={(e) => onKeyChange(e.target.value)}
+              value={keys.apiKey}
+              onChange={(e) => setKeys({ ...keys, apiKey: e.target.value })}
               disabled={isLoading}
               className="font-mono pr-10"
             />
@@ -161,9 +172,9 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
               variant="ghost"
               size="icon"
               className="absolute right-0 top-0 h-full"
-              onClick={onToggleShow}
+              onClick={() => setShowSecrets(!showSecrets)}
             >
-              <Icon name={showSecret ? "EyeOff" : "Eye"} size={16} />
+              <Icon name={showSecrets ? "EyeOff" : "Eye"} size={16} />
             </Button>
           </div>
         </div>
@@ -172,10 +183,10 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
           <Label>Secret Key</Label>
           <div className="relative">
             <Input
-              type={showSecret ? "text" : "password"}
+              type={showSecrets ? "text" : "password"}
               placeholder="Вставь Secret ключ"
-              value={secretValue}
-              onChange={(e) => onSecretChange(e.target.value)}
+              value={keys.apiSecret}
+              onChange={(e) => setKeys({ ...keys, apiSecret: e.target.value })}
               disabled={isLoading}
               className="font-mono pr-10"
             />
@@ -184,27 +195,27 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
               variant="ghost"
               size="icon"
               className="absolute right-0 top-0 h-full"
-              onClick={onToggleShow}
+              onClick={() => setShowSecrets(!showSecrets)}
             >
-              <Icon name={showSecret ? "EyeOff" : "Eye"} size={16} />
+              <Icon name={showSecrets ? "EyeOff" : "Eye"} size={16} />
             </Button>
           </div>
         </div>
       </div>
 
       <div className="flex space-x-3">
-        <Button onClick={onSave} disabled={isLoading} className="flex-1">
+        <Button onClick={() => handleSave(exchange)} disabled={isLoading} className="flex-1">
           <Icon name="Save" size={16} className="mr-2" />
-          {hasKeysValue ? 'Обновить' : 'Сохранить'}
+          {keys.hasKeys ? 'Обновить' : 'Сохранить'}
         </Button>
-        {hasKeysValue && (
-          <Button variant="destructive" onClick={onDelete} disabled={isLoading}>
+        {keys.hasKeys && (
+          <Button variant="destructive" onClick={() => handleDelete(exchange)} disabled={isLoading}>
             <Icon name="Trash2" size={16} className="mr-2" />
             Удалить
           </Button>
         )}
       </div>
-    </>
+    </div>
   );
 
   return (
@@ -217,117 +228,26 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 mt-4">
-          {renderKeyInputs(
-            apiKey, 
-            apiSecret, 
-            showSecrets,
-            setApiKey,
-            setApiSecret,
-            () => setShowSecrets(!showSecrets),
-            handleSave,
-            () => handleDelete('bybit'),
-            hasKeys,
-            false
-          )}
-        </div>
+        <Tabs defaultValue="live" className="mt-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="live">
+              <Icon name="Zap" size={16} className="mr-2" />
+              Боевой аккаунт
+            </TabsTrigger>
+            <TabsTrigger value="testnet">
+              <Icon name="TestTube" size={16} className="mr-2" />
+              Тестовый аккаунт
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="space-y-6 mt-4 hidden">
-          <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-            <div className="flex items-start space-x-3">
-              <Icon name="Info" size={20} className="text-primary mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium mb-1">Как получить API ключи:</p>
-                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                  <li>Войди на Bybit → Профиль → API</li>
-                  <li>Создай новый API ключ</li>
-                  <li>Разрешения: "Чтение" и "Торговля"</li>
-                  <li>Скопируй API Key и Secret Key</li>
-                </ol>
-              </div>
-            </div>
-          </div>
+          <TabsContent value="live" className="mt-6">
+            {renderKeysTab('bybit', liveKeys, setLiveKeys, false)}
+          </TabsContent>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="apiKey">API Key</Label>
-              <div className="relative">
-                <Input
-                  id="apiKey"
-                  type={showSecrets ? "text" : "password"}
-                  placeholder="Вставь API ключ"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  disabled={isLoading}
-                  className="font-mono pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full"
-                  onClick={() => setShowSecrets(!showSecrets)}
-                >
-                  <Icon name={showSecrets ? "EyeOff" : "Eye"} size={16} />
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="apiSecret">Secret Key</Label>
-              <div className="relative">
-                <Input
-                  id="apiSecret"
-                  type={showSecrets ? "text" : "password"}
-                  placeholder="Вставь Secret ключ"
-                  value={apiSecret}
-                  onChange={(e) => setApiSecret(e.target.value)}
-                  disabled={isLoading}
-                  className="font-mono pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full"
-                  onClick={() => setShowSecrets(!showSecrets)}
-                >
-                  <Icon name={showSecrets ? "EyeOff" : "Eye"} size={16} />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t my-4"></div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {hasKeys && (
-                <Button 
-                  variant="destructive" 
-                  onClick={handleDelete}
-                  disabled={isLoading}
-                >
-                  <Icon name="Trash2" size={16} className="mr-2" />
-                  Удалить ключи
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-                Закрыть
-              </Button>
-              <Button onClick={handleSave} disabled={isLoading || !apiKey || !apiSecret}>
-                {isLoading ? (
-                  <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
-                ) : (
-                  <Icon name="Save" size={16} className="mr-2" />
-                )}
-                {isLoading ? 'Сохранение...' : 'Сохранить'}
-              </Button>
-            </div>
-          </div>
-        </div>
+          <TabsContent value="testnet" className="mt-6">
+            {renderKeysTab('bybit-testnet', testKeys, setTestKeys, true)}
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
