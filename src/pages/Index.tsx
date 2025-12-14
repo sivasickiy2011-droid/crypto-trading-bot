@@ -42,7 +42,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [currentTimeframe, setCurrentTimeframe] = useState('15');
   const [chartsEnabled, setChartsEnabled] = useState(true);
   const [signalsMode, setSignalsMode] = useState<'disabled' | 'bots_only' | 'top10'>('bots_only');
-  const [apiRequestsEnabled, setApiRequestsEnabled] = useState(false);
+  const [apiRequestsEnabled, setApiRequestsEnabled] = useState(true);
 
   const { watchlist, logs, handleAddPair, handleRemovePair } = useMarketData(apiRequestsEnabled);
 

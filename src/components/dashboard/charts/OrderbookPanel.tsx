@@ -25,22 +25,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
     setOrderModalOpen(true);
   };
 
-  if (orderbook.length === 0) {
-    return (
-      <Card className="bg-card border-border h-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Стакан</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center text-muted-foreground py-12">
-            <Icon name="BookOpen" size={32} className="mx-auto mb-2 opacity-30" />
-            <p className="text-xs">Загрузка...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  // useMemo должен быть вызван ВСЕГДА, до любого условного return
   const { asks, bids, maxSize, spreadPrice, spreadPercent, bestAskPrice } = useMemo(() => {
     const asksData = orderbook.filter(o => o.askSize > 0).sort((a, b) => a.price - b.price).slice(0, 20);
     const bidsData = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
@@ -64,6 +49,22 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
       bestAskPrice: bestAskPriceValue
     };
   }, [orderbook]);
+
+  if (orderbook.length === 0) {
+    return (
+      <Card className="bg-card border-border h-full">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Стакан</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center text-muted-foreground py-12">
+            <Icon name="BookOpen" size={32} className="mx-auto mb-2 opacity-30" />
+            <p className="text-xs">Загрузка...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
