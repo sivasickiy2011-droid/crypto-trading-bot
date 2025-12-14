@@ -65,16 +65,16 @@ export default function TestTrade() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Тестовая торговля SOL/USDT</h1>
           <p className="text-muted-foreground">
-            Демо-счет • Testnet Bybit • Без реальных денег
+            Демо-счет Bybit • Виртуальный баланс • Без риска
           </p>
-          <div className="mt-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+          <div className="mt-4 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
             <div className="flex items-start space-x-3">
-              <Icon name="AlertTriangle" size={20} className="text-yellow-500 mt-0.5" />
+              <Icon name="Info" size={20} className="text-blue-500 mt-0.5" />
               <div className="text-sm">
-                <p className="font-medium mb-1 text-yellow-600 dark:text-yellow-500">Важно: Используй ключи от testnet.bybit.com</p>
+                <p className="font-medium mb-1 text-blue-600 dark:text-blue-500">Используется демо-счет Bybit</p>
                 <p className="text-muted-foreground">
-                  API ключи от обычного bybit.com НЕ РАБОТАЮТ на testnet. 
-                  Создай ключи на <strong>testnet.bybit.com</strong> и добавь их на вкладке "Тестовый аккаунт" в настройках API.
+                  Торговля идет на виртуальном балансе через <strong>bybit.com</strong> (демо-режим). 
+                  Убедись, что в настройках API добавлены ключи на вкладке "Боевой аккаунт" с правами Read и Trade.
                 </p>
               </div>
             </div>

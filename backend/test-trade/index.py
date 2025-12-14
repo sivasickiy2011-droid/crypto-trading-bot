@@ -9,17 +9,17 @@ from urllib.request import Request, urlopen
 from typing import Dict, Any
 import psycopg2
 
-BYBIT_TESTNET_URL = "https://api-testnet.bybit.com"
+BYBIT_API_URL = "https://api.bybit.com"
 
 def get_db_connection():
     return psycopg2.connect(os.environ['DATABASE_URL'])
 
 def get_user_api_keys(user_id: int) -> tuple[str, str]:
-    """Get user's Bybit testnet API keys"""
+    """Get user's Bybit API keys (for demo account)"""
     conn = get_db_connection()
     cur = conn.cursor()
     
-    query = f"SELECT api_key, api_secret FROM user_api_keys WHERE user_id = {user_id} AND exchange = 'bybit-testnet'"
+    query = f"SELECT api_key, api_secret FROM user_api_keys WHERE user_id = {user_id} AND exchange = 'bybit'"
     cur.execute(query)
     
     result = cur.fetchone()
@@ -27,7 +27,7 @@ def get_user_api_keys(user_id: int) -> tuple[str, str]:
     conn.close()
     
     if not result:
-        raise Exception(f'Testnet API keys not found for user {user_id}')
+        raise Exception(f'Bybit API keys not found for user {user_id}')
     
     api_key = base64.b64decode(result[0]).decode('utf-8')
     api_secret = base64.b64decode(result[1]).decode('utf-8')
@@ -46,7 +46,7 @@ def generate_signature(params: str, secret: str) -> str:
     ).hexdigest()
 
 def bybit_request(endpoint: str, api_key: str, api_secret: str, params: Dict[str, Any] = None, method: str = 'GET') -> Dict[str, Any]:
-    """Make authenticated request to Bybit V5 testnet API"""
+    """Make authenticated request to Bybit V5 API (demo account)"""
     if not params:
         params = {}
     
@@ -62,7 +62,7 @@ def bybit_request(endpoint: str, api_key: str, api_secret: str, params: Dict[str
     
     signature = generate_signature(sign_payload, api_secret)
     
-    url = f"{BYBIT_TESTNET_URL}{endpoint}"
+    url = f"{BYBIT_API_URL}{endpoint}"
     if method == 'GET' and param_str:
         url += f"?{param_str}"
     
@@ -171,10 +171,10 @@ def send_telegram(message: str):
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Тестовый запуск торговли на демо-счете
-    Открывает позицию по SOL/USDT, держит 30 секунд и закрывает
-    Args: event - HTTP запрос с user_id и action
-    Returns: Отчет о тестовой сделке
+    Тестовая торговля на демо-счете Bybit (виртуальные деньги)
+    Открывает/закрывает позицию по SOL/USDT на демо-счете
+    Args: event - HTTP запрос с user_id и action (open/close/status)
+    Returns: Отчет о тестовой сделке с балансом и PnL
     '''
     method = event.get('httpMethod', 'POST')
     
