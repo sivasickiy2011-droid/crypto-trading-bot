@@ -298,7 +298,7 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
             </div>
           </div>
 
-          <Separator />
+          <div className="border-t my-4"></div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
