@@ -10,16 +10,18 @@ from typing import Dict, Any, List, Optional
 import psycopg2
 
 BYBIT_BASE_URL = "https://api.bybit.com"
+BYBIT_TESTNET_URL = "https://api-testnet.bybit.com"
 
 def get_db_connection():
     return psycopg2.connect(os.environ['DATABASE_URL'])
 
-def get_user_api_keys(user_id: int) -> tuple[str, str]:
+def get_user_api_keys(user_id: int, testnet: bool = True) -> tuple[str, str]:
     """Get user's Bybit API keys from database"""
     conn = get_db_connection()
     cur = conn.cursor()
     
-    query = f"SELECT api_key, api_secret FROM user_api_keys WHERE user_id = {user_id} AND exchange = 'bybit'"
+    exchange = 'bybit-testnet' if testnet else 'bybit'
+    query = f"SELECT api_key, api_secret FROM user_api_keys WHERE user_id = {user_id} AND exchange = '{exchange}'"
     cur.execute(query)
     
     result = cur.fetchone()
@@ -27,7 +29,7 @@ def get_user_api_keys(user_id: int) -> tuple[str, str]:
     conn.close()
     
     if not result:
-        raise Exception(f'API keys not found for user {user_id}')
+        raise Exception(f'API keys not found for user {user_id} (exchange={exchange})')
     
     api_key = base64.b64decode(result[0]).decode('utf-8')
     api_secret = base64.b64decode(result[1]).decode('utf-8')
@@ -42,7 +44,7 @@ def generate_signature(params: str, secret: str) -> str:
         hashlib.sha256
     ).hexdigest()
 
-def bybit_request(endpoint: str, api_key: str, api_secret: str, params: Dict[str, Any] = None, method: str = 'GET') -> Dict[str, Any]:
+def bybit_request(endpoint: str, api_key: str, api_secret: str, params: Dict[str, Any] = None, method: str = 'GET', testnet: bool = True) -> Dict[str, Any]:
     """Make authenticated request to Bybit V5 API"""
     if not params:
         params = {}
@@ -59,7 +61,8 @@ def bybit_request(endpoint: str, api_key: str, api_secret: str, params: Dict[str
     
     signature = generate_signature(sign_payload, api_secret)
     
-    url = f"{BYBIT_BASE_URL}{endpoint}"
+    base_url = BYBIT_TESTNET_URL if testnet else BYBIT_BASE_URL
+    url = f"{base_url}{endpoint}"
     if method == 'GET' and param_str:
         url += f"?{param_str}"
     
@@ -263,13 +266,15 @@ def analyze_strategy(klines: List[Dict[str, Any]], strategy: str) -> Optional[st
     
     return None
 
-def get_current_position(api_key: str, api_secret: str, symbol: str) -> Optional[Dict[str, Any]]:
+def get_current_position(api_key: str, api_secret: str, symbol: str, testnet: bool = True) -> Optional[Dict[str, Any]]:
     """Get current position for symbol"""
     result = bybit_request(
         '/v5/position/list',
         api_key,
         api_secret,
-        {'category': 'linear', 'symbol': symbol}
+        {'category': 'linear', 'symbol': symbol},
+        'GET',
+        testnet
     )
     
     if result.get('retCode') == 0:
@@ -286,7 +291,7 @@ def get_current_position(api_key: str, api_secret: str, symbol: str) -> Optional
     
     return None
 
-def place_order(api_key: str, api_secret: str, symbol: str, side: str, qty: float) -> bool:
+def place_order(api_key: str, api_secret: str, symbol: str, side: str, qty: float, testnet: bool = True) -> bool:
     """Place market order on Bybit"""
     params = {
         'category': 'linear',
@@ -297,14 +302,14 @@ def place_order(api_key: str, api_secret: str, symbol: str, side: str, qty: floa
         'timeInForce': 'GTC'
     }
     
-    result = bybit_request('/v5/order/create', api_key, api_secret, params, 'POST')
+    result = bybit_request('/v5/order/create', api_key, api_secret, params, 'POST', testnet)
     
     return result.get('retCode') == 0
 
-def close_position(api_key: str, api_secret: str, symbol: str, side: str, qty: float) -> bool:
+def close_position(api_key: str, api_secret: str, symbol: str, side: str, qty: float, testnet: bool = True) -> bool:
     """Close position"""
     close_side = 'Sell' if side == 'Buy' else 'Buy'
-    return place_order(api_key, api_secret, symbol, close_side, qty)
+    return place_order(api_key, api_secret, symbol, close_side, qty, testnet)
 
 def send_telegram_notification(message: str):
     """Send notification to Telegram"""
@@ -379,8 +384,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         for bot_row in active_bots:
             user_id, bot_id, pair, market, strategy, entry_signal = bot_row
             
+            # По умолчанию используем testnet (демо-счет)
+            use_testnet = True
+            
             try:
-                api_key, api_secret = get_user_api_keys(user_id)
+                api_key, api_secret = get_user_api_keys(user_id, testnet=use_testnet)
             except Exception as e:
                 actions.append(f'Bot {bot_id}: No API keys - {str(e)}')
                 continue
@@ -407,17 +415,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             signal = analyze_strategy(klines, strategy_key)
             priority_mark = '⭐' if is_top_pair else ''
-            print(f'Bot {bot_id} ({symbol}){priority_mark}: strategy={strategy_key}, signal={signal}')
+            testnet_mark = '🧪' if use_testnet else ''
+            print(f'Bot {bot_id} ({symbol}){priority_mark}{testnet_mark}: strategy={strategy_key}, signal={signal}')
             
-            position = get_current_position(api_key, api_secret, symbol)
+            position = get_current_position(api_key, api_secret, symbol, testnet=use_testnet)
             
             if position:
                 pos_side = position['side']
                 
                 if (signal == 'SELL' and pos_side == 'Buy') or (signal == 'BUY' and pos_side == 'Sell'):
-                    if close_position(api_key, api_secret, symbol, pos_side, position['size']):
+                    if close_position(api_key, api_secret, symbol, pos_side, position['size'], testnet=use_testnet):
                         pnl = position['unrealizedPnl']
-                        msg = f"🔴 Закрыта позиция {symbol}\nPnL: {pnl:.2f} USDT\nПричина: Обратный сигнал"
+                        msg = f"🔴 Закрыта позиция {symbol}\nPnL: {pnl:.2f} USDT\nПричина: Обратный сигнал\nРежим: {'Testnet' if use_testnet else 'Live'}"
                         send_telegram_notification(msg)
                         actions.append(f'Bot {bot_id}: Closed position {pos_side} on {symbol}, PnL: {pnl:.2f}')
                     else:
@@ -428,9 +437,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     side = 'Buy' if signal == 'BUY' else 'Sell'
                     qty = 0.001
                     
-                    if place_order(api_key, api_secret, symbol, side, qty):
+                    if place_order(api_key, api_secret, symbol, side, qty, testnet=use_testnet):
                         current_price = klines[-1]['close']
-                        msg = f"🟢 Открыта позиция {symbol}\nНаправление: {side}\nЦена: {current_price}\nСтратегия: {strategy}"
+                        msg = f"🟢 Открыта позиция {symbol}\nНаправление: {side}\nЦена: {current_price}\nСтратегия: {strategy}\nРежим: {'Testnet' if use_testnet else 'Live'}"
                         send_telegram_notification(msg)
                         actions.append(f'Bot {bot_id}: Opened {side} position on {symbol}')
                         
