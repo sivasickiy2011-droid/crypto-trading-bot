@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -54,21 +54,77 @@ interface TradesPanelProps {
 }
 
 export default function TradesPanel({ positions, closedTrades, strategySignals, botLogs, onLogAdd, activeBotCount = 0, onBotCountChange, onBotClick, userPositions, accountMode = 'demo', userId }: TradesPanelProps) {
+  const [tradeMode, setTradeMode] = useState<'live' | 'demo'>('demo');
+  const [virtualTrades, setVirtualTrades] = useState<any[]>([]);
+  const [loadingVirtual, setLoadingVirtual] = useState(false);
+
+  // Load virtual trades
+  useEffect(() => {
+    if (tradeMode === 'demo') {
+      loadVirtualTrades();
+    }
+  }, [tradeMode, userId]);
+
+  const loadVirtualTrades = async () => {
+    try {
+      setLoadingVirtual(true);
+      const response = await fetch(`https://functions.poehali.dev/0eb3fae3-717f-4343-a978-789ab29b3561?status=all&limit=100`, {
+        headers: { 'X-User-Id': userId.toString() }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setVirtualTrades(data.trades);
+      }
+    } catch (error) {
+      console.error('Failed to load virtual trades:', error);
+    } finally {
+      setLoadingVirtual(false);
+    }
+  };
+
+  const displayTrades = tradeMode === 'demo' 
+    ? virtualTrades.filter(t => t.status === 'closed')
+    : closedTrades;
+  
+  const displayPositions = tradeMode === 'demo'
+    ? virtualTrades.filter(t => t.status === 'open')
+    : positions;
+
   return (
     <Card className="bg-card border-border">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between pb-4">
         <CardTitle className="text-base">Сделки</CardTitle>
+        <div className="flex items-center gap-2 bg-secondary/50 rounded-lg p-1">
+          <Button
+            size="sm"
+            variant={tradeMode === 'live' ? 'default' : 'ghost'}
+            className="h-7 text-xs"
+            onClick={() => setTradeMode('live')}
+          >
+            <Icon name="Zap" size={12} className="mr-1" />
+            Реальные
+          </Button>
+          <Button
+            size="sm"
+            variant={tradeMode === 'demo' ? 'default' : 'ghost'}
+            className="h-7 text-xs"
+            onClick={() => setTradeMode('demo')}
+          >
+            <Icon name="Gamepad2" size={12} className="mr-1" />
+            Демо
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="open" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="open" className="text-xs">
               <Icon name="CircleDot" size={14} className="mr-1.5" />
-              Открытые ({positions.length})
+              Открытые ({displayPositions.length})
             </TabsTrigger>
             <TabsTrigger value="history" className="text-xs">
               <Icon name="History" size={14} className="mr-1.5" />
-              История ({closedTrades.length})
+              История ({displayTrades.length})
             </TabsTrigger>
             <TabsTrigger value="signals" className="text-xs">
               <Icon name="Activity" size={14} className="mr-1.5" />
@@ -85,37 +141,55 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
           </TabsList>
           
           <TabsContent value="open" className="mt-4">
-            {positions.length === 0 ? (
+            {displayPositions.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 <Icon name="Inbox" size={36} className="mx-auto mb-3 opacity-30" />
                 <p className="text-sm">Нет открытых позиций</p>
               </div>
             ) : (
               <div className="space-y-2">
-                {positions.map((position) => (
-                  <div key={position.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border hover:bg-secondary/80 transition-colors">
+                {displayPositions.map((position: any) => {
+                  const isVirtual = 'is_demo' in position;
+                  const displayPosition = isVirtual ? {
+                    id: position.id,
+                    pair: position.symbol,
+                    side: position.side === 'Buy' ? 'LONG' : 'SHORT',
+                    entry: position.entry_price,
+                    current: position.entry_price, // Will need real-time price
+                    size: position.quantity,
+                    leverage: position.leverage,
+                    pnl: 0, // Calculate later
+                    pnlPercent: 0,
+                    status: 'open'
+                  } : position;
+                  
+                  return (
+                  <div key={displayPosition.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border hover:bg-secondary/80 transition-colors">
                     <div className="flex items-center space-x-4">
-                      <Badge variant={position.side === 'LONG' ? 'default' : 'destructive'} className="w-16 justify-center">
-                        {position.side}
+                      <Badge variant={displayPosition.side === 'LONG' ? 'default' : 'destructive'} className="w-16 justify-center">
+                        {displayPosition.side}
                       </Badge>
                       <div>
-                        <div className="font-semibold text-sm">{position.pair}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm">{displayPosition.pair}</span>
+                          {isVirtual && <Badge variant="outline" className="text-xs h-5">DEMO</Badge>}
+                        </div>
                         <div className="text-xs text-muted-foreground font-mono">
-                          Вход: ${position.entry} • Объем: {position.size} • {position.leverage}x
+                          Вход: ${displayPosition.entry} • Объем: {displayPosition.size} • {displayPosition.leverage}x
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-6">
                       <div className="text-right">
-                        <div className="font-mono text-sm">${position.current}</div>
+                        <div className="font-mono text-sm">${displayPosition.current}</div>
                         <div className="text-xs text-muted-foreground">Текущая</div>
                       </div>
                       <div className="text-right min-w-[100px]">
-                        <div className={`font-mono font-semibold ${position.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
-                          {position.pnl >= 0 ? '+' : ''}{position.pnl.toFixed(2)} USDT
+                        <div className={`font-mono font-semibold ${displayPosition.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          {displayPosition.pnl >= 0 ? '+' : ''}{displayPosition.pnl.toFixed(2)} USDT
                         </div>
-                        <div className={`text-xs ${position.pnlPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
-                          {position.pnlPercent >= 0 ? '+' : ''}{position.pnlPercent.toFixed(2)}%
+                        <div className={`text-xs ${displayPosition.pnlPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          {displayPosition.pnlPercent >= 0 ? '+' : ''}{displayPosition.pnlPercent.toFixed(2)}%
                         </div>
                       </div>
                       <Button size="sm" variant="destructive" className="h-8">
@@ -124,42 +198,66 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
                       </Button>
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             )}
           </TabsContent>
           
           <TabsContent value="history" className="mt-4">
-            {closedTrades.length === 0 ? (
+            {displayTrades.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 <Icon name="Inbox" size={36} className="mx-auto mb-3 opacity-30" />
                 <p className="text-sm">Нет закрытых сделок</p>
               </div>
             ) : (
               <div className="space-y-2">
-                {closedTrades.map((trade) => (
-                  <div key={trade.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
+                {displayTrades.map((trade: any) => {
+                  const isVirtual = 'is_demo' in trade;
+                  const displayTrade = isVirtual ? {
+                    id: trade.id,
+                    pair: trade.symbol,
+                    side: trade.side === 'Buy' ? 'LONG' : 'SHORT',
+                    entry: trade.entry_price,
+                    exit: trade.close_price,
+                    size: trade.quantity,
+                    pnl: trade.pnl || 0,
+                    pnlPercent: trade.pnl ? (trade.pnl / (trade.entry_price * trade.quantity) * 100) : 0,
+                    closeTime: new Date(trade.closed_at).toLocaleString('ru-RU', { 
+                      day: '2-digit', 
+                      month: '2-digit', 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })
+                  } : trade;
+                  
+                  return (
+                  <div key={displayTrade.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
                     <div className="flex items-center space-x-4">
-                      <Badge variant={trade.side === 'LONG' ? 'outline' : 'outline'} className="w-16 justify-center">
-                        {trade.side}
+                      <Badge variant={displayTrade.side === 'LONG' ? 'outline' : 'outline'} className="w-16 justify-center">
+                        {displayTrade.side}
                       </Badge>
                       <div>
-                        <div className="font-semibold text-sm">{trade.pair}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm">{displayTrade.pair}</span>
+                          {isVirtual && <Badge variant="outline" className="text-xs h-5 bg-green-500/10 border-green-500/30 text-green-600">DEMO</Badge>}
+                        </div>
                         <div className="text-xs text-muted-foreground font-mono">
-                          {trade.entry} → {trade.exit} • {trade.size} • {trade.closeTime}
+                          {displayTrade.entry} → {displayTrade.exit} • {displayTrade.size} • {displayTrade.closeTime}
                         </div>
                       </div>
                     </div>
                     <div className="text-right min-w-[100px]">
-                      <div className={`font-mono font-semibold ${trade.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
-                        {trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)} USDT
+                      <div className={`font-mono font-semibold ${displayTrade.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        {displayTrade.pnl >= 0 ? '+' : ''}{displayTrade.pnl.toFixed(2)} USDT
                       </div>
-                      <div className={`text-xs ${trade.pnlPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
-                        {trade.pnlPercent >= 0 ? '+' : ''}{trade.pnlPercent.toFixed(2)}%
+                      <div className={`text-xs ${displayTrade.pnlPercent >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        {displayTrade.pnlPercent >= 0 ? '+' : ''}{displayTrade.pnlPercent.toFixed(2)}%
                       </div>
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             )}
           </TabsContent>
