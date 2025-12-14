@@ -47,31 +47,24 @@ export default function DevConsole({ userId }: DevConsoleProps) {
   const [loading, setLoading] = useState(false);
   const [strategies, setStrategies] = useState<StrategyMetrics[]>([]);
   const [autoMonitor, setAutoMonitor] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-R1-Distill-Llama-70B');
+  const [selectedModel, setSelectedModel] = useState('yandexgpt');
   const [showModels, setShowModels] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const availableModels: AIModel[] = [
     {
-      id: 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
-      name: 'Llama 3.1 70B Versatile',
-      description: 'Лучший баланс скорости и качества (Groq)',
-      speed: 'Очень быстрая',
-      quality: 'Отличная'
-    },
-    {
-      id: 'meta-llama/Meta-Llama-3.1-8B-Instruct',
-      name: 'Llama 3.1 8B Instant',
-      description: 'Мгновенные ответы для простых задач',
-      speed: 'Молниеносная',
-      quality: 'Хорошая'
-    },
-    {
-      id: 'mistralai/Mistral-Large-Instruct-2407',
-      name: 'Mixtral 8x7B',
-      description: 'Модель Mixtral для сложных задач',
+      id: 'yandexgpt',
+      name: 'YandexGPT',
+      description: 'Основная модель для сложных задач',
       speed: 'Быстрая',
       quality: 'Отличная'
+    },
+    {
+      id: 'yandexgpt-lite',
+      name: 'YandexGPT Lite',
+      description: 'Облегчённая версия для простых задач',
+      speed: 'Очень быстрая',
+      quality: 'Хорошая'
     }
   ];
 
@@ -291,7 +284,7 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
                   onClick={() => setShowModels(!showModels)}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                 >
-                  {availableModels.find(m => m.id === selectedModel)?.name || 'Llama 3.1 70B'} • Groq (без VPN)
+                  {availableModels.find(m => m.id === selectedModel)?.name || 'YandexGPT'} • Yandex Cloud
                   <Icon name={showModels ? 'ChevronUp' : 'ChevronDown'} size={14} />
                 </button>
                 

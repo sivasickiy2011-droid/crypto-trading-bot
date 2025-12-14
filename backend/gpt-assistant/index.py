@@ -5,10 +5,10 @@ from typing import Dict, Any
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    AI ассистент для анализа торговых стратегий через Groq API
+    AI ассистент для анализа торговых стратегий через YandexGPT
     Мониторит стратегии 24/7 и предлагает оптимизации
     Args: event - POST запрос с message, model и context
-    Returns: Ответ от Llama 3.1 70B с рекомендациями (работает без VPN)
+    Returns: Ответ от YandexGPT с рекомендациями (работает из Yandex Cloud без VPN)
     '''
     method: str = event.get('httpMethod', 'POST')
     
@@ -65,38 +65,39 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             for s in context_data['strategies']:
                 strategies_info += f"- {s['name']}: WinRate {s['winRate']:.1f}%, Сделок: {s['totalTrades']}, Средняя прибыль: {s['avgProfit']:.2f}%\n"
         
-        # Вызов Groq API (работает без VPN из России!)
-        groq_key = os.environ.get('GROQ_API_KEY')
-        if not groq_key:
-            raise Exception('GROQ_API_KEY not configured. Получите ключ на console.groq.com')
+        # Вызов YandexGPT API (работает из Yandex Cloud без VPN!)
+        yandex_api_key = os.environ.get('YANDEX_API_KEY')
+        yandex_folder_id = os.environ.get('YANDEX_FOLDER_ID')
         
-        # Маппинг моделей на Groq (Nebius модели не поддерживаются)
-        groq_models = {
-            'deepseek-ai/DeepSeek-R1-Distill-Llama-70B': 'llama-3.1-70b-versatile',
-            'Qwen/Qwen2.5-Coder-32B-Instruct': 'llama-3.1-70b-versatile',
-            'meta-llama/Meta-Llama-3.1-70B-Instruct': 'llama-3.1-70b-versatile',
-            'mistralai/Mistral-Large-Instruct-2407': 'mixtral-8x7b-32768',
-            'meta-llama/Meta-Llama-3.1-8B-Instruct': 'llama-3.1-8b-instant'
-        }
-        groq_model = groq_models.get(selected_model, 'llama-3.1-70b-versatile')
+        if not yandex_api_key:
+            raise Exception('YANDEX_API_KEY not configured. Получите ключ на console.cloud.yandex.ru')
+        if not yandex_folder_id:
+            raise Exception('YANDEX_FOLDER_ID not configured. Найдите в console.cloud.yandex.ru')
+        
+        # YandexGPT использует свой формат запроса
+        yandex_model = 'yandexgpt-lite' if 'llama-3.1-8b' in selected_model.lower() else 'yandexgpt'
         
         ai_request = {
-            'model': groq_model,
+            'modelUri': f'gpt://{yandex_folder_id}/{yandex_model}/latest',
+            'completionOptions': {
+                'stream': False,
+                'temperature': 0.7,
+                'maxTokens': 800
+            },
             'messages': [
-                {'role': 'system', 'content': system_prompt + strategies_info},
-                {'role': 'user', 'content': user_message}
-            ],
-            'max_tokens': 800,
-            'temperature': 0.7
+                {'role': 'system', 'text': system_prompt + strategies_info},
+                {'role': 'user', 'text': user_message}
+            ]
         }
         
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {groq_key}'
+            'Authorization': f'Api-Key {yandex_api_key}',
+            'x-folder-id': yandex_folder_id
         }
         
         req = Request(
-            'https://api.groq.com/openai/v1/chat/completions',
+            'https://llm.api.cloud.yandex.net/foundationModels/v1/completion',
             data=json.dumps(ai_request).encode('utf-8'),
             headers=headers,
             method='POST'
@@ -104,20 +105,32 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         try:
             with urlopen(req, timeout=60) as response:
-                ai_response = json.loads(response.read().decode('utf-8'))
+                yandex_response = json.loads(response.read().decode('utf-8'))
+                
+                if 'result' in yandex_response and 'alternatives' in yandex_response['result']:
+                    ai_message = yandex_response['result']['alternatives'][0]['message']['text']
+                    ai_response = {
+                        'choices': [{
+                            'message': {
+                                'content': ai_message
+                            }
+                        }]
+                    }
+                else:
+                    raise Exception('Invalid YandexGPT response format')
         except Exception as api_error:
             error_msg = str(api_error)
             
             if hasattr(api_error, 'read'):
                 try:
                     error_body = api_error.read().decode('utf-8')
-                    raise Exception(f'Groq API error: {error_msg} | Response: {error_body}')
+                    raise Exception(f'YandexGPT API error: {error_msg} | Response: {error_body}')
                 except:
                     pass
             
-            if '401' in error_msg or 'Unauthorized' in error_msg:
-                raise Exception(f'Groq API: неверный API ключ. Получите новый на console.groq.com')
-            raise Exception(f'Groq API error: {error_msg}')
+            if '401' in error_msg or 'Unauthorized' in error_msg or '403' in error_msg:
+                raise Exception(f'YandexGPT API: проверьте API ключ и Folder ID. Инструкция: console.cloud.yandex.ru')
+            raise Exception(f'YandexGPT API error: {error_msg}')
         
         if 'choices' in ai_response and len(ai_response['choices']) > 0:
             ai_message = ai_response['choices'][0]['message']['content']
@@ -131,8 +144,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'body': json.dumps({
                     'success': True,
                     'response': ai_message,
-                    'model': groq_model,
-                    'provider': 'Groq (без VPN)',
+                    'model': yandex_model,
+                    'provider': 'YandexGPT',
                     'timestamp': context.request_id
                 }),
                 'isBase64Encoded': False
