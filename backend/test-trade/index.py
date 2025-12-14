@@ -189,11 +189,16 @@ def send_telegram(message: str):
     except Exception as e:
         print(f'Telegram error: {e}')
 
+def get_api_key_permissions(api_key: str, api_secret: str) -> Dict[str, Any]:
+    """Check API key permissions"""
+    result = bybit_request('/v5/user/query-api', api_key, api_secret, {}, 'GET')
+    return result
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Тестовая торговля на демо-счете Bybit (виртуальные деньги)
     Открывает/закрывает позицию по SOL/USDT на демо-счете
-    Args: event - HTTP запрос с user_id и action (open/close/status)
+    Args: event - HTTP запрос с user_id и action (open/close/status/diagnose)
     Returns: Отчет о тестовой сделке с балансом и PnL
     '''
     method = event.get('httpMethod', 'POST')
@@ -218,6 +223,29 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         symbol = 'SOLUSDT'
         
         api_key, api_secret = get_user_api_keys(user_id)
+        
+        steps = []
+        
+        # Диагностика: показываем настройки API
+        if action == 'diagnose':
+            steps.append(f'🔧 API URL: {BYBIT_API_URL}')
+            steps.append(f'🔑 API Key: {api_key[:8]}...{api_key[-4:]}')
+            
+            # Проверяем права API ключа
+            permissions = get_api_key_permissions(api_key, api_secret)
+            if permissions.get('retCode') == 0:
+                perm_data = permissions.get('result', {})
+                steps.append(f'✅ API подключен успешно')
+                steps.append(f'📋 Права: {json.dumps(perm_data, indent=2)}')
+            else:
+                steps.append(f'❌ Ошибка проверки прав: {permissions.get("retMsg")}')
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'success': True, 'steps': steps, 'api_url': BYBIT_API_URL}),
+                'isBase64Encoded': False
+            }
         
         steps = []
         

@@ -30,7 +30,7 @@ export default function TestTrade() {
     }
   };
 
-  const runTest = async (action: 'open' | 'close' | 'status') => {
+  const runTest = async (action: 'open' | 'close' | 'status' | 'diagnose') => {
     try {
       setLoading(true);
       setResult([`⏳ Запускаю ${action}...`]);
@@ -44,7 +44,11 @@ export default function TestTrade() {
       const data = await response.json();
 
       if (data.success) {
-        setResult(data.steps || ['Успешно']);
+        const steps = data.steps || ['Успешно'];
+        if (data.api_url) {
+          steps.push(`🌐 API URL: ${data.api_url}`);
+        }
+        setResult(steps);
         toast.success(`Действие ${action} выполнено`);
       } else {
         setResult([`❌ Ошибка: ${data.error}`, JSON.stringify(data.details || {}, null, 2)]);
@@ -84,20 +88,32 @@ export default function TestTrade() {
         <Card className="p-6 mb-6">
           <div className="space-y-4">
             <Button
-              onClick={checkApiKey}
+              onClick={() => runTest('diagnose')}
               disabled={loading}
-              className="w-full"
-              variant="secondary"
-              size="sm"
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              size="lg"
             >
-              <Icon name="Key" className="mr-2" size={16} />
-              Проверить API ключ
+              <Icon name="Stethoscope" className="mr-2" size={20} />
+              🔧 Диагностика API (права + URL)
             </Button>
-            {apiKeyInfo && (
-              <div className="text-sm text-muted-foreground font-mono bg-secondary/50 p-2 rounded">
-                {apiKeyInfo}
-              </div>
-            )}
+
+            <div className="border-t pt-4">
+              <Button
+                onClick={checkApiKey}
+                disabled={loading}
+                className="w-full"
+                variant="secondary"
+                size="sm"
+              >
+                <Icon name="Key" className="mr-2" size={16} />
+                Проверить API ключ
+              </Button>
+              {apiKeyInfo && (
+                <div className="text-sm text-muted-foreground font-mono bg-secondary/50 p-2 rounded mt-2">
+                  {apiKeyInfo}
+                </div>
+              )}
+            </div>
             
             <Button
               onClick={() => runTest('status')}
