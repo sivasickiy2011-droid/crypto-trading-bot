@@ -250,7 +250,7 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
               </div>
               <div>
                 <h2 className="font-bold text-lg">AI Dev Console</h2>
-                <p className="text-sm text-muted-foreground">GPT-4 мониторит и улучшает стратегии</p>
+                <p className="text-sm text-muted-foreground">DeepSeek R1 Distill Llama 70B • Nebius Token Factory</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

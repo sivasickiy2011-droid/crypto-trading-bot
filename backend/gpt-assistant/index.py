@@ -5,10 +5,10 @@ from typing import Dict, Any
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    AI ассистент для анализа торговых стратегий через GPT-4
+    AI ассистент для анализа торговых стратегий через Nebius Token Factory
     Мониторит стратегии 24/7 и предлагает оптимизации
     Args: event - POST запрос с message и context
-    Returns: Ответ от GPT-4 с рекомендациями
+    Returns: Ответ от DeepSeek R1 Distill Llama 70B с рекомендациями
     '''
     method: str = event.get('httpMethod', 'POST')
     
@@ -64,38 +64,39 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             for s in context_data['strategies']:
                 strategies_info += f"- {s['name']}: WinRate {s['winRate']:.1f}%, Сделок: {s['totalTrades']}, Средняя прибыль: {s['avgProfit']:.2f}%\n"
         
-        # Вызов OpenAI API
-        openai_key = os.environ.get('OPENAI_API_KEY')
-        if not openai_key:
-            raise Exception('OPENAI_API_KEY not configured')
+        # Вызов Nebius Token Factory API (OpenAI-совместимый)
+        nebius_key = os.environ.get('NEBIUS_API_KEY')
+        if not nebius_key:
+            raise Exception('NEBIUS_API_KEY not configured')
         
-        openai_request = {
-            'model': 'gpt-4o-mini',
+        # Используем DeepSeek R1 Distill Llama 70B - лучшая бесплатная модель
+        ai_request = {
+            'model': 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
             'messages': [
                 {'role': 'system', 'content': system_prompt + strategies_info},
                 {'role': 'user', 'content': user_message}
             ],
-            'max_tokens': 500,
+            'max_tokens': 800,
             'temperature': 0.7
         }
         
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {openai_key}'
+            'Authorization': f'Bearer {nebius_key}'
         }
         
         req = Request(
-            'https://api.openai.com/v1/chat/completions',
-            data=json.dumps(openai_request).encode('utf-8'),
+            'https://api.studio.nebius.ai/v1/chat/completions',
+            data=json.dumps(ai_request).encode('utf-8'),
             headers=headers,
             method='POST'
         )
         
-        with urlopen(req, timeout=30) as response:
-            openai_response = json.loads(response.read().decode('utf-8'))
+        with urlopen(req, timeout=60) as response:
+            ai_response = json.loads(response.read().decode('utf-8'))
             
-            if 'choices' in openai_response and len(openai_response['choices']) > 0:
-                gpt_message = openai_response['choices'][0]['message']['content']
+            if 'choices' in ai_response and len(ai_response['choices']) > 0:
+                ai_message = ai_response['choices'][0]['message']['content']
                 
                 return {
                     'statusCode': 200,
@@ -105,14 +106,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     },
                     'body': json.dumps({
                         'success': True,
-                        'response': gpt_message,
-                        'model': 'gpt-4o-mini',
+                        'response': ai_message,
+                        'model': 'DeepSeek-R1-Distill-Llama-70B',
+                        'provider': 'Nebius Token Factory',
                         'timestamp': context.request_id
                     }),
                     'isBase64Encoded': False
                 }
             else:
-                raise Exception('Invalid OpenAI response')
+                raise Exception('Invalid AI response')
     
     except Exception as e:
         return {
