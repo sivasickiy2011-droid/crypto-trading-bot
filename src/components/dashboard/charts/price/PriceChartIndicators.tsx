@@ -17,6 +17,11 @@ interface PriceChartIndicatorsProps {
 }
 
 export default function PriceChartIndicators({ chartData, showRSI, showMACD, showVolume = true }: PriceChartIndicatorsProps) {
+  const volumeData = chartData.map(d => ({
+    ...d,
+    volumeColor: (d.close && d.open && d.close >= d.open) ? '#16a34a' : '#ef4444'
+  }));
+
   return (
     <>
       {showVolume && (
@@ -25,7 +30,7 @@ export default function PriceChartIndicators({ chartData, showRSI, showMACD, sho
             <span className="text-xs text-zinc-400 font-medium">Объем</span>
           </div>
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 0, right: 60, left: 0, bottom: 0 }}>
+            <ComposedChart data={volumeData} margin={{ top: 0, right: 60, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="1 1" stroke="rgba(255,255,255,0.03)" vertical={false} />
               <XAxis 
                 dataKey="time" 
@@ -53,11 +58,23 @@ export default function PriceChartIndicators({ chartData, showRSI, showMACD, sho
               />
               <Bar 
                 dataKey="volume"
-                fill={(entry: any) => {
-                  const isGreen = entry.close >= entry.open;
-                  return isGreen ? 'rgba(22, 163, 74, 0.5)' : 'rgba(239, 68, 68, 0.5)';
+                shape={(props: any) => {
+                  const { x, y, width, height, payload } = props;
+                  const isGreen = payload.close >= payload.open;
+                  const color = isGreen ? '#16a34a' : '#ef4444';
+                  
+                  return (
+                    <rect
+                      x={x}
+                      y={y}
+                      width={width}
+                      height={height}
+                      fill={color}
+                      opacity={0.8}
+                      rx={2}
+                    />
+                  );
                 }}
-                radius={[2, 2, 0, 0]}
                 isAnimationActive={false}
               />
             </ComposedChart>
