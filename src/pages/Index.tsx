@@ -9,6 +9,7 @@ import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import DashboardSidePanels from '@/components/dashboard/DashboardSidePanels';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import DashboardWatchlist from '@/components/dashboard/DashboardWatchlist';
+import DevConsole from '@/pages/DevConsole';
 import { getUserBalance, getUserPositions, UserBalanceData, UserPositionData, getMarketTickers, getKlineData, TickerData, KlineData, getOrderbook, OrderbookEntry, getStrategySignals, StrategySignal } from '@/lib/api';
 
 const generateMockPriceData = (basePrice: number) => Array.from({ length: 50 }, (_, i) => ({
@@ -427,17 +428,17 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             {activeTab === 'backtest' ? (
               <BacktestPanel />
             ) : activeTab === 'top-pairs' ? (
-              <iframe 
-                src="/top-pairs" 
-                className="w-full h-[calc(100vh-80px)] border-0 rounded-lg"
-                title="Top Trading Pairs"
-              />
+              <div className="bg-background">
+                <iframe 
+                  src="/top-pairs" 
+                  className="w-full h-[calc(100vh-120px)] border-0 rounded-lg"
+                  title="Top Trading Pairs"
+                />
+              </div>
             ) : activeTab === 'dev-console' ? (
-              <iframe 
-                src="/dev-console" 
-                className="w-full h-[calc(100vh-80px)] border-0 rounded-lg"
-                title="AI Dev Console"
-              />
+              <div className="mt-[-24px]">
+                <DevConsole userId={userId} />
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-[auto_1fr] gap-3 items-start">
