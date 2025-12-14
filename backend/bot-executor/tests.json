@@ -1,0 +1,15 @@
+{
+  "tests": [
+    {
+      "name": "Test bot executor endpoint",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "actions": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
