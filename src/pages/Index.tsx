@@ -284,6 +284,13 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
       takeProfit: p.side === 'LONG' ? p.entryPrice * 1.05 : p.entryPrice * 0.95,
       side: p.side as 'LONG' | 'SHORT'
     }));
+
+  const userPositionsForBots = positions.map(p => ({
+    symbol: p.symbol,
+    side: p.side,
+    entryPrice: p.entryPrice,
+    unrealizedPnl: p.unrealizedPnl
+  }));
   
   const formatSymbolForDisplay = (symbol: string) => {
     return symbol.replace('USDT', '/USDT');
@@ -425,6 +432,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   apiMode={apiMode}
                   positionLevels={positionLevels}
                   onSymbolChange={setSelectedSymbol}
+                  userPositions={userPositionsForBots}
                 />
 
                 <DashboardTabs

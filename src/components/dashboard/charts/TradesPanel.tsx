@@ -48,9 +48,10 @@ interface TradesPanelProps {
   activeBotCount?: number;
   onBotCountChange?: (count: number) => void;
   onBotClick?: (pair: string) => void;
+  userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number}>;
 }
 
-export default function TradesPanel({ positions, closedTrades, strategySignals, botLogs, onLogAdd, activeBotCount = 0, onBotCountChange, onBotClick }: TradesPanelProps) {
+export default function TradesPanel({ positions, closedTrades, strategySignals, botLogs, onLogAdd, activeBotCount = 0, onBotCountChange, onBotClick, userPositions }: TradesPanelProps) {
   return (
     <Card className="bg-card border-border">
       <CardHeader>
@@ -199,7 +200,7 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
           </TabsContent>
           
           <TabsContent value="bots" className="mt-4">
-            <BotsPanel onLogAdd={onLogAdd} onBotCountChange={onBotCountChange} onBotClick={onBotClick} />
+            <BotsPanel onLogAdd={onLogAdd} onBotCountChange={onBotCountChange} onBotClick={onBotClick} userPositions={userPositions} />
           </TabsContent>
           
           <TabsContent value="logs" className="mt-4">

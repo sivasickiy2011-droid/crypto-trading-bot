@@ -35,9 +35,10 @@ interface BotsPanelProps {
   onLogAdd: (log: BotLogEntry) => void;
   onBotCountChange?: (count: number) => void;
   onBotClick?: (pair: string) => void;
+  userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number}>;
 }
 
-export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick }: BotsPanelProps) {
+export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, userPositions = [] }: BotsPanelProps) {
   const { toast } = useToast();
   const [bots, setBots] = useState<Bot[]>([
     {
@@ -54,10 +55,8 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick }: Bo
       pair: 'ETH/USDT',
       market: 'futures',
       strategy: 'Мартингейл',
-      status: 'in_position',
-      active: true,
-      entryPrice: 2265,
-      currentPnL: 12.5
+      status: 'searching',
+      active: true
     }
   ]);
 
@@ -69,9 +68,37 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick }: Bo
   });
 
   useEffect(() => {
-    const activeCount = bots.filter(b => b.active).length;
+    const updatedBots = bots.map(bot => {
+      const pairSymbol = bot.pair.replace('/', '');
+      const position = userPositions.find(p => p.symbol === pairSymbol);
+      
+      if (position && bot.active) {
+        return {
+          ...bot,
+          status: 'in_position' as const,
+          entryPrice: position.entryPrice,
+          currentPnL: position.unrealizedPnl
+        };
+      } else if (bot.active) {
+        return {
+          ...bot,
+          status: 'searching' as const,
+          entryPrice: undefined,
+          currentPnL: undefined
+        };
+      }
+      
+      return bot;
+    });
+    
+    const hasChanges = JSON.stringify(updatedBots) !== JSON.stringify(bots);
+    if (hasChanges) {
+      setBots(updatedBots);
+    }
+    
+    const activeCount = updatedBots.filter(b => b.active).length;
     onBotCountChange?.(activeCount);
-  }, [bots, onBotCountChange]);
+  }, [userPositions, bots, onBotCountChange]);
 
   const toggleBot = (id: string) => {
     setBots(prev => {
@@ -164,73 +191,7 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick }: Bo
     });
   };
   
-  useEffect(() => {
-    const interval = setInterval(() => {
-      bots.forEach(bot => {
-        if (!bot.active) return;
-        
-        const now = new Date();
-        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-        
-        if (bot.status === 'searching' && Math.random() > 0.95) {
-          onLogAdd({
-            id: Date.now().toString() + Math.random(),
-            botId: bot.id,
-            botName: `${bot.pair} (${bot.strategy})`,
-            timestamp: timeStr,
-            type: 'signal',
-            message: 'Получен сигнал для входа в позицию',
-            details: {
-              signal: bot.entrySignal || 'Условия стратегии выполнены'
-            }
-          });
-        }
-        
-        if (bot.status === 'searching' && Math.random() > 0.98) {
-          const entryPrice = 43500 + Math.random() * 1000;
-          setBots(prev => prev.map(b => 
-            b.id === bot.id ? { ...b, status: 'in_position' as const, entryPrice, currentPnL: 0 } : b
-          ));
-          
-          onLogAdd({
-            id: Date.now().toString() + Math.random(),
-            botId: bot.id,
-            botName: `${bot.pair} (${bot.strategy})`,
-            timestamp: timeStr,
-            type: 'entry',
-            message: 'Открыта позиция LONG',
-            details: {
-              price: entryPrice
-            }
-          });
-        }
-        
-        if (bot.status === 'in_position' && Math.random() > 0.97) {
-          const exitPrice = (bot.entryPrice || 43500) * (1 + (Math.random() * 0.1 - 0.03));
-          const pnl = ((exitPrice - (bot.entryPrice || 43500)) / (bot.entryPrice || 43500)) * 100;
-          
-          setBots(prev => prev.map(b => 
-            b.id === bot.id ? { ...b, status: 'searching' as const, entryPrice: undefined, currentPnL: undefined } : b
-          ));
-          
-          onLogAdd({
-            id: Date.now().toString() + Math.random(),
-            botId: bot.id,
-            botName: `${bot.pair} (${bot.strategy})`,
-            timestamp: timeStr,
-            type: 'exit',
-            message: pnl >= 0 ? 'Позиция закрыта с прибылью (тейк-профит)' : 'Позиция закрыта с убытком (стоп-лосс)',
-            details: {
-              price: exitPrice,
-              pnl: pnl
-            }
-          });
-        }
-      });
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, [bots, onLogAdd]);
+
 
   const getStatusBadge = (status: Bot['status']) => {
     switch (status) {
