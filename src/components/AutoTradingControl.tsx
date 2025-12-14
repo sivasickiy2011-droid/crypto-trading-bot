@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,34 @@ export default function AutoTradingControl({ userId }: AutoTradingControlProps) 
   const [bots, setBots] = useState<Bot[]>([]);
   const [loading, setLoading] = useState(false);
   const [autoTrading, setAutoTrading] = useState(false);
+  const [hasApiKeys, setHasApiKeys] = useState(false);
+  const [checkingKeys, setCheckingKeys] = useState(true);
+
+  useEffect(() => {
+    checkApiKeys();
+    loadBots();
+  }, [userId]);
+
+  const checkApiKeys = async () => {
+    try {
+      setCheckingKeys(true);
+      const response = await fetch('https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': userId.toString()
+        },
+        body: JSON.stringify({ action: 'check_keys' })
+      });
+      const data = await response.json();
+      setHasApiKeys(data.success && data.hasKeys);
+    } catch (error) {
+      console.error('Failed to check API keys:', error);
+      setHasApiKeys(false);
+    } finally {
+      setCheckingKeys(false);
+    }
+  };
 
   const loadBots = async () => {
     try {
@@ -176,6 +204,34 @@ export default function AutoTradingControl({ userId }: AutoTradingControlProps) 
       </div>
 
       <div className="space-y-4">
+        {!checkingKeys && !hasApiKeys && (
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Icon name="AlertTriangle" size={16} className="text-yellow-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-yellow-800 mb-1">
+                  Настрой API ключи Bybit для автоматической торговли
+                </p>
+                <p className="text-xs text-yellow-700 mb-2">
+                  Без API ключей боты не смогут открывать сделки на бирже
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-7"
+                  onClick={() => {
+                    const sidebar = document.querySelector('[data-api-keys-button]') as HTMLElement;
+                    if (sidebar) sidebar.click();
+                  }}
+                >
+                  <Icon name="Key" size={12} className="mr-1" />
+                  Настроить API ключи
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="p-3 bg-muted rounded-lg">
           <p className="text-sm text-muted-foreground mb-2">
             <Icon name="Info" size={14} className="inline mr-1" />

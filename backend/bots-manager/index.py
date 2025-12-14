@@ -1,5 +1,6 @@
 import json
 import os
+import base64
 import psycopg2
 from typing import Dict, Any, Optional
 
@@ -44,7 +45,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             return get_bots(user_id)
         elif method == 'POST':
             body_data = json.loads(event.get('body', '{}'))
-            return create_bot(user_id, body_data)
+            action = body_data.get('action')
+            
+            if action == 'check_keys':
+                return check_api_keys(user_id)
+            elif action == 'save_keys':
+                return save_api_keys(user_id, body_data)
+            elif action == 'delete_keys':
+                return delete_api_keys(user_id)
+            else:
+                return create_bot(user_id, body_data)
         elif method == 'PUT':
             body_data = json.loads(event.get('body', '{}'))
             return update_bot(user_id, body_data)
@@ -175,6 +185,98 @@ def delete_bot(user_id: int, bot_id: str) -> Dict[str, Any]:
             cur.execute(
                 "DELETE FROM t_p69937905_crypto_trading_bot.bots WHERE user_id = %s AND bot_id = %s",
                 (user_id, bot_id)
+            )
+            conn.commit()
+        
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'success': True}),
+            'isBase64Encoded': False
+        }
+    finally:
+        conn.close()
+
+def check_api_keys(user_id: int) -> Dict[str, Any]:
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT api_key, api_secret FROM user_api_keys WHERE user_id = %s AND exchange = 'bybit'",
+                (user_id,)
+            )
+            result = cur.fetchone()
+            
+            if result:
+                decoded_key = base64.b64decode(result[0]).decode('utf-8')
+                decoded_secret = base64.b64decode(result[1]).decode('utf-8')
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({
+                        'success': True,
+                        'hasKeys': True,
+                        'api_key': decoded_key[:8] + '...' + decoded_key[-4:],
+                        'api_secret': '***hidden***'
+                    }),
+                    'isBase64Encoded': False
+                }
+            else:
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'success': True, 'hasKeys': False}),
+                    'isBase64Encoded': False
+                }
+    finally:
+        conn.close()
+
+def save_api_keys(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
+    conn = get_db_connection()
+    try:
+        api_key = data.get('apiKey', '').strip()
+        api_secret = data.get('apiSecret', '').strip()
+        
+        if not api_key or not api_secret:
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'success': False, 'error': 'API key and secret required'}),
+                'isBase64Encoded': False
+            }
+        
+        encoded_key = base64.b64encode(api_key.encode('utf-8')).decode('utf-8')
+        encoded_secret = base64.b64encode(api_secret.encode('utf-8')).decode('utf-8')
+        
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO user_api_keys (user_id, exchange, api_key, api_secret)
+                VALUES (%s, 'bybit', %s, %s)
+                ON CONFLICT (user_id, exchange) 
+                DO UPDATE SET api_key = EXCLUDED.api_key, api_secret = EXCLUDED.api_secret
+                """,
+                (user_id, encoded_key, encoded_secret)
+            )
+            conn.commit()
+        
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'success': True}),
+            'isBase64Encoded': False
+        }
+    finally:
+        conn.close()
+
+def delete_api_keys(user_id: int) -> Dict[str, Any]:
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM user_api_keys WHERE user_id = %s AND exchange = 'bybit'",
+                (user_id,)
             )
             conn.commit()
         

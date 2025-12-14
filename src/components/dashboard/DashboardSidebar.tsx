@@ -72,6 +72,7 @@ export default function DashboardSidebar({
         className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent"
         onClick={onApiKeysOpen}
         title="API ключи Bybit"
+        data-api-keys-button
       >
         <Icon name="Key" size={20} />
       </Button>

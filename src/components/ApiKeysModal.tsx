@@ -2,9 +2,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useState, useEffect } from 'react';
 import { saveApiKeys, getApiKeys, deleteApiKeys } from '@/lib/api';
@@ -20,46 +17,31 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
-  const [testnetApiKey, setTestnetApiKey] = useState('');
-  const [testnetApiSecret, setTestnetApiSecret] = useState('');
   const [hasKeys, setHasKeys] = useState(false);
-  const [hasTestnetKeys, setHasTestnetKeys] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSecrets, setShowSecrets] = useState(false);
-  const [showTestnetSecrets, setShowTestnetSecrets] = useState(false);
 
   useEffect(() => {
     if (open && userId) {
       setIsLoading(true);
-      Promise.all([
-        getApiKeys(userId, 'bybit'),
-        getApiKeys(userId, 'bybit-testnet')
-      ]).then(([liveResult, testnetResult]) => {
-        if (liveResult.success && liveResult.api_key) {
-          setApiKey(liveResult.api_key);
-          setApiSecret(liveResult.api_secret);
-          setHasKeys(true);
-        } else {
-          setApiKey('');
-          setApiSecret('');
+      getApiKeys(userId, 'bybit')
+        .then((result) => {
+          if (result.success && result.hasKeys) {
+            setApiKey(result.api_key || '');
+            setApiSecret(result.api_secret || '***hidden***');
+            setHasKeys(true);
+          } else {
+            setApiKey('');
+            setApiSecret('');
+            setHasKeys(false);
+          }
+        })
+        .catch(() => {
           setHasKeys(false);
-        }
-        
-        if (testnetResult.success && testnetResult.api_key) {
-          setTestnetApiKey(testnetResult.api_key);
-          setTestnetApiSecret(testnetResult.api_secret);
-          setHasTestnetKeys(true);
-        } else {
-          setTestnetApiKey('');
-          setTestnetApiSecret('');
-          setHasTestnetKeys(false);
-        }
-      }).catch(() => {
-        setHasKeys(false);
-        setHasTestnetKeys(false);
-      }).finally(() => {
-        setIsLoading(false);
-      });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   }, [open, userId]);
 
@@ -101,59 +83,17 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
     }
   };
 
-  const handleSaveTestnet = async () => {
-    if (!testnetApiKey || !testnetApiSecret) {
-      toast({
-        title: 'Ошибка',
-        description: 'Заполни оба поля',
-        variant: 'destructive'
-      });
-      return;
-    }
 
+
+  const handleDelete = async () => {
     setIsLoading(true);
     try {
-      const result = await saveApiKeys(userId, testnetApiKey, testnetApiSecret, 'bybit-testnet');
+      const result = await deleteApiKeys(userId);
       
       if (result.success) {
-        setHasTestnetKeys(true);
-        toast({
-          title: 'Успешно',
-          description: 'Testnet API ключи сохранены',
-        });
-      } else {
-        toast({
-          title: 'Ошибка',
-          description: result.error || 'Не удалось сохранить ключи',
-          variant: 'destructive'
-        });
-      }
-    } catch (error) {
-      toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить ключи',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDelete = async (exchange: string = 'bybit') => {
-    setIsLoading(true);
-    try {
-      const result = await deleteApiKeys(userId, exchange);
-      
-      if (result.success) {
-        if (exchange === 'bybit-testnet') {
-          setTestnetApiKey('');
-          setTestnetApiSecret('');
-          setHasTestnetKeys(false);
-        } else {
-          setApiKey('');
-          setApiSecret('');
-          setHasKeys(false);
-        }
+        setApiKey('');
+        setApiSecret('');
+        setHasKeys(false);
         toast({
           title: 'Успешно',
           description: 'API ключи удалены',
@@ -277,50 +217,20 @@ export default function ApiKeysModal({ open, onOpenChange, userId }: ApiKeysModa
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="live" className="mt-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="live" className="flex items-center space-x-2">
-              <Icon name="Zap" size={14} />
-              <span>Боевой режим</span>
-              {hasKeys && <Icon name="Check" size={12} className="text-success" />}
-            </TabsTrigger>
-            <TabsTrigger value="testnet" className="flex items-center space-x-2">
-              <Icon name="TestTube" size={14} />
-              <span>Testnet</span>
-              {hasTestnetKeys && <Icon name="Check" size={12} className="text-success" />}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="live" className="space-y-6 mt-4">
-            {renderKeyInputs(
-              apiKey, 
-              apiSecret, 
-              showSecrets,
-              setApiKey,
-              setApiSecret,
-              () => setShowSecrets(!showSecrets),
-              handleSave,
-              () => handleDelete('bybit'),
-              hasKeys,
-              false
-            )}
-          </TabsContent>
-
-          <TabsContent value="testnet" className="space-y-6 mt-4">
-            {renderKeyInputs(
-              testnetApiKey,
-              testnetApiSecret,
-              showTestnetSecrets,
-              setTestnetApiKey,
-              setTestnetApiSecret,
-              () => setShowTestnetSecrets(!showTestnetSecrets),
-              handleSaveTestnet,
-              () => handleDelete('bybit-testnet'),
-              hasTestnetKeys,
-              true
-            )}
-          </TabsContent>
-        </Tabs>
+        <div className="space-y-6 mt-4">
+          {renderKeyInputs(
+            apiKey, 
+            apiSecret, 
+            showSecrets,
+            setApiKey,
+            setApiSecret,
+            () => setShowSecrets(!showSecrets),
+            handleSave,
+            () => handleDelete('bybit'),
+            hasKeys,
+            false
+          )}
+        </div>
 
         <div className="space-y-6 mt-4 hidden">
           <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
