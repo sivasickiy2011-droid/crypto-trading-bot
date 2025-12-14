@@ -51,6 +51,15 @@ export default function DashboardSidebar({
       <Button 
         variant="ghost" 
         size="icon" 
+        className={`text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent ${activeTab === 'dev-console' ? 'bg-sidebar-accent text-primary' : ''}`}
+        onClick={() => onTabChange('dev-console')}
+        title="AI Dev Console"
+      >
+        <Icon name="Terminal" size={20} />
+      </Button>
+      <Button 
+        variant="ghost" 
+        size="icon" 
         className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent"
         onClick={onConfigOpen}
         title="Настройки стратегий"

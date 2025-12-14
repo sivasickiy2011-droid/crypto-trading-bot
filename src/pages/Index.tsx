@@ -432,6 +432,12 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                 className="w-full h-[calc(100vh-80px)] border-0 rounded-lg"
                 title="Top Trading Pairs"
               />
+            ) : activeTab === 'dev-console' ? (
+              <iframe 
+                src="/dev-console" 
+                className="w-full h-[calc(100vh-80px)] border-0 rounded-lg"
+                title="AI Dev Console"
+              />
             ) : (
               <>
                 <div className="grid grid-cols-[auto_1fr] gap-3 items-start">

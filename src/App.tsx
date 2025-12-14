@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SetPassword from "./pages/SetPassword";
 import TopPairs from "./pages/TopPairs";
+import DevConsole from "./pages/DevConsole";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -110,6 +111,16 @@ const App = () => {
             <Route 
               path="/top-pairs" 
               element={<TopPairs />}
+            />
+            <Route 
+              path="/dev-console" 
+              element={
+                isAuthenticated && userId ? (
+                  <DevConsole userId={userId} />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -1,4 +1,5 @@
 {
+  "gpt-assistant": "https://functions.poehali.dev/7874ace6-6bc4-4991-9d28-55b333c47b7b",
   "pair-analyzer": "https://functions.poehali.dev/79d0e27c-f6b2-4735-b88a-9e3fa48e6c4a",
   "bot-executor": "https://functions.poehali.dev/e2dd154c-dde5-456b-a4c6-1200070fcc75",
   "bot-scheduler": "https://functions.poehali.dev/3baf1812-37ea-46ef-bb85-dbed89ed66a5",
