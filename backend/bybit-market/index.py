@@ -93,8 +93,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             elif action == 'kline':
                 symbol = params.get('symbol', 'BTCUSDT')
-                interval = params.get('interval', '15')
+                interval_input = params.get('interval', '15')
                 limit = params.get('limit', '50')
+                
+                # Конвертация формата интервала (1h → 60, 4h → 240, 1d → D)
+                interval_map = {
+                    '15m': '15',
+                    '1h': '60',
+                    '4h': '240',
+                    '1d': 'D',
+                    '15': '15',  # поддержка старого формата
+                    '60': '60',
+                    '240': '240',
+                    'D': 'D'
+                }
+                interval = interval_map.get(interval_input, interval_input)
                 
                 url = f"{BYBIT_BASE_URL}/v5/market/kline?category=spot&symbol={symbol}&interval={interval}&limit={limit}"
                 request = Request(url)
