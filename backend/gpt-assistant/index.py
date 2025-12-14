@@ -87,7 +87,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
         
         req = Request(
-            'https://api.studio.nebius.ai/v1/chat/completions',
+            'https://api.tokenfactory.nebius.com/v1/chat/completions',
             data=json.dumps(ai_request).encode('utf-8'),
             headers=headers,
             method='POST'
@@ -98,8 +98,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 ai_response = json.loads(response.read().decode('utf-8'))
         except Exception as api_error:
             error_msg = str(api_error)
+            
+            if hasattr(api_error, 'read'):
+                try:
+                    error_body = api_error.read().decode('utf-8')
+                    raise Exception(f'Nebius API error: {error_msg} | Body: {error_body}')
+                except:
+                    pass
+            
             if '403' in error_msg or 'Forbidden' in error_msg:
-                raise Exception(f'Nebius API: неверный API ключ или доступ запрещён. Проверьте ключ на tokenfactory.nebius.com')
+                raise Exception(f'Nebius API: 403 Forbidden. Проверьте: 1) Ключ обновлён в секретах? 2) Формат: Bearer v1.CmI... 3) URL: api.tokenfactory.nebius.com')
             raise Exception(f'Nebius API error: {error_msg}')
         
         if 'choices' in ai_response and len(ai_response['choices']) > 0:
