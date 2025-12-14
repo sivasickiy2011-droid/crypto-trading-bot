@@ -22,6 +22,14 @@ interface StrategyMetrics {
   status: 'active' | 'paused' | 'optimizing';
 }
 
+interface AIModel {
+  id: string;
+  name: string;
+  description: string;
+  speed: string;
+  quality: string;
+}
+
 interface DevConsoleProps {
   userId: number;
 }
@@ -39,7 +47,47 @@ export default function DevConsole({ userId }: DevConsoleProps) {
   const [loading, setLoading] = useState(false);
   const [strategies, setStrategies] = useState<StrategyMetrics[]>([]);
   const [autoMonitor, setAutoMonitor] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('deepseek-ai/DeepSeek-R1-Distill-Llama-70B');
+  const [showModels, setShowModels] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const availableModels: AIModel[] = [
+    {
+      id: 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+      name: 'DeepSeek R1 Distill Llama 70B',
+      description: 'Лучшая точность и понимание контекста',
+      speed: 'Быстрая',
+      quality: 'Отличная'
+    },
+    {
+      id: 'Qwen/Qwen2.5-Coder-32B-Instruct',
+      name: 'Qwen 2.5 Coder 32B',
+      description: 'Специализация на коде и алгоритмах',
+      speed: 'Очень быстрая',
+      quality: 'Отличная'
+    },
+    {
+      id: 'meta-llama/Meta-Llama-3.1-70B-Instruct',
+      name: 'Meta Llama 3.1 70B',
+      description: 'Универсальная модель от Meta',
+      speed: 'Быстрая',
+      quality: 'Хорошая'
+    },
+    {
+      id: 'mistralai/Mistral-Large-Instruct-2407',
+      name: 'Mistral Large 2 (123B)',
+      description: 'Большая модель для сложных задач',
+      speed: 'Средняя',
+      quality: 'Отличная'
+    },
+    {
+      id: 'meta-llama/Meta-Llama-3.1-8B-Instruct',
+      name: 'Meta Llama 3.1 8B',
+      description: 'Быстрая модель для простых задач',
+      speed: 'Молниеносная',
+      quality: 'Хорошая'
+    }
+  ];
 
   useEffect(() => {
     loadStrategies();
@@ -112,6 +160,7 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
         body: JSON.stringify({
           userId,
           message: prompt,
+          model: selectedModel,
           context: {
             strategies: strategies,
             autoMode: autoMonitor
@@ -241,16 +290,68 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
       </div>
 
       {/* Main Console */}
-      <Card className="flex flex-col">
+      <Card className="flex flex-col relative">
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Icon name="Terminal" className="text-primary" size={20} />
               </div>
-              <div>
+              <div className="relative">
                 <h2 className="font-bold text-lg">AI Dev Console</h2>
-                <p className="text-sm text-muted-foreground">DeepSeek R1 Distill Llama 70B • Nebius Token Factory</p>
+                <button
+                  onClick={() => setShowModels(!showModels)}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  {availableModels.find(m => m.id === selectedModel)?.name || 'DeepSeek R1'} • Nebius
+                  <Icon name={showModels ? 'ChevronUp' : 'ChevronDown'} size={14} />
+                </button>
+                
+                {showModels && (
+                  <div className="absolute top-full left-0 mt-2 bg-card border rounded-lg shadow-lg p-3 z-50 w-[500px]">
+                    <p className="text-xs text-muted-foreground mb-3">Выберите AI модель для консоли:</p>
+                    <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                      {availableModels.map(model => (
+                        <button
+                          key={model.id}
+                          onClick={() => {
+                            setSelectedModel(model.id);
+                            setShowModels(false);
+                            setMessages(prev => [...prev, {
+                              id: Date.now().toString(),
+                              role: 'system',
+                              content: `🔄 Модель изменена на ${model.name}`,
+                              timestamp: new Date()
+                            }]);
+                          }}
+                          className={`w-full text-left p-3 rounded-lg border transition-all hover:border-primary ${
+                            selectedModel === model.id ? 'border-primary bg-primary/5' : 'border-border'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="font-semibold text-sm">{model.name}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{model.description}</p>
+                              <div className="flex gap-3 mt-2">
+                                <Badge variant="outline" className="text-xs">
+                                  <Icon name="Zap" size={10} className="mr-1" />
+                                  {model.speed}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  <Icon name="Award" size={10} className="mr-1" />
+                                  {model.quality}
+                                </Badge>
+                              </div>
+                            </div>
+                            {selectedModel === model.id && (
+                              <Icon name="Check" size={16} className="text-primary" />
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">

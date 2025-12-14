@@ -37,6 +37,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         body = json.loads(event.get('body', '{}'))
         user_message = body.get('message', '')
         context_data = body.get('context', {})
+        selected_model = body.get('model', 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B')
         
         if not user_message:
             return {
@@ -69,9 +70,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if not nebius_key:
             raise Exception('NEBIUS_API_KEY not configured')
         
-        # Используем DeepSeek R1 Distill Llama 70B - лучшая бесплатная модель
+        # Используем выбранную модель
         ai_request = {
-            'model': 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B',
+            'model': selected_model,
             'messages': [
                 {'role': 'system', 'content': system_prompt + strategies_info},
                 {'role': 'user', 'content': user_message}
@@ -107,7 +108,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({
                         'success': True,
                         'response': ai_message,
-                        'model': 'DeepSeek-R1-Distill-Llama-70B',
+                        'model': selected_model,
                         'provider': 'Nebius Token Factory',
                         'timestamp': context.request_id
                     }),
