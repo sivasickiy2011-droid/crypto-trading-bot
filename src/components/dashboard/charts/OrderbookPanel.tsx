@@ -41,8 +41,8 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
     );
   }
 
-  const asks = orderbook.filter(o => o.askSize > 0).sort((a, b) => b.price - a.price).slice(0, 15);
-  const bids = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 15);
+  const asks = orderbook.filter(o => o.askSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
+  const bids = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
   
   const maxSize = Math.max(
     ...asks.map(o => o.askSize),
@@ -63,7 +63,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
         orderType={orderType}
       />
       
-      <Card className="bg-card border-border flex flex-col" style={{ height: '300px' }}>
+      <Card className="bg-card border-border flex flex-col" style={{ height: '545px' }}>
         <CardHeader className="pb-2 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm">Стакан</CardTitle>

@@ -90,7 +90,7 @@ export default function DashboardCharts({
   
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-[1fr_280px] gap-6">
+      <div className="grid grid-cols-[1fr_380px] gap-6">
         <div className="space-y-6">
           <PriceChart 
             priceData={priceData}

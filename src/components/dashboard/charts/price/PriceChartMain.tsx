@@ -89,7 +89,7 @@ export default function PriceChartMain({ chartData, chartType, showIndicators, y
           <Scatter
             data={chartData}
             shape={(props: any) => {
-              const { cx, cy, payload } = props;
+              const { cx, cy, payload, index } = props;
               if (!payload || !payload.open || !payload.close || !payload.high || !payload.low) return null;
               
               const chartHeight = 450;
@@ -108,7 +108,11 @@ export default function PriceChartMain({ chartData, chartType, showIndicators, y
               const color = isGreen ? 'hsl(142, 76%, 36%)' : 'hsl(0, 84%, 60%)';
               const bodyTop = Math.min(yOpen, yClose);
               const bodyHeight = Math.abs(yOpen - yClose) || 1;
-              const bodyWidth = 8;
+              
+              // Calculate dynamic candle width based on chart width and data length
+              const chartWidth = typeof window !== 'undefined' ? window.innerWidth * 0.6 : 1200;
+              const candleSpacing = chartWidth / (chartData.length + 1);
+              const bodyWidth = Math.max(Math.min(candleSpacing * 0.8, 16), 4); // Min 4px, max 16px, 80% of space
               
               return (
                 <g>

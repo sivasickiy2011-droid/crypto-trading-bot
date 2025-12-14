@@ -35,12 +35,19 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [apiKeysModalOpen, setApiKeysModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
+  const [selectedSymbol, setSelectedSymbol] = useState('');
   const [apiMode, setApiMode] = useState<'live' | 'testnet'>('testnet');
   const [accountMode, setAccountMode] = useState<'live' | 'demo'>('demo');
   const [currentTimeframe, setCurrentTimeframe] = useState('15');
 
   const { watchlist, logs, handleAddPair, handleRemovePair } = useMarketData();
+
+  // Set first symbol from watchlist as default
+  useEffect(() => {
+    if (!selectedSymbol && watchlist.length > 0) {
+      setSelectedSymbol(watchlist[0].symbol);
+    }
+  }, [watchlist, selectedSymbol]);
   const { balance, positions } = useUserData(userId, apiMode);
   const { priceData } = usePriceData(selectedSymbol, watchlist, currentTimeframe);
   const { orderbook, strategySignals } = useOrderbookAndSignals(selectedSymbol, apiMode);
