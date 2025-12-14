@@ -41,7 +41,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
     );
   }
 
-  const asks = orderbook.filter(o => o.askSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
+  const asks = orderbook.filter(o => o.askSize > 0).sort((a, b) => a.price - b.price).slice(0, 20);
   const bids = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
   
   const maxSize = Math.max(
@@ -52,6 +52,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
 
   const spreadPrice = asks.length > 0 && bids.length > 0 ? asks[asks.length - 1].price - bids[0].price : 0;
   const spreadPercent = asks.length > 0 && bids.length > 0 ? (spreadPrice / bids[0].price) * 100 : 0;
+  const bestAskPrice = asks.length > 0 ? asks[asks.length - 1].price : 0;
 
   return (
     <>
@@ -113,11 +114,14 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
           {spreadPrice > 0 && (
             <div className="flex items-center justify-center py-2 my-1 bg-zinc-900/50 flex-shrink-0">
               <div className="text-center">
-                <div className="text-lg font-mono font-bold text-green-400">
-                  {bids[0].price.toFixed(2)}
+                <div className="text-lg font-mono font-bold text-red-400">
+                  {bestAskPrice.toFixed(2)}
                 </div>
                 <div className="text-[9px] text-zinc-600 mt-0.5">
                   ↕ {spreadPrice.toFixed(2)} ({spreadPercent.toFixed(3)}%)
+                </div>
+                <div className="text-lg font-mono font-bold text-green-400 mt-1">
+                  {bids[0].price.toFixed(2)}
                 </div>
               </div>
             </div>

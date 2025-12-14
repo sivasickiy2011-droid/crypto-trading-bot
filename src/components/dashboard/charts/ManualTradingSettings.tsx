@@ -16,8 +16,8 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
   const [isExpanded, setIsExpanded] = useState(false);
   
   return (
-    <Card className="bg-black/90 border-zinc-800">
-      <CardHeader className="pb-2 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+    <Card className="bg-black/90 border-zinc-800 flex flex-col" style={{ minHeight: '400px' }}>
+      <CardHeader className="pb-2 cursor-pointer flex-shrink-0" onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <CardTitle className="text-xs text-white">Ручная торговля</CardTitle>
@@ -37,7 +37,7 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
           </div>
         </div>
       </CardHeader>
-      {isExpanded && (<CardContent className="space-y-3 pt-2">
+      {isExpanded && (<CardContent className="space-y-3 pt-2 flex-1 overflow-y-auto">
         <div className="space-y-1.5">
           <Label className="text-[10px] text-muted-foreground">Режим входа</Label>
           <Select defaultValue="single">
