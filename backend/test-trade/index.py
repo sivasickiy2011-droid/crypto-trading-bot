@@ -80,8 +80,14 @@ def bybit_request(endpoint: str, api_key: str, api_secret: str, params: Dict[str
     
     request = Request(url, data=data, headers=headers, method=method)
     
-    with urlopen(request, timeout=10) as response:
-        return json.loads(response.read().decode('utf-8'))
+    try:
+        with urlopen(request, timeout=10) as response:
+            return json.loads(response.read().decode('utf-8'))
+    except Exception as e:
+        print(f'Bybit API error: {str(e)}')
+        print(f'Request URL: {url}')
+        print(f'Request headers: {headers}')
+        raise
 
 def get_current_price(symbol: str) -> float:
     """Get current market price"""

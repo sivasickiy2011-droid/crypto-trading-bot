@@ -67,6 +67,18 @@ export default function TestTrade() {
           <p className="text-muted-foreground">
             Демо-счет • Testnet Bybit • Без реальных денег
           </p>
+          <div className="mt-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+            <div className="flex items-start space-x-3">
+              <Icon name="AlertTriangle" size={20} className="text-yellow-500 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium mb-1 text-yellow-600 dark:text-yellow-500">Важно: Используй ключи от testnet.bybit.com</p>
+                <p className="text-muted-foreground">
+                  API ключи от обычного bybit.com НЕ РАБОТАЮТ на testnet. 
+                  Создай ключи на <strong>testnet.bybit.com</strong> и добавь их на вкладке "Тестовый аккаунт" в настройках API.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <Card className="p-6 mb-6">
