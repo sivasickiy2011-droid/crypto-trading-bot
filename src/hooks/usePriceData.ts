@@ -114,11 +114,16 @@ const calculateMACD = (prices: number[]): number[] => {
 export function usePriceData(
   selectedSymbol: string, 
   watchlist: WatchlistItem[], 
-  currentTimeframe: string
+  currentTimeframe: string,
+  enabled: boolean = true
 ) {
   const [priceData, setPriceData] = useState<PriceDataPoint[]>(generateMockPriceData(43580));
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const loadPriceData = async () => {
       try {
         const klines = await getKlineData(selectedSymbol, currentTimeframe, 50);
@@ -166,7 +171,7 @@ export function usePriceData(
     loadPriceData();
     const priceInterval = setInterval(loadPriceData, 15000);
     return () => clearInterval(priceInterval);
-  }, [selectedSymbol, watchlist, currentTimeframe]);
+  }, [selectedSymbol, watchlist, currentTimeframe, enabled]);
 
   return { priceData };
 }

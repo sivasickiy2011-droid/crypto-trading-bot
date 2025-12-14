@@ -3,7 +3,8 @@ import { getOrderbook, getStrategySignals, OrderbookEntry, StrategySignal } from
 
 export function useOrderbookAndSignals(
   selectedSymbol: string,
-  apiMode: 'live' | 'testnet'
+  apiMode: 'live' | 'testnet',
+  signalsEnabled: boolean = true
 ) {
   const [orderbook, setOrderbook] = useState<OrderbookEntry[]>([]);
   const [strategySignals, setStrategySignals] = useState<StrategySignal[]>([]);
@@ -12,13 +13,17 @@ export function useOrderbookAndSignals(
   useEffect(() => {
     const loadOrderbookAndSignals = async () => {
       try {
-        const [orderbookData, signalsData] = await Promise.all([
-          getOrderbook(selectedSymbol, 25).catch(() => []),
-          getStrategySignals(selectedSymbol).catch(() => [])
-        ]);
+        const orderbookData = await getOrderbook(selectedSymbol, 25).catch(() => []);
         setOrderbook(orderbookData);
         
-        if (signalsData.length > 0) {
+        if (!signalsEnabled) {
+          setStrategySignals([]);
+          return;
+        }
+        
+        const signalsData = await getStrategySignals(selectedSymbol).catch(() => []);
+        
+        if (signalsData && signalsData.length > 0) {
           signalsData.forEach(signal => {
             if (signal.signal !== 'neutral' && signal.strength > 60) {
               const signalKey = `${selectedSymbol}-${signal.strategy}-${signal.signal}-${Math.floor(Date.now() / 300000)}`;
@@ -48,9 +53,8 @@ export function useOrderbookAndSignals(
               }
             }
           });
+          setStrategySignals(signalsData);
         }
-        
-        setStrategySignals(signalsData);
       } catch (error) {
         console.error('Failed to load orderbook or signals:', error);
       }
@@ -59,7 +63,7 @@ export function useOrderbookAndSignals(
     loadOrderbookAndSignals();
     const interval = setInterval(loadOrderbookAndSignals, 5000);
     return () => clearInterval(interval);
-  }, [selectedSymbol, apiMode]);
+  }, [selectedSymbol, apiMode, signalsEnabled]);
 
   return { orderbook, strategySignals };
 }

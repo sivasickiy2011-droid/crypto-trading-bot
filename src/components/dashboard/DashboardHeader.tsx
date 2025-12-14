@@ -16,6 +16,10 @@ interface DashboardHeaderProps {
   onApiModeChange: (mode: 'live' | 'testnet') => void;
   accountMode: 'live' | 'demo';
   onAccountModeChange: (mode: 'live' | 'demo') => void;
+  chartsEnabled: boolean;
+  onChartsEnabledChange: (enabled: boolean) => void;
+  signalsMode: 'disabled' | 'bots_only' | 'top10';
+  onSignalsModeChange: (mode: 'disabled' | 'bots_only' | 'top10') => void;
 }
 
 export default function DashboardHeader({
@@ -28,7 +32,11 @@ export default function DashboardHeader({
   apiMode,
   onApiModeChange,
   accountMode,
-  onAccountModeChange
+  onAccountModeChange,
+  chartsEnabled,
+  onChartsEnabledChange,
+  signalsMode,
+  onSignalsModeChange
 }: DashboardHeaderProps) {
   return (
     <header className="h-16 border-b border-border px-6 flex items-center justify-between bg-card">
@@ -70,6 +78,42 @@ export default function DashboardHeader({
         </div>
       </div>
       <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-border bg-secondary/50">
+          <span className="text-xs text-muted-foreground">Графики:</span>
+          <Switch 
+            checked={chartsEnabled} 
+            onCheckedChange={onChartsEnabledChange}
+            className="scale-75"
+          />
+        </div>
+        <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-border bg-secondary/50">
+          <span className="text-xs text-muted-foreground">Сигналы:</span>
+          <Button
+            variant={signalsMode === 'disabled' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => onSignalsModeChange('disabled')}
+            className="h-6 px-2 text-xs"
+          >
+            Выкл
+          </Button>
+          <Button
+            variant={signalsMode === 'bots_only' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => onSignalsModeChange('bots_only')}
+            className="h-6 px-2 text-xs"
+          >
+            Боты
+          </Button>
+          <Button
+            variant={signalsMode === 'top10' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => onSignalsModeChange('top10')}
+            className="h-6 px-2 text-xs"
+          >
+            Топ-10
+          </Button>
+        </div>
+        <Separator orientation="vertical" className="h-6" />
         <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-border bg-secondary/50">
           <span className="text-xs text-muted-foreground">API:</span>
           <Button

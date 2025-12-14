@@ -14,7 +14,7 @@ import { useMarketData } from '@/hooks/useMarketData';
 import { useUserData } from '@/hooks/useUserData';
 import { usePriceData } from '@/hooks/usePriceData';
 import { useOrderbookAndSignals } from '@/hooks/useOrderbookAndSignals';
-import { createBot } from '@/lib/api';
+import { createBot, getUserSettings, updateUserSettings, UserSettings } from '@/lib/api';
 import { toast } from 'sonner';
 
 const mockClosedTrades = [
@@ -39,8 +39,24 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [apiMode, setApiMode] = useState<'live' | 'testnet'>('testnet');
   const [accountMode, setAccountMode] = useState<'live' | 'demo'>('demo');
   const [currentTimeframe, setCurrentTimeframe] = useState('15');
+  const [chartsEnabled, setChartsEnabled] = useState(true);
+  const [signalsMode, setSignalsMode] = useState<'disabled' | 'bots_only' | 'top10'>('bots_only');
 
   const { watchlist, logs, handleAddPair, handleRemovePair } = useMarketData();
+
+  // Load user settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await getUserSettings(userId);
+        setChartsEnabled(settings.charts_enabled);
+        setSignalsMode(settings.signals_mode);
+      } catch (error) {
+        console.error('Failed to load user settings:', error);
+      }
+    };
+    loadSettings();
+  }, [userId]);
 
   // Set first symbol from watchlist as default
   useEffect(() => {
@@ -49,8 +65,31 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     }
   }, [watchlist, selectedSymbol]);
   const { balance, positions } = useUserData(userId, apiMode);
-  const { priceData } = usePriceData(selectedSymbol, watchlist, currentTimeframe);
-  const { orderbook, strategySignals } = useOrderbookAndSignals(selectedSymbol, apiMode);
+  const { priceData } = usePriceData(selectedSymbol, watchlist, currentTimeframe, chartsEnabled);
+  const { orderbook, strategySignals } = useOrderbookAndSignals(selectedSymbol, apiMode, signalsMode !== 'disabled');
+
+  const handleChartsEnabledChange = async (enabled: boolean) => {
+    setChartsEnabled(enabled);
+    try {
+      await updateUserSettings(userId, { charts_enabled: enabled });
+      toast.success(enabled ? 'Графики включены' : 'Графики выключены');
+    } catch (error) {
+      toast.error('Не удалось сохранить настройку');
+      console.error('Failed to update charts setting:', error);
+    }
+  };
+
+  const handleSignalsModeChange = async (mode: 'disabled' | 'bots_only' | 'top10') => {
+    setSignalsMode(mode);
+    try {
+      await updateUserSettings(userId, { signals_mode: mode });
+      const modeText = mode === 'disabled' ? 'выключены' : mode === 'bots_only' ? 'только по ботам' : 'топ-10 рынка';
+      toast.success(`Сигналы: ${modeText}`);
+    } catch (error) {
+      toast.error('Не удалось сохранить настройку');
+      console.error('Failed to update signals mode:', error);
+    }
+  };
 
   const totalPnL = positions.length > 0 
     ? positions.reduce((sum, p) => sum + p.unrealizedPnl, 0) 
@@ -180,6 +219,10 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             onApiModeChange={setApiMode}
             accountMode={accountMode}
             onAccountModeChange={setAccountMode}
+            chartsEnabled={chartsEnabled}
+            onChartsEnabledChange={handleChartsEnabledChange}
+            signalsMode={signalsMode}
+            onSignalsModeChange={handleSignalsModeChange}
           />
 
           <div className="p-6 space-y-6">

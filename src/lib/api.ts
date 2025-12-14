@@ -8,6 +8,7 @@ const API_KEYS_URL = 'https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f
 const STRATEGY_SIGNALS_URL = 'https://functions.poehali.dev/4b1221ec-86fd-4273-a7fe-2130d93a0e5b';
 const TELEGRAM_NOTIFY_URL = 'https://functions.poehali.dev/3e081d1f-2d3b-429a-8490-942983a3d17d';
 const BOTS_MANAGER_URL = 'https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13';
+const USER_SETTINGS_URL = 'https://functions.poehali.dev/e9d739c2-9ebd-4ce4-a11c-367956a9e6aa';
 
 export interface TickerData {
   symbol: string;
@@ -412,4 +413,40 @@ export async function deleteBot(userId: number, botId: string): Promise<{ succes
   }
   
   throw new Error(data.error || 'Failed to delete bot');
+}
+
+export interface UserSettings {
+  charts_enabled: boolean;
+  signals_mode: 'disabled' | 'bots_only' | 'top10';
+}
+
+export async function getUserSettings(userId: number): Promise<UserSettings> {
+  const response = await fetch(USER_SETTINGS_URL, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.settings;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch user settings');
+}
+
+export async function updateUserSettings(userId: number, settings: Partial<UserSettings>): Promise<{ success: boolean }> {
+  const response = await fetch(USER_SETTINGS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': userId.toString()
+    },
+    body: JSON.stringify(settings)
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data;
+  }
+  
+  throw new Error(data.error || 'Failed to update settings');
 }
