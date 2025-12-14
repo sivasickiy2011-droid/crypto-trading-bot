@@ -43,9 +43,10 @@ interface PriceChartMainProps {
   yMin: number;
   yMax: number;
   positionLevels?: PositionLevel[];
+  currentMarketPrice?: number;
 }
 
-export default function PriceChartMain({ chartData, chartType, showIndicators, yMin, yMax, positionLevels = [] }: PriceChartMainProps) {
+export default function PriceChartMain({ chartData, chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice }: PriceChartMainProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -187,6 +188,23 @@ export default function PriceChartMain({ chartData, chartType, showIndicators, y
               isAnimationActive={false}
             />
           </>
+        )}
+
+        {currentMarketPrice && (
+          <ReferenceLine 
+            y={currentMarketPrice} 
+            stroke="hsl(199, 89%, 48%)" 
+            strokeWidth={2}
+            strokeDasharray="1 1"
+            label={{ 
+              value: `$${currentMarketPrice.toFixed(2)}`, 
+              position: 'right',
+              fill: 'hsl(199, 89%, 48%)',
+              fontSize: 12,
+              fontWeight: 700,
+              fontFamily: 'Roboto Mono'
+            }}
+          />
         )}
 
         {positionLevels.map((level, idx) => (

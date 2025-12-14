@@ -87,6 +87,13 @@ export default function DashboardCharts({
   const handleLogAdd = (log: BotLogEntry) => {
     setBotLogs(prev => [log, ...prev].slice(0, 100));
   };
+
+  // Get current market price from orderbook
+  const asks = orderbook.filter(o => o.askSize > 0).sort((a, b) => a.price - b.price);
+  const bids = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price);
+  const currentMarketPrice = asks.length > 0 && bids.length > 0 
+    ? (asks[0].price + bids[0].price) / 2 
+    : undefined;
   
   return (
     <div className="space-y-6">
@@ -98,6 +105,7 @@ export default function DashboardCharts({
             onTimeframeChange={onTimeframeChange}
             strategySignals={strategySignals}
             positionLevels={positionLevels}
+            currentMarketPrice={currentMarketPrice}
           />
           
           <TradesPanel 
