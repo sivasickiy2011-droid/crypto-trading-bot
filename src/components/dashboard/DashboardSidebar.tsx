@@ -42,6 +42,15 @@ export default function DashboardSidebar({
       <Button 
         variant="ghost" 
         size="icon" 
+        className={`text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent ${activeTab === 'top-pairs' ? 'bg-sidebar-accent text-primary' : ''}`}
+        onClick={() => onTabChange('top-pairs')}
+        title="Топ пары для трейдинга"
+      >
+        <Icon name="Trophy" size={20} />
+      </Button>
+      <Button 
+        variant="ghost" 
+        size="icon" 
         className="text-sidebar-foreground hover:text-primary hover:bg-sidebar-accent"
         onClick={onConfigOpen}
         title="Настройки стратегий"

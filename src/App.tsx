@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SetPassword from "./pages/SetPassword";
+import TopPairs from "./pages/TopPairs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -105,6 +106,10 @@ const App = () => {
                   <Navigate to="/login" replace />
                 )
               } 
+            />
+            <Route 
+              path="/top-pairs" 
+              element={<TopPairs />}
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -317,9 +317,33 @@ def send_telegram_notification(message: str):
     except Exception as e:
         print(f'Failed to send Telegram notification: {e}')
 
+def get_top_trading_pairs(min_score: float = 70.0) -> List[str]:
+    """Получить топ пары для автотрейдинга"""
+    try:
+        analyzer_url = 'https://functions.poehali.dev/pair-analyzer'
+        request = Request(analyzer_url, method='GET')
+        
+        with urlopen(request, timeout=15) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            
+            if data.get('success'):
+                top_pairs = data.get('topPairs', [])
+                # Фильтруем по минимальному скору и берём топ-10
+                good_pairs = [
+                    p['symbol'] for p in top_pairs 
+                    if p['totalScore'] >= min_score and p['recommendation'] in ['excellent', 'good']
+                ][:10]
+                return good_pairs
+    except Exception as e:
+        print(f'Failed to get top pairs: {e}')
+    
+    # Фолбэк на популярные пары
+    return ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
+
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
     Автономный исполнитель ботов: анализирует стратегии и торгует 24/7
+    Автоматически подбирает лучшие пары по волатильности и надёжности
     Args: event - HTTP запрос (может быть пустым для cron)
     Returns: Отчет о выполненных действиях
     '''
@@ -342,6 +366,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     actions = []
     
     try:
+        # Получаем топ пары для автотрейдинга
+        top_pairs = get_top_trading_pairs(min_score=70.0)
+        actions.append(f'Top pairs for trading: {", ".join(top_pairs[:5])}')
+        
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT user_id, bot_id, pair, market, strategy, entry_signal FROM t_p69937905_crypto_trading_bot.bots WHERE active = true"
@@ -359,6 +387,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             symbol = pair.replace('/', '')
             
+            # Если символ в топе — повышенный приоритет
+            is_top_pair = symbol in top_pairs
+            
             # Преобразуем человеко-читаемое название стратегии в технический ключ
             strategy_map = {
                 'EMA 9/21/55 (тренд + кросс)': 'ma-crossover',
@@ -375,7 +406,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 continue
             
             signal = analyze_strategy(klines, strategy_key)
-            print(f'Bot {bot_id} ({symbol}): strategy={strategy_key}, signal={signal}')
+            priority_mark = '⭐' if is_top_pair else ''
+            print(f'Bot {bot_id} ({symbol}){priority_mark}: strategy={strategy_key}, signal={signal}')
             
             position = get_current_position(api_key, api_secret, symbol)
             

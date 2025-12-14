@@ -426,6 +426,12 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
           <div className="p-6 space-y-6">
             {activeTab === 'backtest' ? (
               <BacktestPanel />
+            ) : activeTab === 'top-pairs' ? (
+              <iframe 
+                src="/top-pairs" 
+                className="w-full h-[calc(100vh-80px)] border-0 rounded-lg"
+                title="Top Trading Pairs"
+              />
             ) : (
               <>
                 <div className="grid grid-cols-[auto_1fr] gap-3 items-start">
