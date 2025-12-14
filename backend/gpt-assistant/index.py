@@ -101,27 +101,27 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if '403' in error_msg or 'Forbidden' in error_msg:
                 raise Exception(f'Nebius API: неверный API ключ или доступ запрещён. Проверьте ключ на tokenfactory.nebius.com')
             raise Exception(f'Nebius API error: {error_msg}')
+        
+        if 'choices' in ai_response and len(ai_response['choices']) > 0:
+            ai_message = ai_response['choices'][0]['message']['content']
             
-            if 'choices' in ai_response and len(ai_response['choices']) > 0:
-                ai_message = ai_response['choices'][0]['message']['content']
-                
-                return {
-                    'statusCode': 200,
-                    'headers': {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    },
-                    'body': json.dumps({
-                        'success': True,
-                        'response': ai_message,
-                        'model': selected_model,
-                        'provider': 'Nebius Token Factory',
-                        'timestamp': context.request_id
-                    }),
-                    'isBase64Encoded': False
-                }
-            else:
-                raise Exception('Invalid AI response')
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'success': True,
+                    'response': ai_message,
+                    'model': selected_model,
+                    'provider': 'Nebius Token Factory',
+                    'timestamp': context.request_id
+                }),
+                'isBase64Encoded': False
+            }
+        else:
+            raise Exception('Invalid AI response')
     
     except Exception as e:
         return {
