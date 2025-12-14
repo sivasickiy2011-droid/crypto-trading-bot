@@ -164,9 +164,11 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
           timestamp: new Date()
         }]);
       } else {
+        console.error('Groq API Error:', data);
         throw new Error(data.error || 'GPT request failed');
       }
     } catch (error) {
+      console.error('DevConsole Error:', error);
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'system',
