@@ -125,6 +125,9 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
   
   const currentPrice = chartData.length > 0 ? (chartData[chartData.length - 1]?.close || chartData[chartData.length - 1]?.price) : 0;
 
+  // Check if volume data exists
+  const hasVolumeData = chartData.some(d => d.volume && d.volume > 0);
+
   return (
     <Card className="bg-black/90 border-zinc-800">
       <CardHeader className="pb-2">
@@ -164,7 +167,7 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
           chartData={chartData}
           showRSI={showIndicators.rsi}
           showMACD={showIndicators.macd}
-          showVolume={true}
+          showVolume={hasVolumeData}
         />
       </CardContent>
     </Card>
