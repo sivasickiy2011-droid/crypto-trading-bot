@@ -60,6 +60,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [orderbook, setOrderbook] = useState<OrderbookEntry[]>([]);
   const [strategySignals, setStrategySignals] = useState<StrategySignal[]>([]);
   const [currentTimeframe, setCurrentTimeframe] = useState('15');
+  const sentSignalsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const loadMarketData = async () => {
@@ -354,12 +355,24 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
         setOrderbook(orderbookData);
         
         if (signalsData.length > 0) {
-          const prevSignalsKey = strategySignals.map(s => `${s.strategy}-${s.signal}-${s.strength}`).join(',');
-          const newSignalsKey = signalsData.map(s => `${s.strategy}-${s.signal}-${s.strength}`).join(',');
-          
-          if (prevSignalsKey !== newSignalsKey) {
-            signalsData.forEach(signal => {
-              if (signal.signal !== 'neutral' && signal.strength > 60) {
+          signalsData.forEach(signal => {
+            if (signal.signal !== 'neutral' && signal.strength > 60) {
+              // Создаём уникальный ключ для сигнала (символ + стратегия + направление)
+              const signalKey = `${selectedSymbol}-${signal.strategy}-${signal.signal}-${Math.floor(Date.now() / 300000)}`; // 5 минут
+              
+              // Отправляем только если ещё не отправляли за последние 5 минут
+              if (!sentSignalsRef.current.has(signalKey)) {
+                sentSignalsRef.current.add(signalKey);
+                
+                // Очищаем старые ключи (старше 10 минут)
+                const currentTime = Math.floor(Date.now() / 300000);
+                sentSignalsRef.current.forEach(key => {
+                  const keyTime = parseInt(key.split('-').pop() || '0');
+                  if (currentTime - keyTime > 2) {
+                    sentSignalsRef.current.delete(key);
+                  }
+                });
+                
                 import('@/lib/api').then(({ sendTelegramNotification }) => {
                   sendTelegramNotification({
                     type: 'signal',
@@ -372,8 +385,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   }).catch(err => console.error('Failed to send signal notification:', err));
                 });
               }
-            });
-          }
+            }
+          });
         }
         
         setStrategySignals(signalsData);
@@ -385,7 +398,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     loadOrderbookAndSignals();
     const interval = setInterval(loadOrderbookAndSignals, 5000);
     return () => clearInterval(interval);
-  }, [selectedSymbol, strategySignals, apiMode]);
+  }, [selectedSymbol, apiMode]);
 
   return (
     <div className="min-h-screen bg-background">
