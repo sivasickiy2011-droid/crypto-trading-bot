@@ -154,20 +154,22 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     bids = orderbook_data.get('b', [])
                     asks = orderbook_data.get('a', [])
                     
-                    max_len = max(len(bids), len(asks))
                     merged = []
                     
-                    for i in range(max_len):
-                        bid_price = float(bids[i][0]) if i < len(bids) else 0
-                        bid_size = float(bids[i][1]) if i < len(bids) else 0
-                        ask_price = float(asks[i][0]) if i < len(asks) else 0
-                        ask_size = float(asks[i][1]) if i < len(asks) else 0
-                        
-                        price = ask_price if ask_price > 0 else bid_price
+                    # Добавляем все ask уровни (продажи)
+                    for ask in asks:
                         merged.append({
-                            'price': price,
-                            'bidSize': bid_size,
-                            'askSize': ask_size
+                            'price': float(ask[0]),
+                            'bidSize': 0,
+                            'askSize': float(ask[1])
+                        })
+                    
+                    # Добавляем все bid уровни (покупки)
+                    for bid in bids:
+                        merged.append({
+                            'price': float(bid[0]),
+                            'bidSize': float(bid[1]),
+                            'askSize': 0
                         })
                     
                     return {
