@@ -165,38 +165,46 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
           </TabsContent>
           
           <TabsContent value="signals" className="mt-4">
-            {strategySignals.length === 0 ? (
+            {strategySignals.filter(s => s.signal !== 'neutral' && s.strength > 50).length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 <Icon name="Activity" size={36} className="mx-auto mb-3 opacity-30" />
                 <p className="text-sm">Нет активных сигналов</p>
+                <p className="text-xs mt-2 opacity-70">Сигналы появятся при обнаружении точек входа</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-3">
-                {strategySignals.map((signal, idx) => {
-                  const signalColor = signal.signal === 'buy' ? 'text-success' : signal.signal === 'sell' ? 'text-destructive' : 'text-muted-foreground';
-                  const signalBg = signal.signal === 'buy' ? 'bg-success/10 border-success/30' : signal.signal === 'sell' ? 'bg-destructive/10 border-destructive/30' : 'bg-secondary border-border';
-                  const signalIcon = signal.signal === 'buy' ? 'TrendingUp' : signal.signal === 'sell' ? 'TrendingDown' : 'Minus';
-                  
-                  return (
-                    <div key={idx} className={`p-3 rounded-lg border ${signalBg} hover:opacity-80 transition-opacity`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <Icon name={signalIcon} size={16} className={signalColor} />
-                          <span className="font-semibold text-sm">{signal.strategy}</span>
+              <div className="space-y-2">
+                {strategySignals
+                  .filter(s => s.signal !== 'neutral' && s.strength > 50)
+                  .map((signal, idx) => {
+                    const signalColor = signal.signal === 'buy' ? 'text-success' : 'text-destructive';
+                    const signalBg = signal.signal === 'buy' ? 'bg-success/10 border-success/30' : 'bg-destructive/10 border-destructive/30';
+                    const signalIcon = signal.signal === 'buy' ? 'TrendingUp' : 'TrendingDown';
+                    
+                    return (
+                      <div key={idx} className={`p-3 rounded-lg border ${signalBg} hover:opacity-90 transition-opacity`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-3">
+                            <Icon name={signalIcon} size={18} className={signalColor} />
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`text-sm font-bold uppercase ${signalColor}`}>
+                                  {signal.signal === 'buy' ? 'ПОКУПКА' : 'ПРОДАЖА'}
+                                </span>
+                                <Badge variant="outline" className="text-xs px-2 h-5">
+                                  {signal.strength}%
+                                </Badge>
+                              </div>
+                              <div className="text-xs text-muted-foreground">{signal.strategy}</div>
+                            </div>
+                          </div>
+                          <Button size="sm" variant="outline" className="h-8 text-xs">
+                            Открыть
+                          </Button>
                         </div>
-                        <Badge variant={signal.signal === 'buy' ? 'default' : signal.signal === 'sell' ? 'destructive' : 'outline'} className="text-xs h-5">
-                          {signal.signal === 'buy' ? 'ПОКУПКА' : signal.signal === 'sell' ? 'ПРОДАЖА' : 'НЕЙТРАЛЬНО'}
-                        </Badge>
+                        <div className="text-xs text-foreground/70 pl-7">{signal.reason}</div>
                       </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">{signal.reason}</span>
-                        <span className={`font-mono font-semibold ${signalColor}`}>
-                          {signal.strength}%
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             )}
           </TabsContent>

@@ -199,6 +199,7 @@ def calculate_macd(data: List[float], fast: int = 12, slow: int = 26, signal: in
 def analyze_strategy(klines: List[Dict[str, Any]], strategy: str) -> Optional[str]:
     """Analyze strategy and return signal: BUY, SELL, or None"""
     if len(klines) < 200:
+        print(f'Not enough klines: {len(klines)}')
         return None
     
     closes = [k['close'] for k in klines]
@@ -213,10 +214,21 @@ def analyze_strategy(klines: List[Dict[str, Any]], strategy: str) -> Optional[st
         idx = -1
         trend_up = closes[idx] > ema55[idx]
         trend_down = closes[idx] < ema55[idx]
+        bullish_cross = ema9[-2] <= ema21[-2] and ema9[idx] > ema21[idx]
+        bearish_cross = ema9[-2] >= ema21[-2] and ema9[idx] < ema21[idx]
         
-        if trend_up and ema9[-2] <= ema21[-2] and ema9[idx] > ema21[idx]:
+        print(f'MA Crossover - trend_up:{trend_up}, bullish_cross:{bullish_cross}, trend_down:{trend_down}, bearish_cross:{bearish_cross}')
+        print(f'  Price:{closes[idx]:.2f}, EMA9:{ema9[idx]:.2f}, EMA21:{ema21[idx]:.2f}, EMA55:{ema55[idx]:.2f}')
+        
+        if trend_up and bullish_cross:
             return 'BUY'
-        elif trend_down and ema9[-2] >= ema21[-2] and ema9[idx] < ema21[idx]:
+        elif trend_down and bearish_cross:
+            return 'SELL'
+        elif ema9[idx] > ema21[idx] and ema21[idx] > ema55[idx] and closes[idx] > ema9[idx]:
+            print('  Strong uptrend detected')
+            return 'BUY'
+        elif ema9[idx] < ema21[idx] and ema21[idx] < ema55[idx] and closes[idx] < ema9[idx]:
+            print('  Strong downtrend detected')
             return 'SELL'
     
     elif strategy == 'rsi':
