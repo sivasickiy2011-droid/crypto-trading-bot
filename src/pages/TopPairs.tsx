@@ -3,6 +3,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 interface TopPair {
   symbol: string;
@@ -43,6 +51,9 @@ export default function TopPairs() {
   const [pairs, setPairs] = useState<TopPair[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPair, setSelectedPair] = useState<TopPair | null>(null);
+  const [actionDialogOpen, setActionDialogOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     loadTopPairs();
@@ -145,7 +156,14 @@ export default function TopPairs() {
 
         <div className="space-y-4">
           {pairs.map((pair, index) => (
-            <Card key={pair.symbol} className="p-6 hover:shadow-lg transition-shadow">
+            <Card 
+              key={pair.symbol} 
+              className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => {
+                setSelectedPair(pair);
+                setActionDialogOpen(true);
+              }}
+            >
               <div className="grid grid-cols-12 gap-4 items-center">
                 {/* Ранг и символ */}
                 <div className="col-span-2">
@@ -227,6 +245,157 @@ export default function TopPairs() {
             </Card>
           ))}
         </div>
+
+        {/* Диалог действий с парой */}
+        <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">
+                {selectedPair?.symbol.replace('USDT', '/USDT')}
+              </DialogTitle>
+              <DialogDescription>
+                Общий балл: {selectedPair?.totalScore} | {' '}
+                {selectedPair && getRecommendationBadge(selectedPair.recommendation)}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 mt-4">
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => {
+                  if (selectedPair) {
+                    window.parent.postMessage(
+                      { 
+                        type: 'addToWatchlist', 
+                        symbol: selectedPair.symbol 
+                      }, 
+                      '*'
+                    );
+                    toast.success(`${selectedPair.symbol} добавлен в избранное`);
+                    setActionDialogOpen(false);
+                  }
+                }}
+                disabled={actionLoading}
+              >
+                <Icon name="Star" size={18} className="mr-3" />
+                Добавить в избранное
+              </Button>
+
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => {
+                  if (selectedPair) {
+                    window.parent.postMessage(
+                      { 
+                        type: 'createBot', 
+                        symbol: selectedPair.symbol 
+                      }, 
+                      '*'
+                    );
+                    toast.success(`Создаю бота для ${selectedPair.symbol}`);
+                    setActionDialogOpen(false);
+                  }
+                }}
+                disabled={actionLoading}
+              >
+                <Icon name="Bot" size={18} className="mr-3" />
+                Создать бота для пары
+              </Button>
+
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => {
+                  if (selectedPair) {
+                    window.parent.postMessage(
+                      { 
+                        type: 'runAutoTrading', 
+                        symbol: selectedPair.symbol 
+                      }, 
+                      '*'
+                    );
+                    toast.success('Запускаю автотрейдинг...');
+                    setActionDialogOpen(false);
+                  }
+                }}
+                disabled={actionLoading}
+              >
+                <Icon name="Play" size={18} className="mr-3" />
+                Запустить автотрейдинг
+              </Button>
+
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => {
+                  if (selectedPair) {
+                    window.parent.postMessage(
+                      { 
+                        type: 'runBacktest', 
+                        symbol: selectedPair.symbol 
+                      }, 
+                      '*'
+                    );
+                    toast.success('Запускаю бэктест...');
+                    setActionDialogOpen(false);
+                  }
+                }}
+                disabled={actionLoading}
+              >
+                <Icon name="BarChart3" size={18} className="mr-3" />
+                Провести анализ бэктеста
+              </Button>
+
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => {
+                  if (selectedPair) {
+                    window.parent.postMessage(
+                      { 
+                        type: 'askAssistant', 
+                        symbol: selectedPair.symbol,
+                        question: `Расскажи про пару ${selectedPair.symbol.replace('USDT', '/USDT')} - стоит ли торговать, какие риски?`
+                      }, 
+                      '*'
+                    );
+                    toast.success('Спрашиваю у ассистента...');
+                    setActionDialogOpen(false);
+                  }
+                }}
+                disabled={actionLoading}
+              >
+                <Icon name="MessageCircle" size={18} className="mr-3" />
+                Задать вопрос ассистенту
+              </Button>
+            </div>
+
+            <div className="mt-4 p-4 bg-muted rounded-lg text-sm">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-muted-foreground">Волатильность</p>
+                  <p className="font-semibold">{selectedPair?.volatility.value.toFixed(2)}%</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Ликвидность</p>
+                  <p className="font-semibold">${(selectedPair?.liquidity.turnover24h ?? 0 / 1e6).toFixed(1)}M</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Тренд</p>
+                  <p className="font-semibold">
+                    {selectedPair?.trend.direction === 'uptrend' ? 'Рост' : selectedPair?.trend.direction === 'downtrend' ? 'Падение' : 'Боковик'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Надёжность</p>
+                  <p className="font-semibold">{selectedPair?.reliability.score.toFixed(0)}</p>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

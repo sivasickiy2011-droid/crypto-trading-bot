@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import StrategyConfigModal from '@/components/StrategyConfigModal';
 import BacktestPanel from '@/components/BacktestPanel';
 import ApiKeysModal from '@/components/ApiKeysModal';
@@ -14,6 +14,8 @@ import { useMarketData } from '@/hooks/useMarketData';
 import { useUserData } from '@/hooks/useUserData';
 import { usePriceData } from '@/hooks/usePriceData';
 import { useOrderbookAndSignals } from '@/hooks/useOrderbookAndSignals';
+import { createBot } from '@/lib/api';
+import { toast } from 'sonner';
 
 const mockClosedTrades = [
   { id: 4, pair: 'BTC/USDT', side: 'LONG', entry: 42800, exit: 43200, size: 0.3, pnl: 120, pnlPercent: 5.6, closeTime: '11:23' },
@@ -83,6 +85,58 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const formatSymbolForDisplay = (symbol: string) => {
     return symbol.replace('USDT', '/USDT');
   };
+
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.data.type === 'addToWatchlist') {
+        handleAddPair(event.data.symbol);
+        setSelectedSymbol(event.data.symbol);
+        setActiveTab('dashboard');
+        toast.success(`${event.data.symbol} добавлен в избранное`);
+      }
+      
+      if (event.data.type === 'createBot') {
+        try {
+          await createBot(userId, {
+            id: `bot-${Date.now()}`,
+            pair: event.data.symbol.replace('USDT', '/USDT'),
+            market: 'futures',
+            strategy: 'EMA 9/21/55 (тренд + кросс)',
+            active: true,
+          });
+          setActiveTab('dashboard');
+          toast.success(`Бот для ${event.data.symbol} создан`);
+        } catch (error) {
+          toast.error('Ошибка создания бота');
+        }
+      }
+
+      if (event.data.type === 'runAutoTrading') {
+        try {
+          const response = await fetch('https://functions.poehali.dev/e2dd154c-dde5-456b-a4c6-1200070fcc75');
+          const data = await response.json();
+          if (data.success) {
+            toast.success('Автотрейдинг запущен');
+            setActiveTab('dashboard');
+          }
+        } catch (error) {
+          toast.error('Ошибка запуска автотрейдинга');
+        }
+      }
+
+      if (event.data.type === 'runBacktest') {
+        setActiveTab('backtest');
+        toast.success(`Переходим к бэктесту ${event.data.symbol}`);
+      }
+
+      if (event.data.type === 'askAssistant') {
+        toast.info('Функция ассистента в разработке');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [userId, handleAddPair]);
 
   return (
     <div className="min-h-screen bg-background">
