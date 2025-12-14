@@ -4,74 +4,127 @@ interface PriceDataPoint {
   time: string;
   rsi?: number;
   macd?: number;
+  volume?: number;
+  open?: number;
+  close?: number;
 }
 
 interface PriceChartIndicatorsProps {
   chartData: PriceDataPoint[];
   showRSI: boolean;
   showMACD: boolean;
+  showVolume?: boolean;
 }
 
-export default function PriceChartIndicators({ chartData, showRSI, showMACD }: PriceChartIndicatorsProps) {
+export default function PriceChartIndicators({ chartData, showRSI, showMACD, showVolume = true }: PriceChartIndicatorsProps) {
   return (
     <>
-      {showRSI && (
-        <div className="h-[120px] mt-2">
+      {showVolume && (
+        <div className="h-[100px] mt-2">
           <div className="flex items-center justify-between mb-1 px-2">
-            <span className="text-xs text-muted-foreground">RSI (14)</span>
+            <span className="text-xs text-zinc-400 font-medium">Объем</span>
+          </div>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={chartData} margin={{ top: 0, right: 60, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="1 1" stroke="rgba(255,255,255,0.03)" vertical={false} />
+              <XAxis 
+                dataKey="time" 
+                stroke="rgba(255,255,255,0.3)" 
+                tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.4)' }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis 
+                stroke="rgba(255,255,255,0.1)" 
+                tick={{ fontSize: 10, fontFamily: 'Roboto Mono', fill: 'rgba(255,255,255,0.4)' }}
+                tickLine={false}
+                axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+                orientation="right"
+                width={60}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'rgba(0,0,0,0.9)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '6px',
+                  color: '#fff'
+                }}
+                formatter={(value: number) => [value.toFixed(2), 'Объем']}
+              />
+              <Bar 
+                dataKey="volume"
+                fill={(entry: any) => {
+                  const isGreen = entry.close >= entry.open;
+                  return isGreen ? 'rgba(22, 163, 74, 0.5)' : 'rgba(239, 68, 68, 0.5)';
+                }}
+                radius={[2, 2, 0, 0]}
+                isAnimationActive={false}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+      {showRSI && (
+        <div className="h-[100px] mt-2">
+          <div className="flex items-center justify-between mb-1 px-2">
+            <span className="text-xs text-zinc-400 font-medium">RSI (14)</span>
             <div className="flex items-center space-x-2 text-xs">
-              <span className="text-destructive">30</span>
-              <span className="text-muted-foreground">|</span>
-              <span className="text-success">70</span>
+              <span className="text-red-400">30</span>
+              <span className="text-zinc-600">|</span>
+              <span className="text-green-400">70</span>
             </div>
           </div>
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 18%)" vertical={false} />
+            <ComposedChart data={chartData} margin={{ top: 0, right: 60, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="1 1" stroke="rgba(255,255,255,0.03)" vertical={false} />
               <XAxis 
                 dataKey="time" 
-                stroke="hsl(220, 9%, 50%)" 
+                stroke="rgba(255,255,255,0.3)" 
                 tick={{ fontSize: 10 }}
                 hide
               />
               <YAxis 
-                stroke="hsl(220, 9%, 50%)" 
-                tick={{ fontSize: 10 }}
+                stroke="rgba(255,255,255,0.1)" 
+                tick={{ fontSize: 10, fontFamily: 'Roboto Mono', fill: 'rgba(255,255,255,0.4)' }}
+                tickLine={false}
+                axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
                 domain={[0, 100]}
                 ticks={[0, 30, 50, 70, 100]}
                 orientation="right"
+                width={60}
               />
               <Tooltip 
                 contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  backgroundColor: 'rgba(0,0,0,0.9)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '6px',
+                  color: '#fff'
                 }}
                 formatter={(value: number) => [value.toFixed(2), 'RSI']}
               />
               <Line 
                 type="monotone"
                 dataKey="rsi"
-                stroke="hsl(280, 70%, 60%)"
-                strokeWidth={2}
+                stroke="#a855f7"
+                strokeWidth={1.5}
                 dot={false}
                 isAnimationActive={false}
               />
               <Line 
                 type="monotone"
                 dataKey={() => 30}
-                stroke="hsl(0, 84%, 60%)"
+                stroke="rgba(239, 68, 68, 0.5)"
                 strokeWidth={1}
-                strokeDasharray="3 3"
+                strokeDasharray="2 2"
                 dot={false}
                 isAnimationActive={false}
               />
               <Line 
                 type="monotone"
                 dataKey={() => 70}
-                stroke="hsl(142, 76%, 36%)"
+                stroke="rgba(22, 163, 74, 0.5)"
                 strokeWidth={1}
-                strokeDasharray="3 3"
+                strokeDasharray="2 2"
                 dot={false}
                 isAnimationActive={false}
               />

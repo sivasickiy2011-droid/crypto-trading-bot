@@ -122,7 +122,7 @@ export default function PriceChartHeader({
             </Button>
           </div>
 
-          <div className="flex items-center space-x-1 border-l border-border pl-2">
+          <div className="flex items-center space-x-1 border-l border-zinc-800 pl-2">
             <Button
               variant={showIndicators.ema9 ? 'secondary' : 'ghost'}
               size="sm"
@@ -146,6 +146,14 @@ export default function PriceChartHeader({
               onClick={() => setShowIndicators(prev => ({ ...prev, bb: !prev.bb }))}
             >
               BB
+            </Button>
+            <Button
+              variant={showIndicators.rsi ? 'secondary' : 'ghost'}
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => setShowIndicators(prev => ({ ...prev, rsi: !prev.rsi }))}
+            >
+              RSI
             </Button>
           </div>
         </div>

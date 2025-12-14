@@ -48,7 +48,7 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
     ema9: false, 
     ema21: false, 
     ema50: false, 
-    rsi: false, 
+    rsi: true, 
     bb: false, 
     macd: false 
   });
@@ -154,6 +154,7 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
           chartData={chartData}
           showRSI={showIndicators.rsi}
           showMACD={showIndicators.macd}
+          showVolume={true}
         />
       </CardContent>
     </Card>
