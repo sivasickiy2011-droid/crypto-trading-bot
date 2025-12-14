@@ -176,10 +176,10 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
 
   const addBot = async () => {
     const strategies: { [key: string]: string } = {
-      'ma-crossover': 'MA Crossover',
-      'martingale': 'Мартингейл',
-      'grid': 'Сетка',
-      'dca': 'DCA'
+      'ma-crossover': 'EMA 9/21/55 (тренд + кросс)',
+      'rsi': 'RSI 14 + EMA50 (отбой от зон)',
+      'bollinger': 'BB + EMA50 (отбой от границ)',
+      'macd': 'MACD + EMA200 (дивергенция)'
     };
 
     const newBotData: Bot = {
@@ -299,7 +299,7 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
               <DialogHeader>
                 <DialogTitle>Создать нового бота</DialogTitle>
                 <DialogDescription>
-                  Бот будет работать только на демо счёте
+                  Бот автоматически торгует по выбранной стратегии (LONG и SHORT позиции)
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -339,10 +339,10 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ma-crossover">MA Crossover</SelectItem>
-                      <SelectItem value="martingale">Мартингейл</SelectItem>
-                      <SelectItem value="grid">Сетка ордеров</SelectItem>
-                      <SelectItem value="dca">DCA усреднение</SelectItem>
+                      <SelectItem value="ma-crossover">EMA 9/21/55 (тренд + кросс)</SelectItem>
+                      <SelectItem value="rsi">RSI 14 + EMA50 (отбой от зон)</SelectItem>
+                      <SelectItem value="bollinger">BB + EMA50 (отбой от границ)</SelectItem>
+                      <SelectItem value="macd">MACD + EMA200 (дивергенция)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -55,6 +55,9 @@ export default function BacktestPanel() {
               <p className="text-sm text-muted-foreground mt-1">
                 Тестируйте стратегии на исторических данных перед реальной торговлей
               </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                ⚡ Все стратегии поддерживают LONG (покупка) и SHORT (продажа) позиции
+              </p>
             </div>
             <Badge variant={isRunning ? "default" : "secondary"} className={isRunning ? "animate-pulse-subtle" : ""}>
               {isRunning ? 'ЗАПУЩЕН' : 'ГОТОВ'}
