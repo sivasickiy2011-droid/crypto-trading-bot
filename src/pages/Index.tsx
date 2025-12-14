@@ -106,9 +106,10 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   useEffect(() => {
     const loadUserData = async () => {
       try {
+        const isTestnet = apiMode === 'testnet';
         const [balanceData, positionsData] = await Promise.all([
-          getUserBalance(userId).catch(() => null),
-          getUserPositions(userId).catch(() => [])
+          getUserBalance(userId, isTestnet).catch(() => null),
+          getUserPositions(userId, isTestnet).catch(() => [])
         ]);
         setBalance(balanceData);
         setPositions(positionsData);
@@ -120,7 +121,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     loadUserData();
     const userDataInterval = setInterval(loadUserData, 30000);
     return () => clearInterval(userDataInterval);
-  }, [userId]);
+  }, [userId, apiMode]);
 
   useEffect(() => {
     const loadPriceData = async () => {
