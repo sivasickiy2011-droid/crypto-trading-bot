@@ -20,6 +20,7 @@ interface DashboardHeaderProps {
   onChartsEnabledChange: (enabled: boolean) => void;
   signalsMode: 'disabled' | 'bots_only' | 'top10';
   onSignalsModeChange: (mode: 'disabled' | 'bots_only' | 'top10') => void;
+  savedRequests: number;
 }
 
 export default function DashboardHeader({
@@ -36,7 +37,8 @@ export default function DashboardHeader({
   chartsEnabled,
   onChartsEnabledChange,
   signalsMode,
-  onSignalsModeChange
+  onSignalsModeChange,
+  savedRequests
 }: DashboardHeaderProps) {
   return (
     <header className="h-16 border-b border-border px-6 flex items-center justify-between bg-card">
@@ -78,6 +80,14 @@ export default function DashboardHeader({
         </div>
       </div>
       <div className="flex items-center space-x-4">
+        {savedRequests > 0 && (
+          <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-green-500/30 bg-green-500/10">
+            <Icon name="TrendingDown" size={14} className="text-green-400" />
+            <span className="text-xs font-mono font-semibold text-green-400">
+              -{savedRequests} запросов
+            </span>
+          </div>
+        )}
         <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-border bg-secondary/50">
           <span className="text-xs text-muted-foreground">Графики:</span>
           <Switch 

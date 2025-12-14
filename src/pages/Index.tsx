@@ -14,6 +14,7 @@ import { useMarketData } from '@/hooks/useMarketData';
 import { useUserData } from '@/hooks/useUserData';
 import { usePriceData } from '@/hooks/usePriceData';
 import { useOrderbookAndSignals } from '@/hooks/useOrderbookAndSignals';
+import { useApiRequestCounter } from '@/hooks/useApiRequestCounter';
 import { createBot, getUserSettings, updateUserSettings, UserSettings } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -67,6 +68,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const { balance, positions } = useUserData(userId, apiMode);
   const { priceData } = usePriceData(selectedSymbol, watchlist, currentTimeframe, chartsEnabled);
   const { orderbook, strategySignals } = useOrderbookAndSignals(selectedSymbol, apiMode, signalsMode !== 'disabled');
+  const { savedRequests } = useApiRequestCounter(chartsEnabled, signalsMode !== 'disabled');
 
   const handleChartsEnabledChange = async (enabled: boolean) => {
     setChartsEnabled(enabled);
@@ -223,6 +225,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             onChartsEnabledChange={handleChartsEnabledChange}
             signalsMode={signalsMode}
             onSignalsModeChange={handleSignalsModeChange}
+            savedRequests={savedRequests}
           />
 
           <div className="p-6 space-y-6">

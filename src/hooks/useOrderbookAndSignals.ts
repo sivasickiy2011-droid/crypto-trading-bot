@@ -11,13 +11,17 @@ export function useOrderbookAndSignals(
   const sentSignalsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    // Clear signals when disabled or symbol changes
+    if (!signalsEnabled) {
+      setStrategySignals([]);
+    }
+
     const loadOrderbookAndSignals = async () => {
       try {
         const orderbookData = await getOrderbook(selectedSymbol, 25).catch(() => []);
         setOrderbook(orderbookData);
         
         if (!signalsEnabled) {
-          setStrategySignals([]);
           return;
         }
         
