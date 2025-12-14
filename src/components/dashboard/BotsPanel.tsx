@@ -76,16 +76,20 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
       const position = userPositions.find(p => p.symbol === pairSymbol);
       
       const wasSearching = bot.status === 'searching';
+      const wasInPosition = bot.status === 'in_position';
       
       if (position && bot.active) {
         if (wasSearching) {
-          sendTelegramNotification(
-            pairSymbol,
-            position.side,
-            bot.market,
-            accountMode,
-            position.entryPrice
-          ).catch(err => console.error('Failed to send Telegram notification:', err));
+          sendTelegramNotification({
+            type: 'position_entry',
+            symbol: pairSymbol,
+            side: position.side,
+            market: bot.market,
+            mode: accountMode,
+            entryPrice: position.entryPrice,
+            size: position.size,
+            leverage: position.leverage
+          }).catch(err => console.error('Failed to send Telegram notification:', err));
           
           const now = new Date();
           const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
@@ -110,6 +114,40 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
           currentPnL: position.unrealizedPnl
         };
       } else if (bot.active) {
+        if (wasInPosition && bot.entryPrice) {
+          const exitPrice = userPositions.find(p => p.symbol === pairSymbol)?.currentPrice || 0;
+          const pnl = bot.currentPnL || 0;
+          const pnlPercent = bot.entryPrice > 0 ? (pnl / bot.entryPrice) * 100 : 0;
+          
+          sendTelegramNotification({
+            type: 'position_exit',
+            symbol: pairSymbol,
+            side: bot.entrySignal || 'LONG',
+            mode: accountMode,
+            entryPrice: bot.entryPrice,
+            exitPrice: exitPrice,
+            pnl: pnl,
+            pnlPercent: pnlPercent,
+            reason: 'Закрытие позиции'
+          }).catch(err => console.error('Failed to send exit notification:', err));
+          
+          const now = new Date();
+          const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+          
+          onLogAdd({
+            id: Date.now().toString() + Math.random(),
+            botId: bot.id,
+            botName: `${bot.pair} (${bot.strategy})`,
+            timestamp: timeStr,
+            type: 'exit',
+            message: `Закрыта позиция с PnL ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} USDT`,
+            details: {
+              pnl: pnl,
+              pnlPercent: pnlPercent
+            }
+          });
+        }
+        
         return {
           ...bot,
           status: 'searching' as const,

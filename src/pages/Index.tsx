@@ -351,6 +351,30 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
           getStrategySignals(selectedSymbol).catch(() => [])
         ]);
         setOrderbook(orderbookData);
+        
+        if (signalsData.length > 0) {
+          const prevSignalsKey = strategySignals.map(s => `${s.strategy}-${s.signal}-${s.strength}`).join(',');
+          const newSignalsKey = signalsData.map(s => `${s.strategy}-${s.signal}-${s.strength}`).join(',');
+          
+          if (prevSignalsKey !== newSignalsKey) {
+            signalsData.forEach(signal => {
+              if (signal.signal !== 'neutral' && signal.strength > 60) {
+                import('@/lib/api').then(({ sendTelegramNotification }) => {
+                  sendTelegramNotification({
+                    type: 'signal',
+                    symbol: selectedSymbol,
+                    signal: signal.signal,
+                    strength: signal.strength,
+                    reason: signal.reason,
+                    strategy: signal.strategy,
+                    mode: apiMode === 'testnet' ? 'demo' : 'live'
+                  }).catch(err => console.error('Failed to send signal notification:', err));
+                });
+              }
+            });
+          }
+        }
+        
         setStrategySignals(signalsData);
       } catch (error) {
         console.error('Failed to load orderbook or signals:', error);
@@ -360,7 +384,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     loadOrderbookAndSignals();
     const interval = setInterval(loadOrderbookAndSignals, 5000);
     return () => clearInterval(interval);
-  }, [selectedSymbol]);
+  }, [selectedSymbol, strategySignals, apiMode]);
 
   return (
     <div className="min-h-screen bg-background">

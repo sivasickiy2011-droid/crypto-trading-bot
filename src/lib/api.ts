@@ -278,17 +278,46 @@ export async function getStrategySignals(symbol: string): Promise<StrategySignal
   throw new Error(data.error || 'Failed to fetch strategy signals');
 }
 
-export async function sendTelegramNotification(
-  symbol: string,
-  side: string,
-  market: string,
-  mode: string,
-  entryPrice: number
-): Promise<{ success: boolean }> {
+interface TelegramNotificationBase {
+  type: 'signal' | 'position_entry' | 'position_exit';
+  symbol: string;
+  mode: string;
+}
+
+interface SignalNotification extends TelegramNotificationBase {
+  type: 'signal';
+  signal: 'buy' | 'sell' | 'neutral';
+  strength: number;
+  reason: string;
+  strategy: string;
+}
+
+interface PositionEntryNotification extends TelegramNotificationBase {
+  type: 'position_entry';
+  side: string;
+  entryPrice: number;
+  size: number;
+  leverage: number;
+  market: string;
+}
+
+interface PositionExitNotification extends TelegramNotificationBase {
+  type: 'position_exit';
+  side: string;
+  entryPrice: number;
+  exitPrice: number;
+  pnl: number;
+  pnlPercent: number;
+  reason: string;
+}
+
+type TelegramNotification = SignalNotification | PositionEntryNotification | PositionExitNotification;
+
+export async function sendTelegramNotification(notification: TelegramNotification): Promise<{ success: boolean }> {
   const response = await fetch(TELEGRAM_NOTIFY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ symbol, side, market, mode, entryPrice })
+    body: JSON.stringify(notification)
   });
   const data = await response.json();
   
