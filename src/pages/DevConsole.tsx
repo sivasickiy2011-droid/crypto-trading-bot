@@ -5,7 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import StrategiesSidebar from '@/components/devconsole/StrategiesSidebar';
+import ChatMessages from '@/components/devconsole/ChatMessages';
+import ModelSelector from '@/components/devconsole/ModelSelector';
+import { useAICommands } from '@/hooks/useAICommands';
 
 interface Message {
   id: string;
@@ -20,14 +23,6 @@ interface StrategyMetrics {
   totalTrades: number;
   avgProfit: number;
   status: 'active' | 'paused' | 'optimizing';
-}
-
-interface AIModel {
-  id: string;
-  name: string;
-  description: string;
-  speed: string;
-  quality: string;
 }
 
 interface DevConsoleProps {
@@ -48,25 +43,9 @@ export default function DevConsole({ userId }: DevConsoleProps) {
   const [strategies, setStrategies] = useState<StrategyMetrics[]>([]);
   const [autoMonitor, setAutoMonitor] = useState(false);
   const [selectedModel, setSelectedModel] = useState('yandexgpt');
-  const [showModels, setShowModels] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const availableModels: AIModel[] = [
-    {
-      id: 'yandexgpt',
-      name: 'YandexGPT',
-      description: 'Основная модель для сложных задач',
-      speed: 'Быстрая',
-      quality: 'Отличная'
-    },
-    {
-      id: 'yandexgpt-lite',
-      name: 'YandexGPT Lite',
-      description: 'Облегчённая версия для простых задач',
-      speed: 'Очень быстрая',
-      quality: 'Хорошая'
-    }
-  ];
+  const { processAICommands } = useAICommands(userId, setMessages);
 
   useEffect(() => {
     loadStrategies();
@@ -74,7 +53,7 @@ export default function DevConsole({ userId }: DevConsoleProps) {
     if (autoMonitor) {
       const interval = setInterval(() => {
         analyzeStrategiesAuto();
-      }, 60000); // Каждую минуту
+      }, 60000);
       
       return () => clearInterval(interval);
     }
@@ -120,101 +99,6 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
     await sendToGPT(prompt, true);
   };
 
-  const processAICommands = async (aiResponse: string) => {
-    const managerUrl = 'https://functions.poehali.dev/cd9a0b3b-e47d-4b62-8334-5c9308d3fdc1';
-    
-    // GET_CONFIG
-    if (aiResponse.includes('GET_CONFIG')) {
-      try {
-        const response = await fetch(managerUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'get_config', userId })
-        });
-        const data = await response.json();
-        if (data.success) {
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            role: 'system',
-            content: `📋 Текущие настройки:\n${data.summary}`,
-            timestamp: new Date()
-          }]);
-        }
-      } catch (error) {
-        console.error('Failed to get config:', error);
-      }
-    }
-    
-    // UPDATE_MA
-    const maMatch = aiResponse.match(/UPDATE_MA\s+short=(\d+)\s+long=(\d+)\s+sl=([\d.]+)\s+tp=([\d.]+)/);
-    if (maMatch) {
-      try {
-        const config = {
-          enabled: true,
-          shortPeriod: parseInt(maMatch[1]),
-          longPeriod: parseInt(maMatch[2]),
-          stopLoss: parseFloat(maMatch[3]),
-          takeProfit: parseFloat(maMatch[4])
-        };
-        
-        const response = await fetch(managerUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'update_config',
-            userId,
-            strategyName: 'ma-crossover',
-            config
-          })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            role: 'system',
-            content: `✅ ${data.message}`,
-            timestamp: new Date()
-          }]);
-        }
-      } catch (error) {
-        console.error('Failed to update MA:', error);
-      }
-    }
-    
-    // RUN_BACKTEST
-    const backtestMatch = aiResponse.match(/RUN_BACKTEST\s+symbol=(\w+)\s+strategy=([\w-]+)\s+period=(\w+)/);
-    if (backtestMatch) {
-      try {
-        const response = await fetch(managerUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'run_backtest',
-            userId,
-            params: {
-              symbol: backtestMatch[1],
-              strategy: backtestMatch[2],
-              period: backtestMatch[3]
-            }
-          })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            role: 'system',
-            content: `📊 Результат бэктеста:\n${data.summary}`,
-            timestamp: new Date()
-          }]);
-        }
-      } catch (error) {
-        console.error('Failed to run backtest:', error);
-      }
-    }
-  };
-
   const sendToGPT = async (prompt: string, isAuto = false) => {
     if (!isAuto) {
       setMessages(prev => [...prev, {
@@ -247,7 +131,6 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
       if (data.success) {
         const aiResponse = data.response;
         
-        // Проверяем наличие команд в ответе AI
         await processAICommands(aiResponse);
         
         setMessages(prev => [...prev, {
@@ -257,7 +140,7 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
           timestamp: new Date()
         }]);
       } else {
-        console.error('Groq API Error:', data);
+        console.error('YandexGPT API Error:', data);
         throw new Error(data.error || 'GPT request failed');
       }
     } catch (error) {
@@ -281,96 +164,30 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
     setInput('');
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500';
-      case 'paused': return 'bg-yellow-500';
-      case 'optimizing': return 'bg-blue-500';
-      default: return 'bg-gray-500';
-    }
+  const handleModelChange = (modelId: string) => {
+    setSelectedModel(modelId);
   };
 
-  const quickActions = [
-    { label: 'Показать настройки', prompt: 'GET_CONFIG - покажи текущие настройки всех стратегий' },
-    { label: 'Оптимизировать MA', prompt: 'Проанализируй стратегию MA Crossover и предложи лучшие параметры. Используй GET_CONFIG чтобы увидеть текущие настройки' },
-    { label: 'Запустить бэктест', prompt: 'RUN_BACKTEST symbol=BTCUSDT strategy=ma-crossover period=7d - протестируй стратегию на истории' },
-    { label: 'Риск-менеджмент', prompt: 'Оцени текущие настройки риск-менеджмента через GET_CONFIG и предложи улучшения' }
-  ];
+  const handleModelChangeMessage = (message: string) => {
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      role: 'system',
+      content: message,
+      timestamp: new Date()
+    }]);
+  };
 
   return (
     <div className="h-[calc(100vh-80px)] p-6 grid grid-cols-[300px_1fr] gap-6">
-      {/* Sidebar - стратегии */}
-      <div className="space-y-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-lg">Стратегии</h3>
-            <Button
-              size="sm"
-              variant={autoMonitor ? 'default' : 'outline'}
-              onClick={() => setAutoMonitor(!autoMonitor)}
-            >
-              <Icon name={autoMonitor ? 'Pause' : 'Play'} size={14} className="mr-1" />
-              {autoMonitor ? 'Пауза' : 'Авто'}
-            </Button>
-          </div>
-          
-          <ScrollArea className="h-[300px]">
-            <div className="space-y-3">
-              {strategies.map(strategy => (
-                <Card key={strategy.name} className="p-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm">{strategy.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className={`w-2 h-2 rounded-full ${getStatusColor(strategy.status)}`} />
-                        <span className="text-xs text-muted-foreground capitalize">{strategy.status}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                    <div>
-                      <p className="text-muted-foreground">Win Rate</p>
-                      <p className="font-bold text-green-500">{strategy.winRate.toFixed(1)}%</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Trades</p>
-                      <p className="font-bold">{strategy.totalTrades}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-muted-foreground">Avg Profit</p>
-                      <p className={`font-bold ${strategy.avgProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {strategy.avgProfit >= 0 ? '+' : ''}{strategy.avgProfit.toFixed(2)}%
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-        </Card>
+      <StrategiesSidebar
+        strategies={strategies}
+        autoMonitor={autoMonitor}
+        onAutoMonitorChange={setAutoMonitor}
+        onQuickAction={sendToGPT}
+        loading={loading}
+        onRefresh={loadStrategies}
+      />
 
-        <Card className="p-4">
-          <h3 className="font-bold text-sm mb-3">Быстрые действия</h3>
-          <div className="space-y-2">
-            {quickActions.map((action, idx) => (
-              <Button
-                key={idx}
-                variant="outline"
-                size="sm"
-                className="w-full justify-start text-xs"
-                onClick={() => sendToGPT(action.prompt)}
-                disabled={loading}
-              >
-                <Icon name="Zap" size={12} className="mr-2" />
-                {action.label}
-              </Button>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* Main Console */}
       <Card className="flex flex-col relative">
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
@@ -378,61 +195,13 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Icon name="Terminal" className="text-primary" size={20} />
               </div>
-              <div className="relative">
+              <div>
                 <h2 className="font-bold text-lg">AI Dev Console</h2>
-                <button
-                  onClick={() => setShowModels(!showModels)}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                >
-                  {availableModels.find(m => m.id === selectedModel)?.name || 'YandexGPT'} • Yandex Cloud
-                  <Icon name={showModels ? 'ChevronUp' : 'ChevronDown'} size={14} />
-                </button>
-                
-                {showModels && (
-                  <div className="absolute top-full left-0 mt-2 bg-card border rounded-lg shadow-lg p-3 z-50 w-[500px]">
-                    <p className="text-xs text-muted-foreground mb-3">Выберите AI модель для консоли:</p>
-                    <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                      {availableModels.map(model => (
-                        <button
-                          key={model.id}
-                          onClick={() => {
-                            setSelectedModel(model.id);
-                            setShowModels(false);
-                            setMessages(prev => [...prev, {
-                              id: Date.now().toString(),
-                              role: 'system',
-                              content: `🔄 Модель изменена на ${model.name}`,
-                              timestamp: new Date()
-                            }]);
-                          }}
-                          className={`w-full text-left p-3 rounded-lg border transition-all hover:border-primary ${
-                            selectedModel === model.id ? 'border-primary bg-primary/5' : 'border-border'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <p className="font-semibold text-sm">{model.name}</p>
-                              <p className="text-xs text-muted-foreground mt-1">{model.description}</p>
-                              <div className="flex gap-3 mt-2">
-                                <Badge variant="outline" className="text-xs">
-                                  <Icon name="Zap" size={10} className="mr-1" />
-                                  {model.speed}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                  <Icon name="Award" size={10} className="mr-1" />
-                                  {model.quality}
-                                </Badge>
-                              </div>
-                            </div>
-                            {selectedModel === model.id && (
-                              <Icon name="Check" size={16} className="text-primary" />
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <ModelSelector
+                  selectedModel={selectedModel}
+                  onModelChange={handleModelChange}
+                  onModelChangeMessage={handleModelChangeMessage}
+                />
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -449,54 +218,7 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
           </div>
         </div>
 
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-          <div className="space-y-4">
-            {messages.map(message => (
-              <div
-                key={message.id}
-                className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {message.role !== 'user' && (
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Icon name={message.role === 'system' ? 'Info' : 'Bot'} size={16} className="text-primary" />
-                  </div>
-                )}
-                
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : message.role === 'system'
-                      ? 'bg-muted text-muted-foreground'
-                      : 'bg-secondary'
-                  }`}
-                >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {message.timestamp.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-
-                {message.role === 'user' && (
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <Icon name="User" size={16} className="text-primary-foreground" />
-                  </div>
-                )}
-              </div>
-            ))}
-            
-            {loading && (
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Icon name="Bot" size={16} className="text-primary" />
-                </div>
-                <div className="bg-secondary rounded-lg p-3">
-                  <Icon name="Loader2" className="animate-spin" size={16} />
-                </div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+        <ChatMessages messages={messages} loading={loading} ref={scrollRef} />
 
         <Separator />
 
