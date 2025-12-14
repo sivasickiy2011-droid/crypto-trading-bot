@@ -14,7 +14,7 @@ export default function BacktestMetrics({ results }: BacktestMetricsProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-xs text-muted-foreground font-normal flex items-center">
             <Icon name="TrendingUp" size={14} className="mr-1.5" />
-            Total PnL
+            Чистая прибыль
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -31,7 +31,7 @@ export default function BacktestMetrics({ results }: BacktestMetricsProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-xs text-muted-foreground font-normal flex items-center">
             <Icon name="Percent" size={14} className="mr-1.5" />
-            Win Rate
+            Винрейт
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -48,7 +48,7 @@ export default function BacktestMetrics({ results }: BacktestMetricsProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-xs text-muted-foreground font-normal flex items-center">
             <Icon name="Activity" size={14} className="mr-1.5" />
-            Trades
+            Сделок
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -65,7 +65,7 @@ export default function BacktestMetrics({ results }: BacktestMetricsProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-xs text-muted-foreground font-normal flex items-center">
             <Icon name="TrendingDown" size={14} className="mr-1.5" />
-            Max Drawdown
+            Макс. просадка
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -73,7 +73,7 @@ export default function BacktestMetrics({ results }: BacktestMetricsProps) {
             {results ? `-$${results.maxDrawdown.toFixed(2)}` : '$0.00'}
           </p>
           <p className="text-xs text-muted-foreground">
-            SR: {results ? results.sharpeRatio.toFixed(2) : '0.00'}
+            {results ? `-${results.maxDrawdownPercent.toFixed(1)}%` : '0.0%'}
           </p>
         </CardContent>
       </Card>
