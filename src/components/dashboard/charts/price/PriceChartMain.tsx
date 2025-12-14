@@ -71,9 +71,10 @@ export default function PriceChartMain({ chartData, chartType, showIndicators, y
           tick={{ fontSize: 11, fontFamily: 'Roboto Mono', fill: 'rgba(255,255,255,0.5)' }}
           tickLine={false}
           axisLine={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
-          domain={['auto', 'auto']}
+          domain={[yMin, yMax]}
           orientation="right"
           width={60}
+          scale="linear"
         />
         <Tooltip content={<CustomTooltip />} />
         

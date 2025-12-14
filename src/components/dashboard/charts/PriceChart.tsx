@@ -110,8 +110,18 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
     return point;
   });
 
-  const yMin = Math.min(...chartData.map(d => d.low || d.price));
-  const yMax = Math.max(...chartData.map(d => d.high || d.price));
+  let yMin = Math.min(...chartData.map(d => d.low || d.price));
+  let yMax = Math.max(...chartData.map(d => d.high || d.price));
+  
+  // Expand range to include bid/ask if available
+  if (bestBid && bestAsk) {
+    yMin = Math.min(yMin, bestBid);
+    yMax = Math.max(yMax, bestAsk);
+    // Add 1% padding
+    const padding = (yMax - yMin) * 0.01;
+    yMin -= padding;
+    yMax += padding;
+  }
   
   const currentPrice = chartData.length > 0 ? (chartData[chartData.length - 1]?.close || chartData[chartData.length - 1]?.price) : 0;
 
