@@ -23,7 +23,7 @@ export default function TestTrade() {
 
   const loadBalance = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/425d3539-8920-4981-84ac-2ea05fd5ec7c', {
+      const response = await fetch('https://function.centerai.tech/api/virtual-balance', {
         headers: { 'X-User-Id': '2' }
       });
       const data = await response.json();
@@ -39,7 +39,7 @@ export default function TestTrade() {
   const checkApiKey = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2?exchange=bybit-testnet', {
+      const response = await fetch('https://function.centerai.tech/api/api-keys?exchange=bybit-testnet', {
         headers: { 'X-User-Id': '2' }
       });
       const data = await response.json();
@@ -62,7 +62,7 @@ export default function TestTrade() {
       setLoading(true);
       setResult([`⏳ Запускаю ${action}...`]);
 
-      const response = await fetch('https://functions.poehali.dev/6a007e68-fcdc-44e6-ad68-00a0846ae618', {
+      const response = await fetch('https://function.centerai.tech/api/test-trade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: 2, action })

@@ -68,7 +68,7 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
   const loadVirtualTrades = async () => {
     try {
       setLoadingVirtual(true);
-      const response = await fetch(`https://functions.poehali.dev/0eb3fae3-717f-4343-a978-789ab29b3561?status=all&limit=100`, {
+      const response = await fetch(`https://function.centerai.tech/api/virtual-trades?status=all&limit=100`, {
         headers: { 'X-User-Id': userId.toString() }
       });
       const data = await response.json();

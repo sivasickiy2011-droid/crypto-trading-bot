@@ -44,7 +44,7 @@ export default function TopPairs() {
   const loadTopPairs = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://functions.poehali.dev/79d0e27c-f6b2-4735-b88a-9e3fa48e6c4a');
+      const response = await fetch('https://function.centerai.tech/api/pair-analyzer');
       const data: TopPairsResponse = await response.json();
       
       if (data.success) {

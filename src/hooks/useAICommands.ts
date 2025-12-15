@@ -7,7 +7,7 @@ interface Message {
 
 export function useAICommands(userId: number, setMessages: React.Dispatch<React.SetStateAction<Message[]>>) {
   const processAICommands = async (aiResponse: string) => {
-    const managerUrl = 'https://functions.poehali.dev/cd9a0b3b-e47d-4b62-8334-5c9308d3fdc1';
+    const managerUrl = 'https://function.centerai.tech/api/config-manager';
     
     // GET_CONFIG
     if (aiResponse.includes('GET_CONFIG')) {

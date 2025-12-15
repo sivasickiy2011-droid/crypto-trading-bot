@@ -165,7 +165,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
 
       if (event.data.type === 'runAutoTrading') {
         try {
-          const response = await fetch('https://functions.poehali.dev/e2dd154c-dde5-456b-a4c6-1200070fcc75');
+          const response = await fetch('https://function.centerai.tech/api/auto-trader');
           const data = await response.json();
           if (data.success) {
             toast.success('Автотрейдинг запущен');

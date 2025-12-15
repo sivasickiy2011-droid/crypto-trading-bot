@@ -67,7 +67,7 @@ export default function DevConsole({ userId }: DevConsoleProps) {
 
   const loadStrategies = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/4b1221ec-86fd-4273-a7fe-2130d93a0e5b?symbols=BTCUSDT,ETHUSDT,SOLUSDT');
+      const response = await fetch('https://function.centerai.tech/api/strategy-signals?symbols=BTCUSDT,ETHUSDT,SOLUSDT');
       const data = await response.json();
       
       if (data.success && data.signals) {
@@ -112,7 +112,7 @@ ${strategies.map(s => `- ${s.name}: WinRate ${s.winRate.toFixed(1)}%, Trades: ${
     setLoading(true);
 
     try {
-      const response = await fetch('https://functions.poehali.dev/7874ace6-6bc4-4991-9d28-55b333c47b7b', {
+      const response = await fetch('https://function.centerai.tech/api/yandexgpt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

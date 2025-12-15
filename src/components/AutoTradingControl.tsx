@@ -35,7 +35,7 @@ export default function AutoTradingControl({ userId }: AutoTradingControlProps) 
   const checkApiKeys = async () => {
     try {
       setCheckingKeys(true);
-      const response = await fetch('https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13', {
+      const response = await fetch('https://function.centerai.tech/api/bots-manager', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ export default function AutoTradingControl({ userId }: AutoTradingControlProps) 
 
   const loadBots = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13', {
+      const response = await fetch('https://function.centerai.tech/api/bots-manager', {
         headers: { 'X-User-Id': userId.toString() }
       });
       const data = await response.json();
@@ -72,7 +72,7 @@ export default function AutoTradingControl({ userId }: AutoTradingControlProps) 
       setLoading(true);
       const botId = `bot-${Date.now()}`;
       
-      const response = await fetch('https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13', {
+      const response = await fetch('https://function.centerai.tech/api/bots-manager', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ export default function AutoTradingControl({ userId }: AutoTradingControlProps) 
 
   const toggleBot = async (botId: string, currentState: boolean) => {
     try {
-      const response = await fetch('https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13', {
+      const response = await fetch('https://function.centerai.tech/api/bots-manager', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ export default function AutoTradingControl({ userId }: AutoTradingControlProps) 
   const runAutoTrader = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://functions.poehali.dev/646ab114-b395-4b2b-9d1f-b2e89e74b47c');
+      const response = await fetch('https://function.centerai.tech/api/auto-trader-runner');
       const data = await response.json();
       
       if (data.success) {

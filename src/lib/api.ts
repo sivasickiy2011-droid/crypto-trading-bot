@@ -1,14 +1,14 @@
-const BYBIT_API_URL = 'https://functions.poehali.dev/6312362e-43af-4142-b3d3-cc951ebd3d8b';
-const BYBIT_USER_DATA_URL = 'https://functions.poehali.dev/13894e82-44c1-492b-b6f2-e2e9ae738abd';
-const BYBIT_TESTNET_URL = 'https://functions.poehali.dev/8e6e4bb5-a1d4-4f21-a966-94935f8ff8ba';
-const AUTH_API_URL = 'https://functions.poehali.dev/59cd39d3-4edd-4a58-9f7c-821efe138ccb';
-const STRATEGY_API_URL = 'https://functions.poehali.dev/fcf2c4c4-a831-42be-b73d-06d909453b38';
-const LANGUAGE_API_URL = 'https://functions.poehali.dev/c93d68f3-190d-4064-8eba-fe82eba4f04d';
-const API_KEYS_URL = 'https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2';
-const STRATEGY_SIGNALS_URL = 'https://functions.poehali.dev/4b1221ec-86fd-4273-a7fe-2130d93a0e5b';
-const TELEGRAM_NOTIFY_URL = 'https://functions.poehali.dev/3e081d1f-2d3b-429a-8490-942983a3d17d';
-const BOTS_MANAGER_URL = 'https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13';
-const USER_SETTINGS_URL = 'https://functions.poehali.dev/e9d739c2-9ebd-4ce4-a11c-367956a9e6aa';
+const BYBIT_API_URL = 'https://function.centerai.tech/api/bybit-market';
+const BYBIT_USER_DATA_URL = 'https://function.centerai.tech/api/bybit-user-data';
+const BYBIT_TESTNET_URL = 'https://function.centerai.tech/api/bybit-testnet';
+const AUTH_API_URL = 'https://function.centerai.tech/api/auth';
+const STRATEGY_API_URL = 'https://function.centerai.tech/api/strategy-config';
+const LANGUAGE_API_URL = 'https://function.centerai.tech/api/language';
+const API_KEYS_URL = 'https://function.centerai.tech/api/api-keys';
+const STRATEGY_SIGNALS_URL = 'https://function.centerai.tech/api/strategy-signals';
+const TELEGRAM_NOTIFY_URL = 'https://function.centerai.tech/api/telegram-notify';
+const BOTS_MANAGER_URL = 'https://function.centerai.tech/api/bots-manager';
+const USER_SETTINGS_URL = 'https://function.centerai.tech/api/user-settings';
 
 export interface TickerData {
   symbol: string;

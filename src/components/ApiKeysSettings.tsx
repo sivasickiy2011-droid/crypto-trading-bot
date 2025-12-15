@@ -22,7 +22,7 @@ export default function ApiKeysSettings({ userId }: ApiKeysSettingsProps) {
 
   const checkApiKeys = async () => {
     try {
-      const response = await fetch('https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13', {
+      const response = await fetch('https://function.centerai.tech/api/bots-manager', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ export default function ApiKeysSettings({ userId }: ApiKeysSettingsProps) {
     setMessage('');
 
     try {
-      const response = await fetch('https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13', {
+      const response = await fetch('https://function.centerai.tech/api/bots-manager', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ export default function ApiKeysSettings({ userId }: ApiKeysSettingsProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch('https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13', {
+      const response = await fetch('https://function.centerai.tech/api/bots-manager', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
