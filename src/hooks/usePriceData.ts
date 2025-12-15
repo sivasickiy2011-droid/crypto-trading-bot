@@ -120,7 +120,7 @@ export function usePriceData(
   const [priceData, setPriceData] = useState<PriceDataPoint[]>(generateMockPriceData(43580));
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !selectedSymbol) {
       return;
     }
 

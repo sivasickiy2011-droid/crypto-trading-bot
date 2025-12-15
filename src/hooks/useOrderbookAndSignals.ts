@@ -12,8 +12,9 @@ export function useOrderbookAndSignals(
 
   useEffect(() => {
     // Clear signals when disabled or symbol changes
-    if (!signalsEnabled) {
+    if (!signalsEnabled || !selectedSymbol) {
       setStrategySignals([]);
+      return;
     }
 
     const loadOrderbookAndSignals = async () => {
