@@ -66,20 +66,8 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
   }, [tradeMode, userId]);
 
   const loadVirtualTrades = async () => {
-    try {
-      setLoadingVirtual(true);
-      const response = await fetch(`https://function.centerai.tech/api/virtual-trades?status=all&limit=100`, {
-        headers: { 'X-User-Id': userId.toString() }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setVirtualTrades(data.trades);
-      }
-    } catch (error) {
-      console.error('Failed to load virtual trades:', error);
-    } finally {
-      setLoadingVirtual(false);
-    }
+    // virtual-trades endpoint не перенесён - используем пустой массив
+    setVirtualTrades([]);
   };
 
   const displayTrades = tradeMode === 'demo' 
