@@ -42,7 +42,10 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [currentTimeframe, setCurrentTimeframe] = useState('15');
   const [chartsEnabled, setChartsEnabled] = useState(true);
   const [signalsMode, setSignalsMode] = useState<'disabled' | 'bots_only' | 'top10'>('bots_only');
-  const [apiRequestsEnabled, setApiRequestsEnabled] = useState(true);
+  const [apiRequestsEnabled, setApiRequestsEnabled] = useState(() => {
+    const saved = localStorage.getItem('apiRequestsEnabled');
+    return saved !== null ? saved === 'true' : false;
+  });
 
   const { watchlist, logs, handleAddPair, handleRemovePair } = useMarketData(apiRequestsEnabled);
 
@@ -228,7 +231,10 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             onSignalsModeChange={handleSignalsModeChange}
             savedRequests={savedRequests}
             apiRequestsEnabled={apiRequestsEnabled}
-            onApiRequestsEnabledChange={setApiRequestsEnabled}
+            onApiRequestsEnabledChange={(enabled) => {
+              setApiRequestsEnabled(enabled);
+              localStorage.setItem('apiRequestsEnabled', String(enabled));
+            }}
           />
 
           <div className="p-6 space-y-6">

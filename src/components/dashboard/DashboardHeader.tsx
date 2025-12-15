@@ -182,6 +182,15 @@ export default function DashboardHeader({
           </Button>
         </div>
         <Separator orientation="vertical" className="h-6" />
+        <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-border bg-secondary/50">
+          <span className="text-xs text-muted-foreground">API запросы:</span>
+          <Switch 
+            checked={apiRequestsEnabled} 
+            onCheckedChange={onApiRequestsEnabledChange}
+            className="scale-75"
+          />
+        </div>
+        <Separator orientation="vertical" className="h-6" />
         <LanguageSwitcher userId={userId} />
         <Separator orientation="vertical" className="h-6" />
         <div className="text-sm text-muted-foreground">{username}</div>
