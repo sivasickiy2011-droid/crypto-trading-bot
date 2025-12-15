@@ -118,13 +118,22 @@ export async function loadStrategyConfig(userId: number, strategyName?: string):
 }
 
 export async function getUserLanguage(userId: number): Promise<{success: boolean, language: string}> {
-  const language = localStorage.getItem(`user_language_${userId}`) || 'ru';
-  return { success: true, language };
+  const response = await fetch(LANGUAGE_API_URL, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  return await response.json();
 }
 
 export async function setUserLanguage(userId: number, language: 'ru' | 'en'): Promise<any> {
-  localStorage.setItem(`user_language_${userId}`, language);
-  return { success: true };
+  const response = await fetch(LANGUAGE_API_URL, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-User-Id': userId.toString()
+    },
+    body: JSON.stringify({ language })
+  });
+  return await response.json();
 }
 
 export async function setPassword(userId: number, newPassword: string): Promise<LoginResponse> {
@@ -200,23 +209,45 @@ export interface UserOrderData {
 }
 
 export async function getUserBalance(userId: number, testnet: boolean = false): Promise<UserBalanceData> {
-  // bybit-user-data endpoint не перенесён - возвращаем демо данные
-  return {
-    totalEquity: 10000,
-    totalWalletBalance: 10000,
-    totalAvailable: 8500,
-    usdtBalance: 10000
-  };
+  const url = BYBIT_USER_DATA_URL;
+  const response = await fetch(`${url}?action=balance`, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.data;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch user balance');
 }
 
 export async function getUserPositions(userId: number, testnet: boolean = false): Promise<UserPositionData[]> {
-  // bybit-user-data endpoint не перенесён - возвращаем пустой массив
-  return [];
+  const url = BYBIT_USER_DATA_URL;
+  const response = await fetch(`${url}?action=positions`, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.data;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch user positions');
 }
 
 export async function getUserOrders(userId: number, testnet: boolean = false): Promise<UserOrderData[]> {
-  // bybit-user-data endpoint не перенесён - возвращаем пустой массив
-  return [];
+  const url = BYBIT_USER_DATA_URL;
+  const response = await fetch(`${url}?action=orders`, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.data;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch user orders');
 }
 
 export interface OrderbookEntry {
