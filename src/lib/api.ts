@@ -8,6 +8,7 @@ const TELEGRAM_NOTIFY_URL = 'https://function.centerai.tech/api/telegram-notify'
 const BOTS_MANAGER_URL = 'https://function.centerai.tech/api/bots-manager';
 const USER_SETTINGS_URL = 'https://function.centerai.tech/api/user-settings';
 const VIRTUAL_TRADES_URL = 'https://function.centerai.tech/api/virtual-trades';
+const API_KEYS_URL = 'https://function.centerai.tech/api/api-keys';
 
 export interface TickerData {
   symbol: string;
