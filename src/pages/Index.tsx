@@ -254,8 +254,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                     totalPnLPercent={totalPnLPercent}
                     openPositions={displayPositions.length}
                     balance={balance}
-                    apiMode={apiMode}
-                    accountMode={accountMode}
+                    apiMode="live"
+                    accountMode="live"
                   />
 
                   <DashboardWatchlist
@@ -273,8 +273,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   onTimeframeChange={setCurrentTimeframe}
                   orderbook={orderbook}
                   strategySignals={strategySignals}
-                  accountMode={accountMode}
-                  apiMode={apiMode}
+                  accountMode="live"
+                  apiMode="live"
                   positionLevels={positionLevels}
                   onSymbolChange={setSelectedSymbol}
                   userPositions={userPositionsForBots}
