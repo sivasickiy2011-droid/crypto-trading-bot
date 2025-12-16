@@ -12,10 +12,6 @@ interface DashboardHeaderProps {
   userId: number;
   activeTab: string;
   onTabChange: (tab: string) => void;
-  apiMode: 'live' | 'testnet';
-  onApiModeChange: (mode: 'live' | 'testnet') => void;
-  accountMode: 'live' | 'demo';
-  onAccountModeChange: (mode: 'live' | 'demo') => void;
   chartsEnabled: boolean;
   onChartsEnabledChange: (enabled: boolean) => void;
   signalsMode: 'disabled' | 'bots_only' | 'top10';
@@ -32,10 +28,6 @@ export default function DashboardHeader({
   userId,
   activeTab,
   onTabChange,
-  apiMode,
-  onApiModeChange,
-  accountMode,
-  onAccountModeChange,
   chartsEnabled,
   onChartsEnabledChange,
   signalsMode,
@@ -140,56 +132,7 @@ export default function DashboardHeader({
             Топ-10
           </Button>
         </div>
-        <Separator orientation="vertical" className="h-6" />
-        <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-border bg-secondary/50">
-          <span className="text-xs text-muted-foreground">API:</span>
-          <Button
-            variant={apiMode === 'testnet' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => onApiModeChange('testnet')}
-            className="h-6 px-2 text-xs"
-          >
-            <Icon name="TestTube" size={12} className="mr-1" />
-            Тестовый
-          </Button>
-          <Button
-            variant={apiMode === 'live' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => onApiModeChange('live')}
-            className="h-6 px-2 text-xs"
-          >
-            <Icon name="Zap" size={12} className="mr-1" />
-            Боевой
-          </Button>
-        </div>
-        <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-border bg-secondary/50">
-          <span className="text-xs text-muted-foreground">Счёт:</span>
-          <Button
-            variant={accountMode === 'demo' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => onAccountModeChange('demo')}
-            className="h-6 px-2 text-xs"
-          >
-            Демо
-          </Button>
-          <Button
-            variant={accountMode === 'live' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => onAccountModeChange('live')}
-            className="h-6 px-2 text-xs"
-          >
-            Боевой
-          </Button>
-        </div>
-        <Separator orientation="vertical" className="h-6" />
-        <div className="flex items-center space-x-2 px-3 py-1 rounded-md border border-border bg-secondary/50">
-          <span className="text-xs text-muted-foreground">API запросы:</span>
-          <Switch 
-            checked={apiRequestsEnabled} 
-            onCheckedChange={onApiRequestsEnabledChange}
-            className="scale-75"
-          />
-        </div>
+
         <Separator orientation="vertical" className="h-6" />
         <LanguageSwitcher userId={userId} />
         <Separator orientation="vertical" className="h-6" />

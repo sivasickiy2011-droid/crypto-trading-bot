@@ -37,8 +37,6 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [apiKeysModalOpen, setApiKeysModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedSymbol, setSelectedSymbol] = useState('');
-  const [apiMode, setApiMode] = useState<'live' | 'testnet'>('testnet');
-  const [accountMode, setAccountMode] = useState<'live' | 'demo'>('demo');
   const [currentTimeframe, setCurrentTimeframe] = useState('15');
   const [chartsEnabled, setChartsEnabled] = useState(true);
   const [signalsMode, setSignalsMode] = useState<'disabled' | 'bots_only' | 'top10'>('bots_only');
@@ -69,9 +67,9 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
       setSelectedSymbol(watchlist[0].symbol);
     }
   }, [watchlist, selectedSymbol]);
-  const { balance, positions } = useUserData(userId, apiMode, apiRequestsEnabled);
+  const { balance, positions } = useUserData(userId, 'live', apiRequestsEnabled);
   const { priceData } = usePriceData(selectedSymbol, watchlist, currentTimeframe, chartsEnabled && apiRequestsEnabled);
-  const { orderbook, strategySignals } = useOrderbookAndSignals(selectedSymbol, apiMode, signalsMode !== 'disabled' && apiRequestsEnabled);
+  const { orderbook, strategySignals } = useOrderbookAndSignals(selectedSymbol, 'live', signalsMode !== 'disabled' && apiRequestsEnabled);
   const { savedRequests } = useApiRequestCounter(chartsEnabled, signalsMode !== 'disabled');
 
   const handleChartsEnabledChange = async (enabled: boolean) => {
@@ -221,10 +219,6 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             userId={userId}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            apiMode={apiMode}
-            onApiModeChange={setApiMode}
-            accountMode={accountMode}
-            onAccountModeChange={setAccountMode}
             chartsEnabled={chartsEnabled}
             onChartsEnabledChange={handleChartsEnabledChange}
             signalsMode={signalsMode}
