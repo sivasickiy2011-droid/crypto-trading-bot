@@ -1,13 +1,13 @@
-const BYBIT_API_URL = 'https://function.centerai.tech/bybit-market';
-const BYBIT_USER_DATA_URL = 'https://function.centerai.tech/bybit-user-data';
-const AUTH_API_URL = 'https://function.centerai.tech/auth';
-const STRATEGY_API_URL = 'https://function.centerai.tech/strategy-config';
-const LANGUAGE_API_URL = 'https://function.centerai.tech/language';
-const STRATEGY_SIGNALS_URL = 'https://function.centerai.tech/strategy-signals';
-const TELEGRAM_NOTIFY_URL = 'https://function.centerai.tech/telegram-notify';
-const BOTS_MANAGER_URL = 'https://function.centerai.tech/bots-manager';
-const USER_SETTINGS_URL = 'https://function.centerai.tech/user-settings';
-const VIRTUAL_TRADES_URL = 'https://function.centerai.tech/virtual-trades';
+const BYBIT_API_URL = 'https://function.centerai.tech/api/bybit-market';
+const BYBIT_USER_DATA_URL = 'https://function.centerai.tech/api/bybit-user-data';
+const AUTH_API_URL = 'https://function.centerai.tech/api/auth';
+const STRATEGY_API_URL = 'https://function.centerai.tech/api/strategy-config';
+const LANGUAGE_API_URL = 'https://function.centerai.tech/api/language';
+const STRATEGY_SIGNALS_URL = 'https://function.centerai.tech/api/strategy-signals';
+const TELEGRAM_NOTIFY_URL = 'https://function.centerai.tech/api/telegram-notify';
+const BOTS_MANAGER_URL = 'https://function.centerai.tech/api/bots-manager';
+const USER_SETTINGS_URL = 'https://function.centerai.tech/api/user-settings';
+const VIRTUAL_TRADES_URL = 'https://function.centerai.tech/api/virtual-trades';
 
 export interface TickerData {
   symbol: string;
