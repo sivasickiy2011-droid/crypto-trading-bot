@@ -64,17 +64,10 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
 
   if (orderbook.length === 0) {
     return (
-      <Card className="bg-card border-border h-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Стакан</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center text-muted-foreground py-12">
-            <Icon name="BookOpen" size={32} className="mx-auto mb-2 opacity-30" />
-            <p className="text-xs">Загрузка...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center text-zinc-500 py-12">
+        <Icon name="BookOpen" size={32} className="mx-auto mb-2 opacity-30" />
+        <p className="text-xs">Загрузка...</p>
+      </div>
     );
   }
 
