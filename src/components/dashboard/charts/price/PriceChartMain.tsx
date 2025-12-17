@@ -61,12 +61,12 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
             <stop offset="95%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0}/>
           </linearGradient>
           <linearGradient id="colorSpot" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0.1}/>
-            <stop offset="95%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0}/>
+            <stop offset="5%" stopColor="#10b981" stopOpacity={0.25}/>
+            <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
           </linearGradient>
           <linearGradient id="colorFutures" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(221, 83%, 53%)" stopOpacity={0.1}/>
-            <stop offset="95%" stopColor="hsl(221, 83%, 53%)" stopOpacity={0}/>
+            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25}/>
+            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.05}/>
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="1 1" stroke="rgba(255,255,255,0.05)" vertical={true} horizontal={true} />
@@ -90,32 +90,27 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
         <Tooltip content={<CustomTooltip />} />
         
         {/* Overlay mode - show both spot and futures */}
-        {marketType === 'overlay' && spotData.length > 0 && (
-          <Area 
-            type="monotone" 
-            dataKey="close"
-            data={spotData}
-            stroke="hsl(142, 76%, 36%)" 
-            fill="url(#colorSpot)"
-            strokeWidth={2}
-            dot={false}
-            isAnimationActive={false}
-            opacity={0.5}
-          />
-        )}
-        
-        {marketType === 'overlay' && futuresData.length > 0 && (
-          <Area 
-            type="monotone" 
-            dataKey="close"
-            data={futuresData}
-            stroke="hsl(221, 83%, 53%)" 
-            fill="url(#colorFutures)"
-            strokeWidth={2}
-            dot={false}
-            isAnimationActive={false}
-            opacity={0.5}
-          />
+        {marketType === 'overlay' && (
+          <>
+            <Line 
+              type="monotone" 
+              dataKey="spotClose"
+              stroke="#10b981" 
+              strokeWidth={2.5}
+              dot={false}
+              isAnimationActive={false}
+              name="Спот"
+            />
+            <Line 
+              type="monotone" 
+              dataKey="futuresClose"
+              stroke="#f59e0b" 
+              strokeWidth={2.5}
+              dot={false}
+              isAnimationActive={false}
+              name="Фьючерсы"
+            />
+          </>
         )}
         
         {chartType === 'line' && marketType !== 'overlay' && (

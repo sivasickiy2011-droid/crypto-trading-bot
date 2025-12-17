@@ -28,6 +28,8 @@ export interface PriceDataPoint {
   bbLower?: number;
   macd?: number;
   signal: string | null;
+  spotClose?: number;
+  futuresClose?: number;
 }
 
 const calculateMA = (prices: number[], period: number): number[] => {
@@ -183,11 +185,20 @@ export function usePriceData(
             getKlineData(selectedSymbol, currentTimeframe, 50, 'linear')
           ]);
           
-          if (spotKlines.length > 0) setSpotData(processKlineData(spotKlines));
-          if (futuresKlines.length > 0) {
-            const formatted = processKlineData(futuresKlines);
-            setPriceData(formatted);
-            setFuturesData(formatted);
+          if (spotKlines.length > 0 && futuresKlines.length > 0) {
+            const spotFormatted = processKlineData(spotKlines);
+            const futuresFormatted = processKlineData(futuresKlines);
+            
+            // Merge data for overlay - use futures as base, add spot prices
+            const mergedData = futuresFormatted.map((point, i) => ({
+              ...point,
+              spotClose: spotFormatted[i]?.close || point.close,
+              futuresClose: point.close
+            }));
+            
+            setPriceData(mergedData);
+            setSpotData(spotFormatted);
+            setFuturesData(futuresFormatted);
           }
         }
       } catch (error) {
