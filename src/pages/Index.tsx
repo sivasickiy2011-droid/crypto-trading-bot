@@ -301,6 +301,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   onSymbolChange={setSelectedSymbol}
                   userPositions={userPositionsForBots}
                   userId={userId}
+                  availableBalance={balance?.totalAvailable || 0}
                 />
 
                 <DashboardTabs

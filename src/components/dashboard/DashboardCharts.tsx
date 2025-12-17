@@ -68,6 +68,7 @@ interface DashboardChartsProps {
   onSymbolChange?: (symbol: string) => void;
   userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number}>;
   userId: number;
+  availableBalance?: number;
 }
 
 export default function DashboardCharts({ 
@@ -86,7 +87,8 @@ export default function DashboardCharts({
   positionLevels = [],
   onSymbolChange,
   userPositions,
-  userId
+  userId,
+  availableBalance = 0
 }: DashboardChartsProps) {
   const [botLogs, setBotLogs] = useState<BotLogEntry[]>([]);
   const [activeBotCount, setActiveBotCount] = useState(0);
@@ -140,7 +142,7 @@ export default function DashboardCharts({
         <div className="space-y-6">
           <OrderbookPanel orderbook={orderbook} symbol={selectedSymbol.replace('/', '')} />
           <StrategySignalsPanel strategySignals={strategySignals} />
-          <ManualTradingSettings accountMode={accountMode} apiMode={apiMode} symbol={selectedSymbol.replace('/', '')} />
+          <ManualTradingSettings accountMode={accountMode} apiMode={apiMode} symbol={selectedSymbol.replace('/', '')} availableBalance={availableBalance} />
         </div>
       </div>
     </div>

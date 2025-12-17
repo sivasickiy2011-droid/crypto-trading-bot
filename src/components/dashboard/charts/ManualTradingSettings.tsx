@@ -13,9 +13,10 @@ interface ManualTradingSettingsProps {
   accountMode: 'live' | 'demo';
   apiMode: 'live' | 'testnet';
   symbol?: string;
+  availableBalance?: number;
 }
 
-export default function ManualTradingSettings({ accountMode, apiMode, symbol = 'BTCUSDT' }: ManualTradingSettingsProps) {
+export default function ManualTradingSettings({ accountMode, apiMode, symbol = 'BTCUSDT', availableBalance = 0 }: ManualTradingSettingsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
   const [entryMode, setEntryMode] = useState<'single' | 'grid' | 'dca'>('single');
@@ -27,6 +28,11 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
   const [entryPrice, setEntryPrice] = useState('');
   const [useMarketPrice, setUseMarketPrice] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  const volumeNum = parseFloat(volume) || 0;
+  const priceNum = parseFloat(entryPrice) || 0;
+  const lotSize = priceNum > 0 ? volumeNum / priceNum : 0;
+  const isVolumeValid = volumeNum <= availableBalance;
 
   const handleMarketPrice = async () => {
     try {
@@ -176,17 +182,24 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground">Объём ($)</Label>
+                  <Label className="text-[10px] text-muted-foreground">
+                    Объём ($)
+                    {!isVolumeValid && <span className="text-destructive ml-1">Превышает баланс</span>}
+                  </Label>
                   <Input 
                     type="number" 
                     value={volume}
                     onChange={(e) => setVolume(e.target.value)}
-                    className="h-7 text-xs font-mono"
+                    className={`h-7 text-xs font-mono ${!isVolumeValid ? 'border-destructive' : ''}`}
+                    max={availableBalance}
                   />
+                  <div className="text-[9px] text-muted-foreground mt-0.5">
+                    Доступно: ${availableBalance.toFixed(2)}
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[10px] text-muted-foreground">Плечо</Label>
-                  <Select value={leverage} onValueChange={setLeverage}>
+                  <Select value={leverage} onValueChange={setLeverage} disabled={marketType === 'spot'}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
                     </SelectTrigger>
@@ -199,8 +212,33 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
                       <SelectItem value="50" className="text-xs">50x</SelectItem>
                     </SelectContent>
                   </Select>
+                  {marketType === 'spot' && (
+                    <div className="text-[9px] text-muted-foreground mt-0.5">
+                      Спот без плеча
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {lotSize > 0 && (
+                <div className="bg-secondary/30 border border-border rounded-md p-2">
+                  <div className="text-[10px] text-muted-foreground mb-1">Информация о сделке</div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Объём покупки:</span>
+                    <span className="font-mono font-semibold">{lotSize.toFixed(8)} {symbol.replace('USDT', '')}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs mt-1">
+                    <span className="text-muted-foreground">Стоимость:</span>
+                    <span className="font-mono font-semibold">${volumeNum.toFixed(2)} USDT</span>
+                  </div>
+                  {marketType === 'futures' && parseFloat(leverage) > 1 && (
+                    <div className="flex items-center justify-between text-xs mt-1">
+                      <span className="text-muted-foreground">С плечом {leverage}x:</span>
+                      <span className="font-mono font-semibold">${(volumeNum * parseFloat(leverage)).toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
@@ -225,7 +263,7 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
 
               <Button 
                 onClick={handleTrade}
-                disabled={isLoading}
+                disabled={isLoading || !isVolumeValid || volumeNum === 0 || priceNum === 0}
                 className={`w-full h-8 text-xs ${
                   side === 'LONG' 
                     ? 'bg-success hover:bg-success/90' 

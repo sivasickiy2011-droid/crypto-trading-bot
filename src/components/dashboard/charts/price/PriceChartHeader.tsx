@@ -91,7 +91,7 @@ export default function PriceChartHeader({
           </div>
           <div className="flex flex-col">
             <div className={`text-2xl font-bold font-mono ${isPositive ? 'text-success' : 'text-destructive'}`}>
-              {currentPrice > 0 ? currentPrice.toFixed(2) : '—'}
+              {currentPrice > 0 ? currentPrice.toFixed(8) : '—'}
             </div>
             <div className={`text-xs font-mono ${isPositive ? 'text-success' : 'text-destructive'}`}>
               {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
