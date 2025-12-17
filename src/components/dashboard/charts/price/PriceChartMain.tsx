@@ -83,8 +83,9 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
           tickLine={false}
           axisLine={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
           domain={[yMin, yMax]}
+          tickFormatter={(value) => value.toFixed(4)}
           orientation="right"
-          width={60}
+          width={70}
           scale="linear"
         />
         <Tooltip content={<CustomTooltip />} />
@@ -240,7 +241,7 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
             stroke="#ef4444" 
             strokeWidth={1.5}
             label={{ 
-              value: `${bestAsk.toFixed(2)}`, 
+              value: `${bestAsk.toFixed(4)}`, 
               position: 'right',
               fill: '#fff',
               fontSize: 11,
@@ -261,7 +262,7 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
             stroke="#16a34a" 
             strokeWidth={1.5}
             label={{ 
-              value: `${bestBid.toFixed(2)}`, 
+              value: `${bestBid.toFixed(4)}`, 
               position: 'right',
               fill: '#fff',
               fontSize: 11,

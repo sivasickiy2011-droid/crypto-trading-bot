@@ -152,7 +152,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
                   />
                   <div className="relative z-10 grid grid-cols-3 gap-1 w-full px-1 text-[11px] font-mono">
                     <div className={`font-medium ${isBestAsk ? 'text-red-300' : 'text-red-400'}`}>
-                      {order.price.toFixed(4)}
+                      {order.price.toFixed(6)}
                     </div>
                     <div className={`text-right ${isBestAsk ? 'text-zinc-300 font-semibold' : 'text-zinc-400'}`}>
                       {order.askSize.toFixed(3)}
@@ -170,13 +170,13 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
             <div className="flex items-center justify-center py-2 my-1 bg-zinc-900/50 flex-shrink-0">
               <div className="text-center">
                 <div className="text-lg font-mono font-bold text-red-400">
-                  {bestAskPrice.toFixed(4)}
+                  {bestAskPrice.toFixed(6)}
                 </div>
                 <div className="text-[9px] text-zinc-600 mt-0.5">
-                  ↕ {spreadPrice.toFixed(4)} ({spreadPercent.toFixed(3)}%)
+                  ↕ {spreadPrice.toFixed(6)} ({spreadPercent.toFixed(3)}%)
                 </div>
                 <div className="text-lg font-mono font-bold text-green-400 mt-1">
-                  {bids[0].price.toFixed(4)}
+                  {bids[0].price.toFixed(6)}
                 </div>
               </div>
             </div>
@@ -200,7 +200,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
                   />
                   <div className="relative z-10 grid grid-cols-3 gap-1 w-full px-1 text-[11px] font-mono">
                     <div className={`font-medium ${isBestBid ? 'text-green-300' : 'text-green-400'}`}>
-                      {order.price.toFixed(4)}
+                      {order.price.toFixed(6)}
                     </div>
                     <div className={`text-right ${isBestBid ? 'text-zinc-300 font-semibold' : 'text-zinc-400'}`}>
                       {order.bidSize.toFixed(3)}

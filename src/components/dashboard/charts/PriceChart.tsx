@@ -66,6 +66,7 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
   };
   const [zoomLevel, setZoomLevel] = useState(1);
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
+  const [priceZoom, setPriceZoom] = useState(1);
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
   const handleTimeframeChange = (tf: string) => {
@@ -82,21 +83,28 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
       e.stopPropagation();
       
       if (e.deltaY) {
-        const delta = e.deltaY > 0 ? -0.1 : 0.1;
-        setZoomLevel(prev => {
-          const newZoom = Math.max(0.5, Math.min(3, prev + delta));
-          
-          const dataLength = priceData.length;
-          const visibleCount = Math.floor(dataLength / newZoom);
-          setVisibleRange(prevRange => {
-            const center = (prevRange.start + prevRange.end) / 2;
-            const newStart = Math.max(0, Math.floor(center - visibleCount / 2));
-            const newEnd = Math.min(dataLength, newStart + visibleCount);
-            return { start: newStart, end: newEnd };
+        // Shift + колесико = вертикальный зум (по цене)
+        if (e.shiftKey) {
+          const delta = e.deltaY > 0 ? -0.15 : 0.15;
+          setPriceZoom(prev => Math.max(0.5, Math.min(5, prev + delta)));
+        } else {
+          // Обычное колесико = горизонтальный зум (по времени)
+          const delta = e.deltaY > 0 ? -0.1 : 0.1;
+          setZoomLevel(prev => {
+            const newZoom = Math.max(0.5, Math.min(3, prev + delta));
+            
+            const dataLength = priceData.length;
+            const visibleCount = Math.floor(dataLength / newZoom);
+            setVisibleRange(prevRange => {
+              const center = (prevRange.start + prevRange.end) / 2;
+              const newStart = Math.max(0, Math.floor(center - visibleCount / 2));
+              const newEnd = Math.min(dataLength, newStart + visibleCount);
+              return { start: newStart, end: newEnd };
+            });
+            
+            return newZoom;
           });
-          
-          return newZoom;
-        });
+        }
       }
     };
 
@@ -120,18 +128,20 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
     return point;
   });
 
-  let yMin = Math.min(...chartData.map(d => d.low || d.price));
-  let yMax = Math.max(...chartData.map(d => d.high || d.price));
+  let baseYMin = Math.min(...chartData.map(d => d.low || d.price));
+  let baseYMax = Math.max(...chartData.map(d => d.high || d.price));
   
   // Expand range to include bid/ask if available
   if (bestBid && bestAsk) {
-    yMin = Math.min(yMin, bestBid);
-    yMax = Math.max(yMax, bestAsk);
-    // Add 1% padding
-    const padding = (yMax - yMin) * 0.01;
-    yMin -= padding;
-    yMax += padding;
+    baseYMin = Math.min(baseYMin, bestBid);
+    baseYMax = Math.max(baseYMax, bestAsk);
   }
+  
+  // Apply price zoom
+  const priceCenter = (baseYMin + baseYMax) / 2;
+  const priceRange = (baseYMax - baseYMin) / priceZoom;
+  const yMin = priceCenter - priceRange / 2;
+  const yMax = priceCenter + priceRange / 2;
   
   const currentPrice = chartData.length > 0 ? (chartData[chartData.length - 1]?.close || chartData[chartData.length - 1]?.price) : 0;
 
@@ -155,6 +165,9 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
         />
       </CardHeader>
       <CardContent className="pt-0 pb-4">
+        <div className="mb-2 px-2 py-1 bg-zinc-900/30 border border-zinc-800/50 rounded text-[10px] text-zinc-500 flex items-center gap-2">
+          <span>💡 Зум: колесико мыши — по времени, Shift + колесико — по цене</span>
+        </div>
         <div 
           ref={chartContainerRef}
           className="h-[480px] overflow-hidden bg-black/50 rounded-md" 
