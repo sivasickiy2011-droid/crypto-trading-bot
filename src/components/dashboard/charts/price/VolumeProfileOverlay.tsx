@@ -34,13 +34,21 @@ export default function VolumeProfileOverlay({
     1
   );
 
+  // Отступы графика (должны совпадать с margin в ComposedChart)
+  const MARGIN_TOP = 15;
+  const MARGIN_BOTTOM = 10;
+  const MARGIN_RIGHT = 150;
+  
+  const effectiveHeight = chartHeight - MARGIN_TOP - MARGIN_BOTTOM;
+  
   const priceToY = (price: number) => {
     const priceRange = yMax - yMin;
     const relativePosition = (yMax - price) / priceRange;
-    return relativePosition * chartHeight;
+    return relativePosition * effectiveHeight;
   };
 
-  const maxBarWidth = chartWidth * 0.15; // 15% max width
+  const svgWidth = chartWidth - (MARGIN_RIGHT - 100);
+  const maxBarWidth = svgWidth * 0.2; // 20% от ширины SVG
   
   // Вычисляем центр между bid и ask
   const centerPrice = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : null;
@@ -50,10 +58,10 @@ export default function VolumeProfileOverlay({
     <svg
       style={{
         position: 'absolute',
-        top: 15,
-        right: 50,
-        width: chartWidth - 50,
-        height: chartHeight - 25,
+        top: MARGIN_TOP,
+        right: MARGIN_RIGHT - 100,
+        width: svgWidth,
+        height: effectiveHeight,
         pointerEvents: 'none',
       }}
     >
@@ -67,7 +75,7 @@ export default function VolumeProfileOverlay({
         return (
           <g key={`ask-vol-${idx}`}>
             <rect
-              x={chartWidth - 50 - barWidth}
+              x={svgWidth - barWidth}
               y={y - 1.5}
               width={barWidth}
               height={3}
@@ -76,7 +84,7 @@ export default function VolumeProfileOverlay({
             />
             {barWidth > maxBarWidth * 0.5 && (
               <text
-                x={chartWidth - 55 - barWidth}
+                x={svgWidth - barWidth - 5}
                 y={y + 1}
                 fontSize={9}
                 fill="#ef4444"
@@ -95,7 +103,7 @@ export default function VolumeProfileOverlay({
         <line
           x1={0}
           y1={centerY}
-          x2={chartWidth - 50}
+          x2={svgWidth}
           y2={centerY}
           stroke="#eab308"
           strokeWidth={2}
@@ -113,7 +121,7 @@ export default function VolumeProfileOverlay({
         return (
           <g key={`bid-vol-${idx}`}>
             <rect
-              x={chartWidth - 50 - barWidth}
+              x={svgWidth - barWidth}
               y={y - 1.5}
               width={barWidth}
               height={3}
@@ -122,7 +130,7 @@ export default function VolumeProfileOverlay({
             />
             {barWidth > maxBarWidth * 0.5 && (
               <text
-                x={chartWidth - 55 - barWidth}
+                x={svgWidth - barWidth - 5}
                 y={y + 1}
                 fontSize={9}
                 fill="#16a34a"
