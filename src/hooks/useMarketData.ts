@@ -153,11 +153,16 @@ export function useMarketData(enabled: boolean = true) {
     }, ...prev].slice(0, 50));
   };
 
+  const handleReorderWatchlist = (newOrder: WatchlistItem[]) => {
+    setWatchlist(newOrder);
+  };
+
   return {
     watchlist,
     logs,
     handleAddPair,
     handleRemovePair,
-    handleMoveToFirst
+    handleMoveToFirst,
+    handleReorderWatchlist
   };
 }

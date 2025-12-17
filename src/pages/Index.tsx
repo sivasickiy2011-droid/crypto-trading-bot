@@ -50,7 +50,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     return saved !== null ? saved === 'true' : false;
   });
 
-  const { watchlist, logs, handleAddPair, handleRemovePair, handleMoveToFirst } = useMarketData(apiRequestsEnabled);
+  const { watchlist, logs, handleAddPair, handleRemovePair, handleMoveToFirst, handleReorderWatchlist } = useMarketData(apiRequestsEnabled);
 
   // Load user settings
   useEffect(() => {
@@ -279,6 +279,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                     watchlist={watchlist}
                     onSymbolSelect={setSelectedSymbol}
                     onSymbolMoveToFirst={handleMoveToFirst}
+                    onReorderWatchlist={handleReorderWatchlist}
                     selectedSymbol={selectedSymbol}
                   />
                 </div>
