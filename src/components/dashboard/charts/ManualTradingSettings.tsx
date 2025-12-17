@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 import { getCurrentPrice, placeOrder, PlaceOrderParams } from '@/lib/api';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface ManualTradingSettingsProps {
   accountMode: 'live' | 'demo';
@@ -15,10 +14,10 @@ interface ManualTradingSettingsProps {
   symbol?: string;
   availableBalance?: number;
   onOrderPlaced?: () => void;
+  userId?: number;
 }
 
-export default function ManualTradingSettings({ accountMode, apiMode, symbol = 'BTCUSDT', availableBalance = 0, onOrderPlaced }: ManualTradingSettingsProps) {
-  const { user } = useAuth();
+export default function ManualTradingSettings({ accountMode, apiMode, symbol = 'BTCUSDT', availableBalance = 0, onOrderPlaced, userId }: ManualTradingSettingsProps) {
   const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
   const [entryMode, setEntryMode] = useState<'single' | 'grid' | 'dca'>('single');
   const [side, setSide] = useState<'LONG' | 'SHORT'>('LONG');
@@ -52,7 +51,7 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
   };
 
   const handleTrade = async () => {
-    if (!user) {
+    if (!userId) {
       toast.error('Необходима авторизация');
       return;
     }
@@ -92,7 +91,7 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
         }
       }
 
-      const result = await placeOrder(user.userId, orderParams);
+      const result = await placeOrder(userId, orderParams);
 
       if (result.success) {
         const action = side === 'LONG' ? 'Покупка' : 'Продажа';

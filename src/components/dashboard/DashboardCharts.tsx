@@ -183,6 +183,7 @@ export default function DashboardCharts({
           symbol={selectedSymbol.replace('/', '')} 
           availableBalance={availableBalance}
           onOrderPlaced={handleOrderPlaced}
+          userId={userId}
         />
       </CollapsiblePanel>
     ),
