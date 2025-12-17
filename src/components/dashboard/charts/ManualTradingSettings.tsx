@@ -21,13 +21,22 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
   const [leverage, setLeverage] = useState('10');
   const [stopLoss, setStopLoss] = useState('2.5');
   const [takeProfit, setTakeProfit] = useState('5.0');
+  const [entryPrice, setEntryPrice] = useState('');
+  const [useMarketPrice, setUseMarketPrice] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleMarketPrice = () => {
+    setUseMarketPrice(true);
+    setEntryPrice('');
+    toast.info('Вход по рыночной цене');
+  };
 
   const handleTrade = async () => {
     setIsLoading(true);
     try {
       const action = side === 'LONG' ? 'Покупка' : 'Продажа';
-      toast.success(`${action} по рынку`);
+      const priceType = useMarketPrice ? 'по рынку' : `по цене $${entryPrice}`;
+      toast.success(`${action} ${priceType}`);
     } catch (error) {
       toast.error('Ошибка выполнения сделки');
     } finally {
@@ -36,8 +45,8 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
   };
   
   return (
-    <Card className="bg-black/90 border-zinc-800 flex flex-col" style={{ minHeight: '400px' }}>
-      <CardHeader className="pb-2 cursor-pointer flex-shrink-0" onClick={() => setIsExpanded(!isExpanded)}>
+    <Card className="bg-black/90 border-zinc-800 flex flex-col" style={isExpanded ? { minHeight: '400px' } : {}}>
+      <CardHeader className={`cursor-pointer flex-shrink-0 ${isExpanded ? 'pb-2' : 'py-2'}`} onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <CardTitle className="text-xs text-white">Ручная торговля</CardTitle>
@@ -98,6 +107,29 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
                     <Icon name="TrendingDown" size={12} className="inline mr-1" />
                     Short
                   </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">Цена входа</Label>
+                <div className="flex gap-1.5">
+                  <Input 
+                    type="number" 
+                    value={entryPrice}
+                    onChange={(e) => { setEntryPrice(e.target.value); setUseMarketPrice(false); }}
+                    placeholder="42500"
+                    className="h-7 text-xs font-mono flex-1"
+                    disabled={useMarketPrice}
+                  />
+                  <Button 
+                    onClick={handleMarketPrice}
+                    variant={useMarketPrice ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 text-xs px-2 whitespace-nowrap"
+                  >
+                    <Icon name="Zap" size={12} className="mr-1" />
+                    По рынку
+                  </Button>
                 </div>
               </div>
 

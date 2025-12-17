@@ -116,15 +116,15 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="open" className="w-full">
+        <Tabs defaultValue="orders" className="w-full">
           <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="open" className="text-xs">
-              <Icon name="CircleDot" size={14} className="mr-1.5" />
-              Открытые ({displayPositions.length})
-            </TabsTrigger>
             <TabsTrigger value="orders" className="text-xs">
               <Icon name="FileText" size={14} className="mr-1.5" />
               Заявки (0)
+            </TabsTrigger>
+            <TabsTrigger value="open" className="text-xs">
+              <Icon name="CircleDot" size={14} className="mr-1.5" />
+              Открытые ({displayPositions.length})
             </TabsTrigger>
             <TabsTrigger value="history" className="text-xs">
               <Icon name="History" size={14} className="mr-1.5" />
