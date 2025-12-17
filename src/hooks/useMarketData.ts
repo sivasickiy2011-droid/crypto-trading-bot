@@ -127,10 +127,29 @@ export function useMarketData(enabled: boolean = true) {
     }, ...prev].slice(0, 50));
   };
 
+  const handleMoveToFirst = (symbol: string) => {
+    setWatchlist(prev => {
+      const item = prev.find(w => w.symbol === symbol);
+      if (!item) return prev;
+      
+      const remaining = prev.filter(w => w.symbol !== symbol);
+      return [item, ...remaining];
+    });
+
+    const now = new Date();
+    const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+    setLogs(prev => [{
+      time: timeStr,
+      type: 'info',
+      message: `Пара ${symbol.replace('USDT', '/USDT')} перемещена на первое место`
+    }, ...prev].slice(0, 50));
+  };
+
   return {
     watchlist,
     logs,
     handleAddPair,
-    handleRemovePair
+    handleRemovePair,
+    handleMoveToFirst
   };
 }

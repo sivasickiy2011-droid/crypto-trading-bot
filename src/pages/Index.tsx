@@ -36,8 +36,12 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const [apiKeysModalOpen, setApiKeysModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedSymbol, setSelectedSymbol] = useState('');
-  const [currentTimeframe, setCurrentTimeframe] = useState('15');
+  const [selectedSymbol, setSelectedSymbol] = useState(() => {
+    return localStorage.getItem('selectedSymbol') || '';
+  });
+  const [currentTimeframe, setCurrentTimeframe] = useState(() => {
+    return localStorage.getItem('currentTimeframe') || '15';
+  });
   const [chartsEnabled, setChartsEnabled] = useState(true);
   const [signalsMode, setSignalsMode] = useState<'disabled' | 'bots_only' | 'top10'>('bots_only');
   const [marketType, setMarketType] = useState<'spot' | 'futures' | 'overlay'>('futures');
@@ -46,7 +50,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     return saved !== null ? saved === 'true' : false;
   });
 
-  const { watchlist, logs, handleAddPair, handleRemovePair } = useMarketData(apiRequestsEnabled);
+  const { watchlist, logs, handleAddPair, handleRemovePair, handleMoveToFirst } = useMarketData(apiRequestsEnabled);
 
   // Load user settings
   useEffect(() => {
@@ -68,6 +72,18 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
       setSelectedSymbol(watchlist[0].symbol);
     }
   }, [watchlist, selectedSymbol]);
+
+  // Save selectedSymbol to localStorage
+  useEffect(() => {
+    if (selectedSymbol) {
+      localStorage.setItem('selectedSymbol', selectedSymbol);
+    }
+  }, [selectedSymbol]);
+
+  // Save currentTimeframe to localStorage
+  useEffect(() => {
+    localStorage.setItem('currentTimeframe', currentTimeframe);
+  }, [currentTimeframe]);
   const { balance, positions } = useUserData(userId, 'live', apiRequestsEnabled);
   const { priceData, spotData, futuresData } = usePriceData(selectedSymbol, watchlist, currentTimeframe, chartsEnabled && apiRequestsEnabled, marketType);
   const { orderbook, strategySignals } = useOrderbookAndSignals(selectedSymbol, 'live', signalsMode !== 'disabled' && apiRequestsEnabled);
@@ -262,6 +278,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   <DashboardWatchlist
                     watchlist={watchlist}
                     onSymbolSelect={setSelectedSymbol}
+                    onSymbolMoveToFirst={handleMoveToFirst}
                     selectedSymbol={selectedSymbol}
                   />
                 </div>

@@ -13,14 +13,20 @@ interface WatchlistItem {
 interface DashboardWatchlistProps {
   watchlist: WatchlistItem[];
   onSymbolSelect: (symbol: string) => void;
+  onSymbolMoveToFirst: (symbol: string) => void;
   selectedSymbol: string;
 }
 
 export default function DashboardWatchlist({
   watchlist,
   onSymbolSelect,
+  onSymbolMoveToFirst,
   selectedSymbol
 }: DashboardWatchlistProps) {
+  const handleDoubleClick = (symbol: string) => {
+    onSymbolMoveToFirst(symbol);
+    onSymbolSelect(symbol);
+  };
   return (
     <Card className="bg-card border-border">
       <CardContent className="p-2">
@@ -30,6 +36,7 @@ export default function DashboardWatchlist({
               <div 
                 key={item.symbol} 
                 onClick={() => onSymbolSelect(item.symbol)}
+                onDoubleClick={() => handleDoubleClick(item.symbol)}
                 className={`flex-shrink-0 p-1.5 rounded-md border transition-all cursor-pointer min-w-[110px] ${
                   selectedSymbol === item.symbol 
                     ? 'bg-primary/10 border-primary' 
