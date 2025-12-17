@@ -68,19 +68,7 @@ export default function VolumeProfileOverlay({
         pointerEvents: 'none',
       }}
     >
-      {/* DEBUG: Выделение области объёмов */}
-      <rect
-        x={svgWidth - maxBarWidth - 10}
-        y={0}
-        width={maxBarWidth + 10}
-        height={effectiveHeight}
-        fill="rgba(255, 0, 255, 0.1)"
-        stroke="rgba(255, 0, 255, 0.6)"
-        strokeWidth={2}
-        strokeDasharray="5 5"
-      />
-      
-      {/* Asks (Sell orders) - Red bars from right */}
+      {/* Asks (Sell orders) - Red bars from right */
       {asks.map((order, idx) => {
         if (order.price < yMin || order.price > yMax) return null;
         
@@ -115,28 +103,15 @@ export default function VolumeProfileOverlay({
       
       {/* Центральная линия между bid/ask */}
       {centerY !== null && (
-        <>
-          <line
-            x1={0}
-            y1={centerY}
-            x2={svgWidth}
-            y2={centerY}
-            stroke="#eab308"
-            strokeWidth={3}
-            opacity={0.9}
-          />
-          {/* DEBUG: Метка с координатой Y */}
-          <text
-            x={10}
-            y={centerY - 5}
-            fontSize={11}
-            fill="#eab308"
-            fontWeight="bold"
-            fontFamily="monospace"
-          >
-            CENTER Y={centerY.toFixed(1)} PRICE={centerPrice?.toFixed(2)}
-          </text>
-        </>
+        <line
+          x1={0}
+          y1={centerY}
+          x2={svgWidth}
+          y2={centerY}
+          stroke="#eab308"
+          strokeWidth={2}
+          opacity={0.8}
+        />
       )}
       
       {/* Bids (Buy orders) - Green bars from right */}
