@@ -23,10 +23,11 @@ interface WatchlistItem {
 interface TopPairsIntegratedProps {
   watchlist: WatchlistItem[];
   onAddToWatchlist: (symbol: string) => void;
+  onRemoveFromWatchlist: (symbol: string) => void;
   onSelectPair: (symbol: string) => void;
 }
 
-export default function TopPairsIntegrated({ watchlist, onAddToWatchlist, onSelectPair }: TopPairsIntegratedProps) {
+export default function TopPairsIntegrated({ watchlist, onAddToWatchlist, onRemoveFromWatchlist, onSelectPair }: TopPairsIntegratedProps) {
   const [pairs, setPairs] = useState<TopPair[]>([]);
   const [allPairs, setAllPairs] = useState<TopPair[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +67,8 @@ export default function TopPairsIntegrated({ watchlist, onAddToWatchlist, onSele
 
   const toggleFavorite = (symbol: string) => {
     if (favoriteSymbols.includes(symbol)) {
-      toast.info('Удаление из избранного в разработке');
+      onRemoveFromWatchlist(symbol);
+      toast.success(`${symbol} удалён из избранного`);
     } else {
       onAddToWatchlist(symbol);
       toast.success(`${symbol} добавлен в избранное`);

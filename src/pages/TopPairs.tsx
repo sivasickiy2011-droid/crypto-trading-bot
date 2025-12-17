@@ -85,6 +85,12 @@ export default function TopPairs() {
         const updated = watchlist.filter((item: any) => item.symbol !== symbol);
         localStorage.setItem('user_watchlist', JSON.stringify(updated));
       }
+      
+      // Send message to parent window to remove from watchlist
+      window.parent.postMessage(
+        { type: 'removeFromWatchlist', symbol }, 
+        '*'
+      );
     } else {
       setFavorites(prev => [...prev, symbol]);
       

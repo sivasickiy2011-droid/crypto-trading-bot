@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/ui/icon';
@@ -71,10 +72,12 @@ const getRecommendationBadge = (recommendation: string) => {
 };
 
 export default function TopPairCard({ pair, index, isFavorite, onToggleFavorite, onSelect }: TopPairCardProps) {
+  const [isHovered, setIsHovered] = React.useState(false);
+  
   return (
     <Card className="p-6 hover:shadow-lg transition-shadow">
       <div className="grid grid-cols-12 gap-4 items-center">
-        <div className="col-span-1 flex justify-center">
+        <div className="col-span-1 flex justify-center gap-1">
           <Button
             variant="ghost"
             size="icon"
@@ -82,11 +85,15 @@ export default function TopPairCard({ pair, index, isFavorite, onToggleFavorite,
               e.stopPropagation();
               onToggleFavorite(pair.symbol);
             }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            title={isFavorite ? "Удалить из избранного" : "Добавить в избранное"}
+            className="relative"
           >
             <Icon 
-              name={isFavorite ? "Star" : "StarOff"} 
+              name={isFavorite && isHovered ? "X" : isFavorite ? "Star" : "StarOff"} 
               size={20} 
-              className={isFavorite ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground'}
+              className={isFavorite && isHovered ? 'text-red-500' : isFavorite ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground'}
             />
           </Button>
         </div>

@@ -163,6 +163,11 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
         toast.success(`${event.data.symbol} добавлен в избранное`);
       }
       
+      if (event.data.type === 'removeFromWatchlist') {
+        handleRemovePair(event.data.symbol, selectedSymbol, setSelectedSymbol);
+        toast.success(`${event.data.symbol} удалён из избранного`);
+      }
+      
       if (event.data.type === 'createBot') {
         try {
           await createBot(userId, {
@@ -256,6 +261,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
               <TopPairsIntegrated 
                 watchlist={watchlist}
                 onAddToWatchlist={handleAddPair}
+                onRemoveFromWatchlist={(symbol) => handleRemovePair(symbol, selectedSymbol, setSelectedSymbol)}
                 onSelectPair={(symbol) => {
                   setSelectedSymbol(symbol);
                   setActiveTab('dashboard');
