@@ -7,8 +7,8 @@ import Icon from '@/components/ui/icon';
 interface PriceChartHeaderProps {
   selectedSymbol: string;
   currentPrice: number;
-  marketType: 'spot' | 'futures';
-  setMarketType: (type: 'spot' | 'futures') => void;
+  marketType: 'spot' | 'futures' | 'overlay';
+  setMarketType: (type: 'spot' | 'futures' | 'overlay') => void;
   activeTimeframe: string;
   onTimeframeChange: (tf: string) => void;
   chartType: 'line' | 'candle';
@@ -77,6 +77,15 @@ export default function PriceChartHeader({
                 onClick={() => setMarketType('futures')}
               >
                 Фьючерсы
+              </Button>
+              <Button
+                variant={marketType === 'overlay' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-6 px-2 text-[10px]"
+                onClick={() => setMarketType('overlay')}
+              >
+                <Icon name="Layers" size={12} className="mr-1" />
+                Наложение
               </Button>
             </div>
           </div>

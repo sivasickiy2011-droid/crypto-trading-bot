@@ -31,10 +31,11 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
   const handleMarketPrice = async () => {
     try {
       setIsLoading(true);
-      const price = await getCurrentPrice(symbol);
+      const category = marketType === 'spot' ? 'spot' : 'linear';
+      const price = await getCurrentPrice(symbol, category);
       setEntryPrice(price.toFixed(2));
       setUseMarketPrice(true);
-      toast.success(`Рыночная цена: $${price.toFixed(2)}`);
+      toast.success(`Рыночная цена ${marketType === 'spot' ? 'спот' : 'фьючерсы'}: $${price.toFixed(2)}`);
     } catch (error) {
       toast.error('Не удалось получить рыночную цену');
       console.error('Market price fetch error:', error);

@@ -115,52 +115,80 @@ export function usePriceData(
   selectedSymbol: string, 
   watchlist: WatchlistItem[], 
   currentTimeframe: string,
-  enabled: boolean = true
+  enabled: boolean = true,
+  marketType: 'spot' | 'futures' = 'futures'
 ) {
   const [priceData, setPriceData] = useState<PriceDataPoint[]>(generateMockPriceData(43580));
+  const [spotData, setSpotData] = useState<PriceDataPoint[]>([]);
+  const [futuresData, setFuturesData] = useState<PriceDataPoint[]>([]);
 
   useEffect(() => {
     if (!enabled || !selectedSymbol) {
       return;
     }
 
+    const processKlineData = (klines: any[]) => {
+      const closes = klines.map(k => k.close);
+      const ema9 = calculateEMA(closes, 9);
+      const ema21 = calculateEMA(closes, 21);
+      const ema50 = calculateEMA(closes, 50);
+      const rsi = calculateRSI(closes, 14);
+      const bb = calculateBB(closes, 20);
+      const macdHist = calculateMACD(closes);
+      
+      return klines.map((k, i) => {
+        const date = new Date(parseInt(k.time));
+        return {
+          time: `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`,
+          price: k.close,
+          open: k.open,
+          high: k.high,
+          low: k.low,
+          close: k.close,
+          volume: k.volume,
+          ma20: calculateMA(closes, 20)[i],
+          ma50: calculateMA(closes, 50)[i],
+          ema9: ema9[i],
+          ema21: ema21[i],
+          ema50: ema50[i],
+          rsi: rsi[i],
+          bbUpper: bb.upper[i],
+          bbLower: bb.lower[i],
+          macd: macdHist[i],
+          signal: null
+        };
+      });
+    };
+
     const loadPriceData = async () => {
       try {
-        const klines = await getKlineData(selectedSymbol, currentTimeframe, 50);
-        
-        if (klines.length > 0) {
-          const closes = klines.map(k => k.close);
+        if (marketType === 'spot') {
+          const klines = await getKlineData(selectedSymbol, currentTimeframe, 50, 'spot');
+          if (klines.length > 0) {
+            const formatted = processKlineData(klines);
+            setPriceData(formatted);
+            setSpotData(formatted);
+          }
+        } else if (marketType === 'futures') {
+          const klines = await getKlineData(selectedSymbol, currentTimeframe, 50, 'linear');
+          if (klines.length > 0) {
+            const formatted = processKlineData(klines);
+            setPriceData(formatted);
+            setFuturesData(formatted);
+          }
+        } else if (marketType === 'overlay') {
+          // overlay mode - load both
+          const [spotKlines, futuresKlines] = await Promise.all([
+            getKlineData(selectedSymbol, currentTimeframe, 50, 'spot'),
+            getKlineData(selectedSymbol, currentTimeframe, 50, 'linear')
+          ]);
           
-          const ema9 = calculateEMA(closes, 9);
-          const ema21 = calculateEMA(closes, 21);
-          const ema50 = calculateEMA(closes, 50);
-          const rsi = calculateRSI(closes, 14);
-          const bb = calculateBB(closes, 20);
-          const macdHist = calculateMACD(closes);
-          
-          const formattedData = klines.map((k, i) => {
-            const date = new Date(parseInt(k.time));
-            return {
-              time: `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`,
-              price: k.close,
-              open: k.open,
-              high: k.high,
-              low: k.low,
-              close: k.close,
-              volume: k.volume,
-              ma20: calculateMA(closes, 20)[i],
-              ma50: calculateMA(closes, 50)[i],
-              ema9: ema9[i],
-              ema21: ema21[i],
-              ema50: ema50[i],
-              rsi: rsi[i],
-              bbUpper: bb.upper[i],
-              bbLower: bb.lower[i],
-              macd: macdHist[i],
-              signal: null
-            };
-          });
-          setPriceData(formattedData);
+          if (spotKlines.length > 0) setSpotData(processKlineData(spotKlines));
+          if (futuresKlines.length > 0) {
+            const formatted = processKlineData(futuresKlines);
+            setPriceData(formatted);
+            setFuturesData(formatted);
+          }
         }
       } catch (error) {
         const selectedItem = watchlist.find(w => w.symbol === selectedSymbol);
@@ -171,7 +199,7 @@ export function usePriceData(
     loadPriceData();
     const priceInterval = setInterval(loadPriceData, 30000);
     return () => clearInterval(priceInterval);
-  }, [selectedSymbol, watchlist, currentTimeframe, enabled]);
+  }, [selectedSymbol, watchlist, currentTimeframe, enabled, marketType]);
 
-  return { priceData };
+  return { priceData, spotData, futuresData };
 }

@@ -31,6 +31,9 @@ interface PositionLevel {
 
 interface PriceChartMainProps {
   chartData: PriceDataPoint[];
+  spotData?: PriceDataPoint[];
+  futuresData?: PriceDataPoint[];
+  marketType?: 'spot' | 'futures' | 'overlay';
   chartType: 'line' | 'candle';
   showIndicators: {
     ema9: boolean;
@@ -48,7 +51,7 @@ interface PriceChartMainProps {
   bestBid?: number;
 }
 
-export default function PriceChartMain({ chartData, chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice, bestAsk, bestBid }: PriceChartMainProps) {
+export default function PriceChartMain({ chartData, spotData = [], futuresData = [], marketType = 'futures', chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice, bestAsk, bestBid }: PriceChartMainProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart data={chartData} margin={{ top: 15, right: 50, left: 0, bottom: 10 }}>
@@ -56,6 +59,14 @@ export default function PriceChartMain({ chartData, chartType, showIndicators, y
           <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.15}/>
             <stop offset="95%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0}/>
+          </linearGradient>
+          <linearGradient id="colorSpot" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0.1}/>
+            <stop offset="95%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0}/>
+          </linearGradient>
+          <linearGradient id="colorFutures" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="hsl(221, 83%, 53%)" stopOpacity={0.1}/>
+            <stop offset="95%" stopColor="hsl(221, 83%, 53%)" stopOpacity={0}/>
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="1 1" stroke="rgba(255,255,255,0.05)" vertical={true} horizontal={true} />
@@ -78,7 +89,36 @@ export default function PriceChartMain({ chartData, chartType, showIndicators, y
         />
         <Tooltip content={<CustomTooltip />} />
         
-        {chartType === 'line' && (
+        {/* Overlay mode - show both spot and futures */}
+        {marketType === 'overlay' && spotData.length > 0 && (
+          <Area 
+            type="monotone" 
+            dataKey="close"
+            data={spotData}
+            stroke="hsl(142, 76%, 36%)" 
+            fill="url(#colorSpot)"
+            strokeWidth={2}
+            dot={false}
+            isAnimationActive={false}
+            opacity={0.5}
+          />
+        )}
+        
+        {marketType === 'overlay' && futuresData.length > 0 && (
+          <Area 
+            type="monotone" 
+            dataKey="close"
+            data={futuresData}
+            stroke="hsl(221, 83%, 53%)" 
+            fill="url(#colorFutures)"
+            strokeWidth={2}
+            dot={false}
+            isAnimationActive={false}
+            opacity={0.5}
+          />
+        )}
+        
+        {chartType === 'line' && marketType !== 'overlay' && (
           <Area 
             type="monotone" 
             dataKey="price" 

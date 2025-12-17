@@ -40,6 +40,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
   const [currentTimeframe, setCurrentTimeframe] = useState('15');
   const [chartsEnabled, setChartsEnabled] = useState(true);
   const [signalsMode, setSignalsMode] = useState<'disabled' | 'bots_only' | 'top10'>('bots_only');
+  const [marketType, setMarketType] = useState<'spot' | 'futures' | 'overlay'>('futures');
   const [apiRequestsEnabled, setApiRequestsEnabled] = useState(() => {
     const saved = localStorage.getItem('apiRequestsEnabled');
     return saved !== null ? saved === 'true' : false;
@@ -68,7 +69,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     }
   }, [watchlist, selectedSymbol]);
   const { balance, positions } = useUserData(userId, 'live', apiRequestsEnabled);
-  const { priceData } = usePriceData(selectedSymbol, watchlist, currentTimeframe, chartsEnabled && apiRequestsEnabled);
+  const { priceData, spotData, futuresData } = usePriceData(selectedSymbol, watchlist, currentTimeframe, chartsEnabled && apiRequestsEnabled, marketType);
   const { orderbook, strategySignals } = useOrderbookAndSignals(selectedSymbol, 'live', signalsMode !== 'disabled' && apiRequestsEnabled);
   const { savedRequests } = useApiRequestCounter(chartsEnabled, signalsMode !== 'disabled');
 
@@ -267,10 +268,13 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
 
                 <DashboardCharts
                   priceData={priceData}
+                  spotData={spotData}
+                  futuresData={futuresData}
                   positions={displayPositions}
                   closedTrades={mockClosedTrades}
                   selectedSymbol={formatSymbolForDisplay(selectedSymbol)}
                   onTimeframeChange={setCurrentTimeframe}
+                  onMarketTypeChange={setMarketType}
                   orderbook={orderbook}
                   strategySignals={strategySignals}
                   accountMode="live"

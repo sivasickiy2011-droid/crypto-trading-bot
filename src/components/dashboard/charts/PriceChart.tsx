@@ -33,8 +33,11 @@ interface PositionLevel {
 
 interface PriceChartProps {
   priceData: Array<PriceDataPoint>;
+  spotData?: Array<PriceDataPoint>;
+  futuresData?: Array<PriceDataPoint>;
   selectedSymbol: string;
   onTimeframeChange: (timeframe: string) => void;
+  onMarketTypeChange?: (type: 'spot' | 'futures' | 'overlay') => void;
   strategySignals?: Array<{strategy: string, signal: 'buy' | 'sell' | 'neutral', strength: number, reason: string}>;
   positionLevels?: PositionLevel[];
   currentMarketPrice?: number;
@@ -42,7 +45,7 @@ interface PriceChartProps {
   bestBid?: number;
 }
 
-export default function PriceChart({ priceData, selectedSymbol, onTimeframeChange, strategySignals = [], positionLevels = [], currentMarketPrice, bestAsk, bestBid }: PriceChartProps) {
+export default function PriceChart({ priceData, spotData = [], futuresData = [], selectedSymbol, onTimeframeChange, onMarketTypeChange, strategySignals = [], positionLevels = [], currentMarketPrice, bestAsk, bestBid }: PriceChartProps) {
   const [activeTimeframe, setActiveTimeframe] = useState('15');
   const [showIndicators, setShowIndicators] = useState({ 
     ema9: false, 
@@ -53,7 +56,14 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
     macd: false 
   });
   const [chartType, setChartType] = useState<'line' | 'candle'>('candle');
-  const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
+  const [marketType, setMarketType] = useState<'spot' | 'futures' | 'overlay'>('futures');
+
+  const handleMarketTypeChange = (type: 'spot' | 'futures' | 'overlay') => {
+    setMarketType(type);
+    if (onMarketTypeChange) {
+      onMarketTypeChange(type);
+    }
+  };
   const [zoomLevel, setZoomLevel] = useState(1);
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -135,7 +145,7 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
           selectedSymbol={selectedSymbol}
           currentPrice={currentPrice}
           marketType={marketType}
-          setMarketType={setMarketType}
+          setMarketType={handleMarketTypeChange}
           activeTimeframe={activeTimeframe}
           onTimeframeChange={handleTimeframeChange}
           chartType={chartType}
@@ -152,6 +162,9 @@ export default function PriceChart({ priceData, selectedSymbol, onTimeframeChang
         >
           <PriceChartMain
             chartData={chartData}
+            spotData={spotData}
+            futuresData={futuresData}
+            marketType={marketType}
             chartType={chartType}
             showIndicators={showIndicators}
             yMin={yMin}

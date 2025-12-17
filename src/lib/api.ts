@@ -42,10 +42,11 @@ export async function getMarketTickers(symbols: string[]): Promise<TickerData[]>
 export async function getKlineData(
   symbol: string, 
   interval: string = '15', 
-  limit: number = 50
+  limit: number = 50,
+  category: 'spot' | 'linear' = 'linear'
 ): Promise<KlineData[]> {
   const response = await fetch(
-    `${BYBIT_API_URL}?action=kline&symbol=${symbol}&interval=${interval}&limit=${limit}`
+    `${BYBIT_API_URL}?action=kline&symbol=${symbol}&interval=${interval}&limit=${limit}&category=${category}`
   );
   const data = await response.json();
   
@@ -267,8 +268,8 @@ export async function getOrderbook(symbol: string, limit: number = 25): Promise<
   throw new Error(data.error || 'Failed to fetch orderbook');
 }
 
-export async function getCurrentPrice(symbol: string): Promise<number> {
-  const response = await fetch(`${BYBIT_API_URL}?action=tickers&symbols=${symbol}`);
+export async function getCurrentPrice(symbol: string, category: 'spot' | 'linear' = 'linear'): Promise<number> {
+  const response = await fetch(`${BYBIT_API_URL}?action=tickers&symbols=${symbol}&category=${category}`);
   const data = await response.json();
   
   if (data.success && data.data && data.data.length > 0) {

@@ -53,10 +53,13 @@ interface PositionLevel {
 
 interface DashboardChartsProps {
   priceData: Array<PriceDataPoint>;
+  spotData?: Array<PriceDataPoint>;
+  futuresData?: Array<PriceDataPoint>;
   positions: Position[];
   closedTrades: ClosedTrade[];
   selectedSymbol: string;
   onTimeframeChange: (timeframe: string) => void;
+  onMarketTypeChange?: (type: 'spot' | 'futures' | 'overlay') => void;
   orderbook?: Array<{price: number, bidSize: number, askSize: number}>;
   strategySignals?: Array<{strategy: string, signal: 'buy' | 'sell' | 'neutral', strength: number, reason: string}>;
   accountMode: 'live' | 'demo';
@@ -69,10 +72,13 @@ interface DashboardChartsProps {
 
 export default function DashboardCharts({ 
   priceData, 
+  spotData = [],
+  futuresData = [],
   positions, 
   closedTrades,
   selectedSymbol, 
-  onTimeframeChange, 
+  onTimeframeChange,
+  onMarketTypeChange, 
   orderbook = [], 
   strategySignals = [],
   accountMode,
@@ -104,8 +110,11 @@ export default function DashboardCharts({
         <div className="space-y-6">
           <PriceChart 
             priceData={priceData}
+            spotData={spotData}
+            futuresData={futuresData}
             selectedSymbol={selectedSymbol}
             onTimeframeChange={onTimeframeChange}
+            onMarketTypeChange={onMarketTypeChange}
             strategySignals={strategySignals}
             positionLevels={positionLevels}
             currentMarketPrice={currentMarketPrice}
