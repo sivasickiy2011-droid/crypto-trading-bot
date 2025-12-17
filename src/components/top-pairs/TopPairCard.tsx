@@ -171,8 +171,17 @@ export default function TopPairCard({ pair, index, isFavorite, onToggleFavorite,
           </div>
         </div>
 
-        <div className="col-span-2 text-right">
+        <div className="col-span-2 flex items-center justify-end gap-2">
           {getRecommendationBadge(pair.recommendation)}
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => onSelect(pair)}
+            className="ml-2"
+          >
+            <Icon name="BarChart3" size={14} className="mr-1" />
+            График
+          </Button>
         </div>
       </div>
     </Card>

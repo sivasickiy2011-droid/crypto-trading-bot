@@ -24,8 +24,12 @@ export default function TopPairs() {
     return (localStorage.getItem('top_pairs_view_mode') as 'favorites' | 'top10' | 'top20') || 'top10';
   });
   const [favorites, setFavorites] = useState<string[]>(() => {
-    const saved = localStorage.getItem('top_pairs_favorites');
-    return saved ? JSON.parse(saved) : [];
+    const saved = localStorage.getItem('user_watchlist');
+    if (saved) {
+      const watchlist = JSON.parse(saved);
+      return watchlist.map((item: any) => item.symbol);
+    }
+    return [];
   });
 
   useEffect(() => {
@@ -38,7 +42,16 @@ export default function TopPairs() {
   }, [viewMode, allPairs, favorites]);
 
   useEffect(() => {
-    localStorage.setItem('top_pairs_favorites', JSON.stringify(favorites));
+    const saved = localStorage.getItem('user_watchlist');
+    const currentWatchlist = saved ? JSON.parse(saved) : [];
+    
+    // Update watchlist based on favorites
+    const newWatchlist = favorites.map(symbol => {
+      const existing = currentWatchlist.find((item: any) => item.symbol === symbol);
+      return existing || { symbol, price: 0, change: 0, volume: '0', signal: 'neutral' };
+    });
+    
+    localStorage.setItem('user_watchlist', JSON.stringify(newWatchlist));
   }, [favorites]);
 
   const loadTopPairs = async () => {
@@ -60,11 +73,27 @@ export default function TopPairs() {
   };
 
   const toggleFavorite = (symbol: string) => {
-    setFavorites(prev => 
-      prev.includes(symbol) 
-        ? prev.filter(s => s !== symbol)
-        : [...prev, symbol]
-    );
+    const isCurrentlyFavorite = favorites.includes(symbol);
+    
+    if (isCurrentlyFavorite) {
+      setFavorites(prev => prev.filter(s => s !== symbol));
+      
+      // Also remove from user_watchlist
+      const saved = localStorage.getItem('user_watchlist');
+      if (saved) {
+        const watchlist = JSON.parse(saved);
+        const updated = watchlist.filter((item: any) => item.symbol !== symbol);
+        localStorage.setItem('user_watchlist', JSON.stringify(updated));
+      }
+    } else {
+      setFavorites(prev => [...prev, symbol]);
+      
+      // Send message to parent window to add to watchlist
+      window.parent.postMessage(
+        { type: 'addToWatchlist', symbol }, 
+        '*'
+      );
+    }
   };
 
   const filterPairs = () => {

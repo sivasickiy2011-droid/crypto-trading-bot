@@ -9,6 +9,7 @@ import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import DashboardWatchlist from '@/components/dashboard/DashboardWatchlist';
 import DevConsole from '@/pages/DevConsole';
+import TopPairsIntegrated from '@/components/top-pairs/TopPairsIntegrated';
 
 import { useMarketData } from '@/hooks/useMarketData';
 import { useUserData } from '@/hooks/useUserData';
@@ -252,13 +253,14 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
             {activeTab === 'backtest' ? (
               <BacktestPanel />
             ) : activeTab === 'top-pairs' ? (
-              <div className="bg-background">
-                <iframe 
-                  src="/top-pairs" 
-                  className="w-full h-[calc(100vh-120px)] border-0 rounded-lg"
-                  title="Top Trading Pairs"
-                />
-              </div>
+              <TopPairsIntegrated 
+                watchlist={watchlist}
+                onAddToWatchlist={handleAddPair}
+                onSelectPair={(symbol) => {
+                  setSelectedSymbol(symbol);
+                  setActiveTab('dashboard');
+                }}
+              />
             ) : activeTab === 'dev-console' ? (
               <div className="mt-[-24px]">
                 <DevConsole userId={userId} />

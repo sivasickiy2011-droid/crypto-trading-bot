@@ -111,7 +111,7 @@ const App = () => {
             />
             <Route 
               path="/top-pairs" 
-              element={<TopPairs />}
+              element={<Navigate to="/" replace />}
             />
             <Route 
               path="/dev-console" 
