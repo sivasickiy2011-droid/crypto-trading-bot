@@ -149,7 +149,7 @@ export default function AutoTradingControl({ userId }: AutoTradingControlProps) 
   const runAutoTrader = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://function.centerai.tech/api/auto-trader-runner');
+      const response = await fetch('https://function.centerai.tech/api/auto-trader');
       const data = await response.json();
       
       if (data.success) {
