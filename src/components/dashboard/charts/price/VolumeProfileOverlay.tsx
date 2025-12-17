@@ -12,6 +12,8 @@ interface VolumeProfileOverlayProps {
   yMax: number;
   chartWidth: number;
   chartHeight: number;
+  bestBid?: number;
+  bestAsk?: number;
 }
 
 export default function VolumeProfileOverlay({ 
@@ -19,7 +21,9 @@ export default function VolumeProfileOverlay({
   yMin, 
   yMax, 
   chartWidth, 
-  chartHeight 
+  chartHeight,
+  bestBid,
+  bestAsk
 }: VolumeProfileOverlayProps) {
   const asks = orderbook.filter(o => o.askSize > 0).sort((a, b) => a.price - b.price).slice(0, 20);
   const bids = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
@@ -37,6 +41,10 @@ export default function VolumeProfileOverlay({
   };
 
   const maxBarWidth = chartWidth * 0.15; // 15% max width
+  
+  // Вычисляем центр между bid и ask
+  const centerPrice = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : null;
+  const centerY = centerPrice ? priceToY(centerPrice) : null;
 
   return (
     <svg
@@ -81,6 +89,19 @@ export default function VolumeProfileOverlay({
           </g>
         );
       })}
+      
+      {/* Центральная линия между bid/ask */}
+      {centerY !== null && (
+        <line
+          x1={0}
+          y1={centerY}
+          x2={chartWidth - 50}
+          y2={centerY}
+          stroke="#eab308"
+          strokeWidth={2}
+          opacity={0.8}
+        />
+      )}
       
       {/* Bids (Buy orders) - Green bars from right */}
       {bids.map((order, idx) => {

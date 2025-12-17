@@ -84,6 +84,8 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
         yMax={yMax}
         chartWidth={chartDimensions.width}
         chartHeight={chartDimensions.height}
+        bestBid={bestBid}
+        bestAsk={bestAsk}
       />
       
       <ResponsiveContainer width="100%" height="100%">
@@ -310,22 +312,7 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
           />
         )}
 
-        {currentMarketPrice && (
-          <ReferenceLine 
-            y={currentMarketPrice} 
-            stroke="#eab308" 
-            strokeWidth={2.5}
-            strokeOpacity={0.8}
-            label={{
-              value: '═══ ЦЕНТР ═══',
-              position: 'insideTopLeft',
-              fill: '#eab308',
-              fontSize: 9,
-              fontWeight: 600,
-              offset: 5
-            }}
-          />
-        )}
+        {/* Центральная линия отрисовывается в VolumeProfileOverlay */}
 
         {positionLevels.map((level, idx) => (
           <React.Fragment key={idx}>
