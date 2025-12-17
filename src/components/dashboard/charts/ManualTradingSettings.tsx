@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,11 +63,11 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
   };
   
   return (
-    <Card className="bg-black/90 border-zinc-800 flex flex-col" style={isExpanded ? { minHeight: '400px' } : {}}>
-      <CardHeader className={`cursor-pointer flex-shrink-0 ${isExpanded ? 'pb-2' : 'py-2'}`} onClick={() => setIsExpanded(!isExpanded)}>
+    <div className="bg-black/50 rounded-md flex flex-col" style={isExpanded ? { minHeight: '400px' } : {}}>
+      <div className={`cursor-pointer flex-shrink-0 p-3 ${isExpanded ? 'pb-2' : 'py-2'}`} onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <CardTitle className="text-xs text-white">Ручная торговля</CardTitle>
+            <span className="text-xs text-white font-semibold">Ручная торговля</span>
             <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
               <Icon name={isExpanded ? 'ChevronUp' : 'ChevronDown'} size={14} />
             </Button>
@@ -84,9 +83,9 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
             </Badge>
           </div>
         </div>
-      </CardHeader>
+      </div>
       {isExpanded && (
-        <CardContent className="space-y-3 pt-2 flex-1 overflow-y-auto">
+        <div className="space-y-3 p-3 pt-2 flex-1 overflow-y-auto">
               <div className="space-y-1.5">
                 <Label className="text-[10px] text-muted-foreground">Тип рынка</Label>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -297,8 +296,8 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
                   </div>
                 </div>
               </div>
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }

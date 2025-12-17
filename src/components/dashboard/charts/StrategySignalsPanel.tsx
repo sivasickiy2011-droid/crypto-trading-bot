@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 
@@ -15,12 +14,7 @@ interface StrategySignalsPanelProps {
 
 export default function StrategySignalsPanel({ strategySignals }: StrategySignalsPanelProps) {
   return (
-    <Card className="bg-black/90 border-zinc-800">
-      <CardHeader>
-        <CardTitle className="text-base text-white">Сигналы стратегий</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
+    <div className="space-y-2">
           {strategySignals.map((signal, idx) => {
             const signalColor = signal.signal === 'buy' ? 'text-green-400' : signal.signal === 'sell' ? 'text-red-400' : 'text-zinc-400';
             const signalBg = signal.signal === 'buy' ? 'bg-green-500/10 border-green-500/30' : signal.signal === 'sell' ? 'bg-red-500/10 border-red-500/30' : 'bg-zinc-800/50 border-zinc-700';
@@ -53,7 +47,6 @@ export default function StrategySignalsPanel({ strategySignals }: StrategySignal
             <p className="text-sm">Нет активных сигналов</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }

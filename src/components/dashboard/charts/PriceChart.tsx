@@ -194,7 +194,7 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
             currentMarketPrice={currentMarketPrice}
             bestAsk={bestAsk}
             bestBid={bestBid}
-            orderbook={orderbook}
+            orderbook={['1', '5', '15'].includes(activeTimeframe) ? orderbook : []}
           />
         </div>
         

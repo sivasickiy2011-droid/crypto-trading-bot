@@ -4,6 +4,7 @@ import OrderbookPanel from './charts/OrderbookPanel';
 import TradesPanel from './charts/TradesPanel';
 import ManualTradingSettings from './charts/ManualTradingSettings';
 import StrategySignalsPanel from './charts/StrategySignalsPanel';
+import CollapsiblePanel from './charts/CollapsiblePanel';
 import { BotLogEntry } from './BotsLogsPanel';
 
 interface Position {
@@ -92,9 +93,86 @@ export default function DashboardCharts({
 }: DashboardChartsProps) {
   const [botLogs, setBotLogs] = useState<BotLogEntry[]>([]);
   const [activeBotCount, setActiveBotCount] = useState(0);
+  const [panelOrder, setPanelOrder] = useState<string[]>(() => {
+    const saved = localStorage.getItem('rightPanelOrder');
+    return saved ? JSON.parse(saved) : ['orderbook', 'signals', 'trading'];
+  });
+  const [draggedPanel, setDraggedPanel] = useState<string | null>(null);
   
   const handleLogAdd = (log: BotLogEntry) => {
     setBotLogs(prev => [log, ...prev].slice(0, 100));
+  };
+
+  const handleDragStart = (panelId: string) => (e: React.DragEvent) => {
+    setDraggedPanel(panelId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (targetPanelId: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggedPanel || draggedPanel === targetPanelId) return;
+
+    const newOrder = [...panelOrder];
+    const draggedIndex = newOrder.indexOf(draggedPanel);
+    const targetIndex = newOrder.indexOf(targetPanelId);
+
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedPanel);
+
+    setPanelOrder(newOrder);
+    localStorage.setItem('rightPanelOrder', JSON.stringify(newOrder));
+    setDraggedPanel(null);
+  };
+
+  const panelComponents = {
+    orderbook: (
+      <CollapsiblePanel
+        key="orderbook"
+        title="Стакан ордеров"
+        icon="BookOpen"
+        badge="0.01"
+        defaultOpen={true}
+        draggable={true}
+        onDragStart={handleDragStart('orderbook')}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop('orderbook')}
+      >
+        <OrderbookPanel orderbook={orderbook} symbol={selectedSymbol.replace('/', '')} />
+      </CollapsiblePanel>
+    ),
+    signals: (
+      <CollapsiblePanel
+        key="signals"
+        title="Сигналы стратегий"
+        icon="TrendingUp"
+        defaultOpen={true}
+        draggable={true}
+        onDragStart={handleDragStart('signals')}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop('signals')}
+      >
+        <StrategySignalsPanel strategySignals={strategySignals} />
+      </CollapsiblePanel>
+    ),
+    trading: (
+      <CollapsiblePanel
+        key="trading"
+        title="Ручная торговля"
+        icon="DollarSign"
+        defaultOpen={false}
+        draggable={true}
+        onDragStart={handleDragStart('trading')}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop('trading')}
+      >
+        <ManualTradingSettings accountMode={accountMode} apiMode={apiMode} symbol={selectedSymbol.replace('/', '')} availableBalance={availableBalance} />
+      </CollapsiblePanel>
+    ),
   };
 
   // Get current market price from orderbook
@@ -140,10 +218,8 @@ export default function DashboardCharts({
           />
         </div>
         
-        <div className="space-y-6">
-          <OrderbookPanel orderbook={orderbook} symbol={selectedSymbol.replace('/', '')} />
-          <StrategySignalsPanel strategySignals={strategySignals} />
-          <ManualTradingSettings accountMode={accountMode} apiMode={apiMode} symbol={selectedSymbol.replace('/', '')} availableBalance={availableBalance} />
+        <div className="space-y-4">
+          {panelOrder.map(panelId => panelComponents[panelId as keyof typeof panelComponents])}
         </div>
       </div>
     </div>

@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import QuickOrderModal from '@/components/QuickOrderModal';
 
@@ -89,16 +88,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
         orderType={orderType}
       />
       
-      <Card className="bg-black/90 border-zinc-800 flex flex-col" style={{ height: '545px' }}>
-        <CardHeader className="pb-2 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm text-white">Стакан ордеров</CardTitle>
-            <div className="text-[10px] text-zinc-500">
-              0.01
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="flex-1 overflow-hidden flex flex-col p-0 px-3 pb-3 bg-black/50">
+      <div className="flex-1 overflow-hidden flex flex-col p-0 px-3 pb-3 bg-black/50 rounded-md">
           <style>{`
             .orderbook-scroll::-webkit-scrollbar {
               width: 8px;
@@ -213,8 +203,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
               );
             })}
           </div>
-        </CardContent>
-      </Card>
+        </div>
     </>
   );
 }
