@@ -313,10 +313,17 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
         {currentMarketPrice && (
           <ReferenceLine 
             y={currentMarketPrice} 
-            stroke="#fbbf24" 
-            strokeWidth={1}
-            strokeDasharray="3 3"
-            strokeOpacity={0.6}
+            stroke="#eab308" 
+            strokeWidth={2.5}
+            strokeOpacity={0.8}
+            label={{
+              value: '═══ ЦЕНТР ═══',
+              position: 'insideTopLeft',
+              fill: '#eab308',
+              fontSize: 9,
+              fontWeight: 600,
+              offset: 5
+            }}
           />
         )}
 

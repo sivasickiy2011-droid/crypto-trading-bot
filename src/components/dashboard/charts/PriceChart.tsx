@@ -138,15 +138,16 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
   const baseYMin = Math.min(...chartData.map(d => d.low || d.price));
   const baseYMax = Math.max(...chartData.map(d => d.high || d.price));
   
-  // ВСЕГДА центрируем график строго по линии bid/ask (середина спреда)
-  let priceCenter = (baseYMin + baseYMax) / 2;
-  if (bestBid && bestAsk) {
-    priceCenter = (bestBid + bestAsk) / 2;
-  }
+  // Определяем центр: СТРОГО середина между bid и ask
+  const priceCenter = (bestBid && bestAsk) 
+    ? (bestBid + bestAsk) / 2 
+    : (baseYMin + baseYMax) / 2;
   
-  // Применяем зум относительно центра спреда
-  const baseRange = Math.max(baseYMax - baseYMin, Math.abs(priceCenter * 0.01));
+  // Диапазон цен для отображения (зависит от зума)
+  const baseRange = Math.max(baseYMax - baseYMin, Math.abs(priceCenter * 0.02));
   const priceRange = baseRange / priceZoom;
+  
+  // График ВСЕГДА центрируется по priceCenter (линия между bid/ask)
   const yMin = priceCenter - priceRange / 2;
   const yMax = priceCenter + priceRange / 2;
   
