@@ -1,21 +1,3 @@
 {
-  "user-settings": "https://functions.poehali.dev/e9d739c2-9ebd-4ce4-a11c-367956a9e6aa",
-  "virtual-trades": "https://functions.poehali.dev/0eb3fae3-717f-4343-a978-789ab29b3561",
-  "virtual-balance": "https://functions.poehali.dev/425d3539-8920-4981-84ac-2ea05fd5ec7c",
-  "test-trade": "https://functions.poehali.dev/6a007e68-fcdc-44e6-ad68-00a0846ae618",
-  "ai-strategy-manager": "https://functions.poehali.dev/cd9a0b3b-e47d-4b62-8334-5c9308d3fdc1",
-  "auto-trader": "https://functions.poehali.dev/646ab114-b395-4b2b-9d1f-b2e89e74b47c",
-  "gpt-assistant": "https://functions.poehali.dev/7874ace6-6bc4-4991-9d28-55b333c47b7b",
-  "pair-analyzer": "https://functions.poehali.dev/79d0e27c-f6b2-4735-b88a-9e3fa48e6c4a",
-  "bot-executor": "https://functions.poehali.dev/e2dd154c-dde5-456b-a4c6-1200070fcc75",
-  "bot-scheduler": "https://functions.poehali.dev/3baf1812-37ea-46ef-bb85-dbed89ed66a5",
-  "bots-manager": "https://functions.poehali.dev/b6906a5e-7940-4cb3-987e-22ba5092eb13",
-  "telegram-notify": "https://functions.poehali.dev/3e081d1f-2d3b-429a-8490-942983a3d17d",
-  "strategy-signals": "https://functions.poehali.dev/4b1221ec-86fd-4273-a7fe-2130d93a0e5b",
-  "bybit-testnet": "https://functions.poehali.dev/8e6e4bb5-a1d4-4f21-a966-94935f8ff8ba",
-  "bybit-user-data": "https://functions.poehali.dev/13894e82-44c1-492b-b6f2-e2e9ae738abd",
-  "api-keys": "https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2",
-  "strategy-config": "https://functions.poehali.dev/fcf2c4c4-a831-42be-b73d-06d909453b38",
-  "auth": "https://functions.poehali.dev/59cd39d3-4edd-4a58-9f7c-821efe138ccb",
-  "bybit-market": "https://functions.poehali.dev/6312362e-43af-4142-b3d3-cc951ebd3d8b"
+  "api-keys": "https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2"
 }

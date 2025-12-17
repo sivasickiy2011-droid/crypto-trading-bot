@@ -1,0 +1,36 @@
+{
+  "tests": [
+    {
+      "name": "Get API keys for user 2",
+      "method": "GET",
+      "headers": {
+        "X-User-Id": "2"
+      },
+      "queryStringParameters": {
+        "exchange": "bybit"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Update existing API keys",
+      "method": "POST",
+      "headers": {
+        "X-User-Id": "2"
+      },
+      "body": {
+        "api_key": "updated_key_123",
+        "api_secret": "updated_secret_456",
+        "exchange": "bybit"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
