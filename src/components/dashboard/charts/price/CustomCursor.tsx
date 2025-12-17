@@ -5,19 +5,28 @@ interface CustomCursorProps {
   chartHeight?: number;
   yMin?: number;
   yMax?: number;
-  coordinate?: { x: number; y: number };
+  activeCoordinate?: { x: number; y: number };
 }
 
-export const CustomCursor = ({ points, width, height, yMin = 0, yMax = 100, coordinate }: CustomCursorProps) => {
+export const CustomCursor = (props: any) => {
+  const { points, width, height, yAxisMap, activeLabel } = props;
+  
   if (!points || points.length === 0 || !width || !height) return null;
   
   const x = points[0].x;
-  const y = coordinate?.y ?? points[0].y;
   
-  console.log('CustomCursor:', { x, y, width, height, yMin, yMax, coordinate, points: points[0] });
+  const yAxis = yAxisMap && yAxisMap[0];
+  if (!yAxis) return null;
+  
+  const { domain } = yAxis;
+  const [yMin, yMax] = domain || [0, 100];
+  
+  const mouseY = props.activeCoordinate?.y;
+  if (!mouseY) return null;
   
   const priceRange = yMax - yMin;
-  const currentPrice = yMax - ((y / height) * priceRange);
+  const relativeY = mouseY / height;
+  const currentPrice = yMax - (relativeY * priceRange);
   
   return (
     <g>
@@ -33,15 +42,15 @@ export const CustomCursor = ({ points, width, height, yMin = 0, yMax = 100, coor
       
       <line
         x1={0}
-        y1={y}
+        y1={mouseY}
         x2={width}
-        y2={y}
+        y2={mouseY}
         stroke="rgba(255, 255, 255, 0.3)"
         strokeWidth={1}
         strokeDasharray="4 4"
       />
       
-      <g transform={`translate(${width - 70}, ${y})`}>
+      <g transform={`translate(${width - 70}, ${mouseY})`}>
         <rect
           x={0}
           y={-10}
