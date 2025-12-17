@@ -14,6 +14,8 @@ export const CustomCursor = ({ points, width, height, yMin = 0, yMax = 100, coor
   const x = points[0].x;
   const y = coordinate?.y ?? points[0].y;
   
+  console.log('CustomCursor:', { x, y, width, height, yMin, yMax, coordinate, points: points[0] });
+  
   const priceRange = yMax - yMin;
   const currentPrice = yMax - ((y / height) * priceRange);
   
