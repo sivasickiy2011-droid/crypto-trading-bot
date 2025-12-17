@@ -135,19 +135,18 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
     return point;
   });
 
-  let baseYMin = Math.min(...chartData.map(d => d.low || d.price));
-  let baseYMax = Math.max(...chartData.map(d => d.high || d.price));
+  const baseYMin = Math.min(...chartData.map(d => d.low || d.price));
+  const baseYMax = Math.max(...chartData.map(d => d.high || d.price));
   
-  // Center chart around current bid/ask price
+  // ВСЕГДА центрируем график строго по линии bid/ask (середина спреда)
   let priceCenter = (baseYMin + baseYMax) / 2;
   if (bestBid && bestAsk) {
     priceCenter = (bestBid + bestAsk) / 2;
-    baseYMin = Math.min(baseYMin, bestBid);
-    baseYMax = Math.max(baseYMax, bestAsk);
   }
   
-  // Apply price zoom centered on current price
-  const priceRange = (baseYMax - baseYMin) / priceZoom;
+  // Применяем зум относительно центра спреда
+  const baseRange = Math.max(baseYMax - baseYMin, Math.abs(priceCenter * 0.01));
+  const priceRange = baseRange / priceZoom;
   const yMin = priceCenter - priceRange / 2;
   const yMax = priceCenter + priceRange / 2;
   
