@@ -57,9 +57,11 @@ interface PriceChartMainProps {
   bestAsk?: number;
   bestBid?: number;
   orderbook?: OrderbookEntry[];
+  userOrders?: Array<{orderId: string; symbol: string; side: string; price: number; orderStatus: string}>;
+  userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number; pnlPercent: number}>;
 }
 
-export default function PriceChartMain({ chartData, spotData = [], futuresData = [], marketType = 'futures', chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice, bestAsk, bestBid, orderbook = [] }: PriceChartMainProps) {
+export default function PriceChartMain({ chartData, spotData = [], futuresData = [], marketType = 'futures', chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice, bestAsk, bestBid, orderbook = [], userOrders = [], userPositions = [] }: PriceChartMainProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = useState({ width: 1200, height: 480 });
 
@@ -313,6 +315,54 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
         )}
 
         {/* Центральная линия отрисовывается в VolumeProfileOverlay */}
+
+        {userOrders.map((order) => {
+          const isLong = order.side === 'Buy';
+          const color = isLong ? '#22c55e' : '#ef4444';
+          
+          return (
+            <ReferenceLine 
+              key={order.orderId}
+              y={order.price} 
+              stroke={color} 
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              opacity={0.7}
+              label={{ 
+                value: `📋 ${isLong ? 'LONG' : 'SHORT'} $${order.price.toFixed(2)}`, 
+                position: 'insideTopRight',
+                fill: color,
+                fontSize: 10,
+                fontWeight: 600,
+                fontFamily: 'Roboto Mono'
+              }}
+            />
+          );
+        })}
+
+        {userPositions.map((position) => {
+          const isLong = position.side === 'Buy';
+          const color = isLong ? '#22c55e' : '#ef4444';
+          const pnlSign = position.pnlPercent >= 0 ? '+' : '';
+          
+          return (
+            <ReferenceLine 
+              key={position.symbol + position.side}
+              y={position.entryPrice} 
+              stroke={color} 
+              strokeWidth={2.5}
+              opacity={0.9}
+              label={{ 
+                value: `${isLong ? '🟢' : '🔴'} $${position.entryPrice.toFixed(2)} | ${pnlSign}${position.pnlPercent.toFixed(2)}%`, 
+                position: 'insideTopRight',
+                fill: color,
+                fontSize: 10,
+                fontWeight: 700,
+                fontFamily: 'Roboto Mono'
+              }}
+            />
+          );
+        })}
 
         {positionLevels.map((level, idx) => (
           <React.Fragment key={idx}>

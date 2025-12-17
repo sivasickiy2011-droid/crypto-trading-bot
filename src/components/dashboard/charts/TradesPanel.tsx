@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { getUserOrders, UserOrderData, cancelOrder } from '@/lib/api';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,11 +59,15 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
   const [tradeMode, setTradeMode] = useState<'live' | 'demo'>('demo');
   const [virtualTrades, setVirtualTrades] = useState<any[]>([]);
   const [loadingVirtual, setLoadingVirtual] = useState(false);
+  const [orders, setOrders] = useState<UserOrderData[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
 
   // Load virtual trades
   useEffect(() => {
     if (tradeMode === 'demo') {
       loadVirtualTrades();
+    } else {
+      loadOrders();
     }
   }, [tradeMode, userId]);
 
@@ -79,6 +85,33 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
       console.error('Failed to load virtual trades:', error);
     } finally {
       setLoadingVirtual(false);
+    }
+  };
+
+  const loadOrders = async () => {
+    try {
+      setLoadingOrders(true);
+      const ordersData = await getUserOrders(userId, false);
+      setOrders(ordersData);
+    } catch (error) {
+      console.error('Failed to load orders:', error);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string, symbol: string) => {
+    try {
+      const result = await cancelOrder(userId, orderId, symbol, 'linear');
+      if (result.success) {
+        toast.success('Ордер отменен');
+        loadOrders();
+      } else {
+        toast.error(result.error || 'Ошибка отмены ордера');
+      }
+    } catch (error) {
+      toast.error('Ошибка отмены ордера');
+      console.error('Cancel order error:', error);
     }
   };
 
@@ -120,7 +153,7 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="orders" className="text-xs">
               <Icon name="FileText" size={14} className="mr-1.5" />
-              Заявки (0)
+              Заявки ({orders.length})
             </TabsTrigger>
             <TabsTrigger value="open" className="text-xs">
               <Icon name="CircleDot" size={14} className="mr-1.5" />
@@ -143,6 +176,54 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
               Логи ({botLogs.length})
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="orders" className="mt-4">
+            {loadingOrders ? (
+              <div className="text-center text-muted-foreground py-8">
+                <Icon name="Loader2" size={36} className="mx-auto mb-3 opacity-30 animate-spin" />
+                <p className="text-sm">Загрузка заявок...</p>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                <Icon name="Inbox" size={36} className="mx-auto mb-3 opacity-30" />
+                <p className="text-sm">Нет активных заявок</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {orders.map((order) => (
+                  <div key={order.orderId} className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border hover:bg-secondary/80 transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <Badge variant={order.side === 'Buy' ? 'default' : 'destructive'} className="w-16 justify-center">
+                        {order.side === 'Buy' ? 'LONG' : 'SHORT'}
+                      </Badge>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm">{order.symbol}</span>
+                          <Badge variant="outline" className="text-xs h-5">{order.orderType}</Badge>
+                          <Badge variant="secondary" className="text-xs h-5">{order.orderStatus}</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground font-mono">
+                          Цена: ${order.price.toFixed(2)} • Объем: {order.qty} • Исполнено: {order.cumExecQty}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-mono mt-0.5">
+                          Создан: {new Date(parseInt(order.createdTime)).toLocaleString('ru-RU')}
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-7 text-xs"
+                      onClick={() => handleCancelOrder(order.orderId, order.symbol)}
+                    >
+                      <Icon name="X" size={12} className="mr-1" />
+                      Отменить
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
           
           <TabsContent value="open" className="mt-4">
             {displayPositions.length === 0 ? (

@@ -16,7 +16,7 @@ import { useUserData } from '@/hooks/useUserData';
 import { usePriceData } from '@/hooks/usePriceData';
 import { useOrderbookAndSignals } from '@/hooks/useOrderbookAndSignals';
 import { useApiRequestCounter } from '@/hooks/useApiRequestCounter';
-import { createBot, getUserSettings, updateUserSettings, UserSettings } from '@/lib/api';
+import { createBot, getUserSettings, updateUserSettings, UserSettings, getUserOrders, UserOrderData } from '@/lib/api';
 import { toast } from 'sonner';
 
 const mockClosedTrades = [
@@ -50,6 +50,8 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     const saved = localStorage.getItem('apiRequestsEnabled');
     return saved !== null ? saved === 'true' : false;
   });
+  const [userOrders, setUserOrders] = useState<UserOrderData[]>([]);
+  const [ordersUpdateKey, setOrdersUpdateKey] = useState(0);
 
   const { watchlist, logs, handleAddPair, handleRemovePair, handleMoveToFirst, handleReorderWatchlist } = useMarketData(apiRequestsEnabled);
 
@@ -66,6 +68,24 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
     };
     loadSettings();
   }, [userId]);
+
+  // Load user orders
+  useEffect(() => {
+    const loadOrders = async () => {
+      if (!apiRequestsEnabled) return;
+      
+      try {
+        const orders = await getUserOrders(userId, false);
+        setUserOrders(orders);
+      } catch (error) {
+        console.error('Failed to load orders:', error);
+      }
+    };
+    loadOrders();
+    
+    const interval = setInterval(loadOrders, 5000);
+    return () => clearInterval(interval);
+  }, [userId, apiRequestsEnabled, ordersUpdateKey]);
 
   // Set first symbol from watchlist as default
   useEffect(() => {
@@ -310,6 +330,7 @@ export default function Index({ userId, username, onLogout }: IndexProps) {
                   userPositions={userPositionsForBots}
                   userId={userId}
                   availableBalance={balance?.totalAvailable || 0}
+                  userOrders={userOrders.filter(o => o.symbol === selectedSymbol.replace('/', ''))}
                 />
 
                 <DashboardTabs

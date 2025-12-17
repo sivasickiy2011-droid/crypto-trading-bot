@@ -6,16 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
-import { getCurrentPrice } from '@/lib/api';
+import { getCurrentPrice, placeOrder, PlaceOrderParams } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ManualTradingSettingsProps {
   accountMode: 'live' | 'demo';
   apiMode: 'live' | 'testnet';
   symbol?: string;
   availableBalance?: number;
+  onOrderPlaced?: () => void;
 }
 
-export default function ManualTradingSettings({ accountMode, apiMode, symbol = 'BTCUSDT', availableBalance = 0 }: ManualTradingSettingsProps) {
+export default function ManualTradingSettings({ accountMode, apiMode, symbol = 'BTCUSDT', availableBalance = 0, onOrderPlaced }: ManualTradingSettingsProps) {
+  const { user } = useAuth();
   const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
   const [entryMode, setEntryMode] = useState<'single' | 'grid' | 'dca'>('single');
   const [side, setSide] = useState<'LONG' | 'SHORT'>('LONG');
@@ -24,7 +27,7 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
   const [stopLoss, setStopLoss] = useState('2.5');
   const [takeProfit, setTakeProfit] = useState('5.0');
   const [entryPrice, setEntryPrice] = useState('');
-  const [useMarketPrice, setUseMarketPrice] = useState(true);
+  const [useMarketPrice, setUseMarketPrice] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const volumeNum = parseFloat(volume) || 0;
@@ -49,13 +52,59 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
   };
 
   const handleTrade = async () => {
+    if (!user) {
+      toast.error('Необходима авторизация');
+      return;
+    }
+
+    if (!entryPrice && !useMarketPrice) {
+      toast.error('Укажите цену входа или выберите рыночную цену');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const action = side === 'LONG' ? 'Покупка' : 'Продажа';
-      const priceType = useMarketPrice ? 'по рынку' : `по цене $${entryPrice}`;
-      toast.success(`${action} ${priceType}`);
+      const orderParams: PlaceOrderParams = {
+        symbol,
+        side: side === 'LONG' ? 'Buy' : 'Sell',
+        orderType: useMarketPrice ? 'Market' : 'Limit',
+        qty: (volumeNum / (parseFloat(entryPrice) || 1)).toFixed(6),
+        category: marketType === 'spot' ? 'spot' : 'linear',
+      };
+
+      if (!useMarketPrice && entryPrice) {
+        orderParams.price = entryPrice;
+      }
+
+      if (marketType === 'futures') {
+        orderParams.leverage = parseInt(leverage);
+        if (stopLoss) {
+          const slPrice = side === 'LONG'
+            ? (parseFloat(entryPrice) * (1 - parseFloat(stopLoss) / 100)).toFixed(2)
+            : (parseFloat(entryPrice) * (1 + parseFloat(stopLoss) / 100)).toFixed(2);
+          orderParams.stopLoss = slPrice;
+        }
+        if (takeProfit) {
+          const tpPrice = side === 'LONG'
+            ? (parseFloat(entryPrice) * (1 + parseFloat(takeProfit) / 100)).toFixed(2)
+            : (parseFloat(entryPrice) * (1 - parseFloat(takeProfit) / 100)).toFixed(2);
+          orderParams.takeProfit = tpPrice;
+        }
+      }
+
+      const result = await placeOrder(user.userId, orderParams);
+
+      if (result.success) {
+        const action = side === 'LONG' ? 'Покупка' : 'Продажа';
+        const priceType = useMarketPrice ? 'по рынку' : `по цене $${entryPrice}`;
+        toast.success(`${action} ${priceType} - Ордер размещен`);
+        onOrderPlaced?.();
+      } else {
+        toast.error(result.error || 'Ошибка выполнения сделки');
+      }
     } catch (error) {
       toast.error('Ошибка выполнения сделки');
+      console.error('Place order error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -153,7 +202,6 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
             onChange={(e) => { setEntryPrice(e.target.value); setUseMarketPrice(false); }}
             placeholder="42500"
             className="h-7 text-xs font-mono flex-1"
-            disabled={useMarketPrice}
           />
           <Button 
             onClick={handleMarketPrice}

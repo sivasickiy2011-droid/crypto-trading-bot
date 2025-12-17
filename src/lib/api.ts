@@ -268,6 +268,56 @@ export async function getOrderbook(symbol: string, limit: number = 25): Promise<
   throw new Error(data.error || 'Failed to fetch orderbook');
 }
 
+export interface PlaceOrderParams {
+  symbol: string;
+  side: 'Buy' | 'Sell';
+  orderType: 'Market' | 'Limit';
+  qty: string;
+  price?: string;
+  category: 'spot' | 'linear';
+  stopLoss?: string;
+  takeProfit?: string;
+  leverage?: number;
+}
+
+export interface PlaceOrderResponse {
+  success: boolean;
+  orderId?: string;
+  error?: string;
+}
+
+export async function placeOrder(userId: number, params: PlaceOrderParams): Promise<PlaceOrderResponse> {
+  const response = await fetch(BYBIT_USER_DATA_URL, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-User-Id': userId.toString()
+    },
+    body: JSON.stringify({ 
+      action: 'place_order',
+      ...params
+    })
+  });
+  return await response.json();
+}
+
+export async function cancelOrder(userId: number, orderId: string, symbol: string, category: 'spot' | 'linear'): Promise<any> {
+  const response = await fetch(BYBIT_USER_DATA_URL, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-User-Id': userId.toString()
+    },
+    body: JSON.stringify({ 
+      action: 'cancel_order',
+      orderId,
+      symbol,
+      category
+    })
+  });
+  return await response.json();
+}
+
 export async function getCurrentPrice(symbol: string, category: 'spot' | 'linear' = 'linear'): Promise<number> {
   const response = await fetch(`${BYBIT_API_URL}?action=tickers&symbols=${symbol}&category=${category}`);
   const data = await response.json();

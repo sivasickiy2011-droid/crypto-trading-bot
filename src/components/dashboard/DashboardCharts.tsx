@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import PriceChart from './charts/PriceChart';
 import OrderbookPanel from './charts/OrderbookPanel';
 import TradesPanel from './charts/TradesPanel';
@@ -67,9 +67,10 @@ interface DashboardChartsProps {
   apiMode: 'live' | 'testnet';
   positionLevels?: PositionLevel[];
   onSymbolChange?: (symbol: string) => void;
-  userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number}>;
+  userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number; pnlPercent: number}>;
   userId: number;
   availableBalance?: number;
+  userOrders?: Array<{orderId: string; symbol: string; side: string; price: number; orderStatus: string}>;
 }
 
 export default function DashboardCharts({ 
@@ -89,9 +90,11 @@ export default function DashboardCharts({
   onSymbolChange,
   userPositions,
   userId,
-  availableBalance = 0
+  availableBalance = 0,
+  userOrders = []
 }: DashboardChartsProps) {
   const [botLogs, setBotLogs] = useState<BotLogEntry[]>([]);
+  const [ordersUpdateKey, setOrdersUpdateKey] = useState(0);
   const [activeBotCount, setActiveBotCount] = useState(0);
   const [panelOrder, setPanelOrder] = useState<string[]>(() => {
     const saved = localStorage.getItem('rightPanelOrder');
@@ -102,6 +105,10 @@ export default function DashboardCharts({
   const handleLogAdd = (log: BotLogEntry) => {
     setBotLogs(prev => [log, ...prev].slice(0, 100));
   };
+
+  const handleOrderPlaced = useCallback(() => {
+    setOrdersUpdateKey(prev => prev + 1);
+  }, []);
 
   const handleDragStart = (panelId: string) => (e: React.DragEvent) => {
     setDraggedPanel(panelId);
@@ -170,7 +177,13 @@ export default function DashboardCharts({
         onDragOver={handleDragOver}
         onDrop={handleDrop('trading')}
       >
-        <ManualTradingSettings accountMode={accountMode} apiMode={apiMode} symbol={selectedSymbol.replace('/', '')} availableBalance={availableBalance} />
+        <ManualTradingSettings 
+          accountMode={accountMode} 
+          apiMode={apiMode} 
+          symbol={selectedSymbol.replace('/', '')} 
+          availableBalance={availableBalance}
+          onOrderPlaced={handleOrderPlaced}
+        />
       </CollapsiblePanel>
     ),
   };
@@ -201,6 +214,8 @@ export default function DashboardCharts({
             bestAsk={bestAsk}
             bestBid={bestBid}
             orderbook={orderbook}
+            userOrders={userOrders}
+            userPositions={userPositions}
           />
           
           <TradesPanel 

@@ -50,9 +50,11 @@ interface PriceChartProps {
   bestAsk?: number;
   bestBid?: number;
   orderbook?: OrderbookEntry[];
+  userOrders?: Array<{orderId: string; symbol: string; side: string; price: number; orderStatus: string}>;
+  userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number; pnlPercent: number}>;
 }
 
-export default function PriceChart({ priceData, spotData = [], futuresData = [], selectedSymbol, onTimeframeChange, onMarketTypeChange, strategySignals = [], positionLevels = [], currentMarketPrice, bestAsk, bestBid, orderbook = [] }: PriceChartProps) {
+export default function PriceChart({ priceData, spotData = [], futuresData = [], selectedSymbol, onTimeframeChange, onMarketTypeChange, strategySignals = [], positionLevels = [], currentMarketPrice, bestAsk, bestBid, orderbook = [], userOrders = [], userPositions = [] }: PriceChartProps) {
   const [activeTimeframe, setActiveTimeframe] = useState('15');
   const [showIndicators, setShowIndicators] = useState({ 
     ema9: false, 
@@ -193,6 +195,8 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
             bestAsk={bestAsk}
             bestBid={bestBid}
             orderbook={['1', '5', '15'].includes(activeTimeframe) ? orderbook : []}
+            userOrders={userOrders}
+            userPositions={userPositions}
           />
         </div>
         
