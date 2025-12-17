@@ -27,7 +27,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
   };
 
   // useMemo должен быть вызван ВСЕГДА, до любого условного return
-  const { asks, bids, maxSize, spreadPrice, spreadPercent, bestAskPrice } = useMemo(() => {
+  const { asks, bids, maxSize, spreadPrice, spreadPercent, bestAskPrice, bestBidPrice, bestAskVolume, bestBidVolume } = useMemo(() => {
     const asksData = orderbook.filter(o => o.askSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
     const bidsData = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
     
@@ -40,6 +40,9 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
     const spreadPriceValue = asksData.length > 0 && bidsData.length > 0 ? asksData[0].price - bidsData[0].price : 0;
     const spreadPercentValue = asksData.length > 0 && bidsData.length > 0 ? (spreadPriceValue / bidsData[0].price) * 100 : 0;
     const bestAskPriceValue = asksData.length > 0 ? asksData[0].price : 0;
+    const bestBidPriceValue = bidsData.length > 0 ? bidsData[0].price : 0;
+    const bestAskVolumeValue = asksData.length > 0 ? asksData[0].askSize : 0;
+    const bestBidVolumeValue = bidsData.length > 0 ? bidsData[0].bidSize : 0;
 
     return {
       asks: asksData,
@@ -47,7 +50,10 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
       maxSize: maxSizeValue,
       spreadPrice: spreadPriceValue,
       spreadPercent: spreadPercentValue,
-      bestAskPrice: bestAskPriceValue
+      bestAskPrice: bestAskPriceValue,
+      bestBidPrice: bestBidPriceValue,
+      bestAskVolume: bestAskVolumeValue,
+      bestBidVolume: bestBidVolumeValue
     };
   }, [orderbook]);
 
@@ -132,22 +138,23 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
             {asks.map((order, idx) => {
               const percent = (order.askSize / maxSize) * 100;
               const cumulative = asks.slice(idx).reduce((sum, o) => sum + o.askSize, 0);
+              const isBestAsk = idx === 0;
               
               return (
                 <div 
                   key={`ask-${order.price}-${idx}`} 
-                  className="relative h-5 flex items-center hover:bg-red-500/5 transition-colors cursor-pointer"
+                  className={`relative h-5 flex items-center hover:bg-red-500/5 transition-colors cursor-pointer ${isBestAsk ? 'ring-1 ring-red-500/40 rounded-sm' : ''}`}
                   onClick={() => handlePriceClick(order.price, 'sell')}
                 >
                   <div 
-                    className="absolute right-0 top-0 h-full bg-red-500/10 transition-all duration-200"
+                    className={`absolute right-0 top-0 h-full transition-all duration-200 ${isBestAsk ? 'bg-red-500/20' : 'bg-red-500/10'}`}
                     style={{ width: `${percent}%` }}
                   />
                   <div className="relative z-10 grid grid-cols-3 gap-1 w-full px-1 text-[11px] font-mono">
-                    <div className="text-red-400 font-medium">
+                    <div className={`font-medium ${isBestAsk ? 'text-red-300' : 'text-red-400'}`}>
                       {order.price.toFixed(4)}
                     </div>
-                    <div className="text-right text-zinc-400">
+                    <div className={`text-right ${isBestAsk ? 'text-zinc-300 font-semibold' : 'text-zinc-400'}`}>
                       {order.askSize.toFixed(3)}
                     </div>
                     <div className="text-right text-zinc-600 text-[10px]">
@@ -179,22 +186,23 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
             {bids.map((order, idx) => {
               const percent = (order.bidSize / maxSize) * 100;
               const cumulative = bids.slice(0, idx + 1).reduce((sum, o) => sum + o.bidSize, 0);
+              const isBestBid = idx === 0;
               
               return (
                 <div 
                   key={`bid-${order.price}-${idx}`} 
-                  className="relative h-5 flex items-center hover:bg-green-500/5 transition-colors cursor-pointer"
+                  className={`relative h-5 flex items-center hover:bg-green-500/5 transition-colors cursor-pointer ${isBestBid ? 'ring-1 ring-green-500/40 rounded-sm' : ''}`}
                   onClick={() => handlePriceClick(order.price, 'buy')}
                 >
                   <div 
-                    className="absolute right-0 top-0 h-full bg-green-500/10 transition-all duration-200"
+                    className={`absolute right-0 top-0 h-full transition-all duration-200 ${isBestBid ? 'bg-green-500/20' : 'bg-green-500/10'}`}
                     style={{ width: `${percent}%` }}
                   />
                   <div className="relative z-10 grid grid-cols-3 gap-1 w-full px-1 text-[11px] font-mono">
-                    <div className="text-green-400 font-medium">
+                    <div className={`font-medium ${isBestBid ? 'text-green-300' : 'text-green-400'}`}>
                       {order.price.toFixed(4)}
                     </div>
-                    <div className="text-right text-zinc-400">
+                    <div className={`text-right ${isBestBid ? 'text-zinc-300 font-semibold' : 'text-zinc-400'}`}>
                       {order.bidSize.toFixed(3)}
                     </div>
                     <div className="text-right text-zinc-600 text-[10px]">
