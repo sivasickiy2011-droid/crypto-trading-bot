@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Scatter, ReferenceLine } from 'recharts';
 import { CustomTooltip } from './PriceChartTooltip';
+import VolumeProfileOverlay from './VolumeProfileOverlay';
 
 interface PriceDataPoint {
   time: string;
@@ -29,6 +30,12 @@ interface PositionLevel {
   side: 'LONG' | 'SHORT';
 }
 
+interface OrderbookEntry {
+  price: number;
+  bidSize: number;
+  askSize: number;
+}
+
 interface PriceChartMainProps {
   chartData: PriceDataPoint[];
   spotData?: PriceDataPoint[];
@@ -49,12 +56,38 @@ interface PriceChartMainProps {
   currentMarketPrice?: number;
   bestAsk?: number;
   bestBid?: number;
+  orderbook?: OrderbookEntry[];
 }
 
-export default function PriceChartMain({ chartData, spotData = [], futuresData = [], marketType = 'futures', chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice, bestAsk, bestBid }: PriceChartMainProps) {
+export default function PriceChartMain({ chartData, spotData = [], futuresData = [], marketType = 'futures', chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice, bestAsk, bestBid, orderbook = [] }: PriceChartMainProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [chartDimensions, setChartDimensions] = useState({ width: 1200, height: 480 });
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setChartDimensions({ width: rect.width, height: rect.height });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+  
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={chartData} margin={{ top: 15, right: 50, left: 0, bottom: 10 }}>
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <VolumeProfileOverlay
+        orderbook={orderbook}
+        yMin={yMin}
+        yMax={yMax}
+        chartWidth={chartDimensions.width}
+        chartHeight={chartDimensions.height}
+      />
+      
+      <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={chartData} margin={{ top: 15, right: 150, left: 0, bottom: 10 }}>
         <defs>
           <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.15}/>
@@ -332,7 +365,9 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
             )}
           </React.Fragment>
         ))}
+        
       </ComposedChart>
     </ResponsiveContainer>
+    </div>
   );
 }

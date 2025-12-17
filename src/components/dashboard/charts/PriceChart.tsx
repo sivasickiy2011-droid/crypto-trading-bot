@@ -31,6 +31,12 @@ interface PositionLevel {
   side: 'LONG' | 'SHORT';
 }
 
+interface OrderbookEntry {
+  price: number;
+  bidSize: number;
+  askSize: number;
+}
+
 interface PriceChartProps {
   priceData: Array<PriceDataPoint>;
   spotData?: Array<PriceDataPoint>;
@@ -43,9 +49,10 @@ interface PriceChartProps {
   currentMarketPrice?: number;
   bestAsk?: number;
   bestBid?: number;
+  orderbook?: OrderbookEntry[];
 }
 
-export default function PriceChart({ priceData, spotData = [], futuresData = [], selectedSymbol, onTimeframeChange, onMarketTypeChange, strategySignals = [], positionLevels = [], currentMarketPrice, bestAsk, bestBid }: PriceChartProps) {
+export default function PriceChart({ priceData, spotData = [], futuresData = [], selectedSymbol, onTimeframeChange, onMarketTypeChange, strategySignals = [], positionLevels = [], currentMarketPrice, bestAsk, bestBid, orderbook = [] }: PriceChartProps) {
   const [activeTimeframe, setActiveTimeframe] = useState('15');
   const [showIndicators, setShowIndicators] = useState({ 
     ema9: false, 
@@ -131,14 +138,15 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
   let baseYMin = Math.min(...chartData.map(d => d.low || d.price));
   let baseYMax = Math.max(...chartData.map(d => d.high || d.price));
   
-  // Expand range to include bid/ask if available
+  // Center chart around current bid/ask price
+  let priceCenter = (baseYMin + baseYMax) / 2;
   if (bestBid && bestAsk) {
+    priceCenter = (bestBid + bestAsk) / 2;
     baseYMin = Math.min(baseYMin, bestBid);
     baseYMax = Math.max(baseYMax, bestAsk);
   }
   
-  // Apply price zoom
-  const priceCenter = (baseYMin + baseYMax) / 2;
+  // Apply price zoom centered on current price
   const priceRange = (baseYMax - baseYMin) / priceZoom;
   const yMin = priceCenter - priceRange / 2;
   const yMax = priceCenter + priceRange / 2;
@@ -186,6 +194,7 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
             currentMarketPrice={currentMarketPrice}
             bestAsk={bestAsk}
             bestBid={bestBid}
+            orderbook={orderbook}
           />
         </div>
         

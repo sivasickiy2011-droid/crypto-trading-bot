@@ -122,6 +122,7 @@ export default function DashboardCharts({
             currentMarketPrice={currentMarketPrice}
             bestAsk={bestAsk}
             bestBid={bestBid}
+            orderbook={orderbook}
           />
           
           <TradesPanel 
