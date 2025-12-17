@@ -5,35 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
 
 interface ManualTradingSettingsProps {
   accountMode: 'live' | 'demo';
   apiMode: 'live' | 'testnet';
-}
-
-interface Order {
-  id: string;
-  symbol: string;
-  side: 'LONG' | 'SHORT';
-  type: 'Лимитная' | 'Рыночная';
-  price: number;
-  volume: number;
-}
-
-interface Position {
-  id: string;
-  symbol: string;
-  side: 'LONG' | 'SHORT';
-  entryPrice: number;
-  volume: number;
-  leverage: number;
-  stopLoss: number;
-  takeProfit: number;
-  pnl: number;
-  pnlPercent: number;
 }
 
 export default function ManualTradingSettings({ accountMode, apiMode }: ManualTradingSettingsProps) {
@@ -45,55 +22,14 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
   const [stopLoss, setStopLoss] = useState('2.5');
   const [takeProfit, setTakeProfit] = useState('5.0');
   const [isLoading, setIsLoading] = useState(false);
-  
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [positions, setPositions] = useState<Position[]>([]);
 
   const handleTrade = async () => {
     setIsLoading(true);
     try {
       const action = side === 'LONG' ? 'Покупка' : 'Продажа';
       toast.success(`${action} по рынку`);
-      
-      const newPosition: Position = {
-        id: `pos-${Date.now()}`,
-        symbol: 'BTCUSDT',
-        side,
-        entryPrice: 42500,
-        volume: parseFloat(volume),
-        leverage: parseFloat(leverage),
-        stopLoss: parseFloat(stopLoss),
-        takeProfit: parseFloat(takeProfit),
-        pnl: 0,
-        pnlPercent: 0
-      };
-      setPositions([...positions, newPosition]);
     } catch (error) {
       toast.error('Ошибка выполнения сделки');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleClosePosition = async (positionId: string) => {
-    setIsLoading(true);
-    try {
-      toast.success('Позиция закрыта по рынку');
-      setPositions(positions.filter(p => p.id !== positionId));
-    } catch (error) {
-      toast.error('Ошибка закрытия позиции');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancelOrder = async (orderId: string) => {
-    setIsLoading(true);
-    try {
-      toast.success('Заявка отменена');
-      setOrders(orders.filter(o => o.id !== orderId));
-    } catch (error) {
-      toast.error('Ошибка отмены заявки');
     } finally {
       setIsLoading(false);
     }
@@ -123,18 +59,6 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
       </CardHeader>
       {isExpanded && (
         <CardContent className="space-y-3 pt-2 flex-1 overflow-y-auto">
-          <Tabs defaultValue="settings" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-7">
-              <TabsTrigger value="settings" className="text-[10px]">Сделка</TabsTrigger>
-              <TabsTrigger value="orders" className="text-[10px]">
-                Заявки {orders.length > 0 && `(${orders.length})`}
-              </TabsTrigger>
-              <TabsTrigger value="positions" className="text-[10px]">
-                Открытые {positions.length > 0 && `(${positions.length})`}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="settings" className="space-y-3 mt-3">
               <div className="space-y-1.5">
                 <Label className="text-[10px] text-muted-foreground">Режим входа</Label>
                 <Select value={entryMode} onValueChange={(val) => setEntryMode(val as 'single' | 'grid' | 'dca')}>
@@ -262,101 +186,6 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
                   </div>
                 </div>
               </div>
-            </TabsContent>
-
-            <TabsContent value="orders" className="mt-3">
-              {orders.length === 0 ? (
-                <div className="text-center py-6 text-[10px] text-muted-foreground">
-                  <Icon name="FileText" size={24} className="mx-auto mb-2 opacity-50" />
-                  <p>Нет активных заявок</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {orders.map((order) => (
-                    <div key={order.id} className="p-2 bg-muted/50 rounded-md border border-border">
-                      <div className="flex items-center justify-between mb-1">
-                        <Badge variant={order.side === 'LONG' ? 'default' : 'destructive'} className="text-[9px] h-4">
-                          {order.side}
-                        </Badge>
-                        <Badge variant="outline" className="text-[9px] h-4">
-                          {order.type}
-                        </Badge>
-                      </div>
-                      <div className="space-y-0.5 text-[10px]">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Цена:</span>
-                          <span className="font-mono">${order.price.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Объём:</span>
-                          <span className="font-mono">${order.volume}</span>
-                        </div>
-                      </div>
-                      <Button 
-                        onClick={() => handleCancelOrder(order.id)}
-                        disabled={isLoading}
-                        variant="outline"
-                        className="w-full h-6 text-[10px] mt-2 border-destructive text-destructive hover:bg-destructive/10"
-                      >
-                        <Icon name="Ban" size={12} className="mr-1" />
-                        Отменить
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="positions" className="mt-3">
-              {positions.length === 0 ? (
-                <div className="text-center py-6 text-[10px] text-muted-foreground">
-                  <Icon name="TrendingUp" size={24} className="mx-auto mb-2 opacity-50" />
-                  <p>Нет открытых позиций</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {positions.map((position) => (
-                    <div key={position.id} className="p-2 bg-muted/50 rounded-md border border-border">
-                      <div className="flex items-center justify-between mb-1">
-                        <Badge variant={position.side === 'LONG' ? 'default' : 'destructive'} className="text-[9px] h-4">
-                          {position.side} {position.leverage}x
-                        </Badge>
-                        <span className={`font-mono text-[10px] ${position.pnl >= 0 ? 'text-success' : 'text-destructive'}`}>
-                          {position.pnl >= 0 ? '+' : ''}{position.pnl.toFixed(2)} ({position.pnlPercent >= 0 ? '+' : ''}{position.pnlPercent.toFixed(2)}%)
-                        </span>
-                      </div>
-                      <div className="space-y-0.5 text-[10px]">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Вход:</span>
-                          <span className="font-mono">${position.entryPrice.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Объём:</span>
-                          <span className="font-mono">${position.volume}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Стоп-лосс:</span>
-                          <span className="font-mono text-destructive">-{position.stopLoss}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Тейк-профит:</span>
-                          <span className="font-mono text-success">+{position.takeProfit}%</span>
-                        </div>
-                      </div>
-                      <Button 
-                        onClick={() => handleClosePosition(position.id)}
-                        disabled={isLoading}
-                        className="w-full h-6 text-[10px] mt-2 bg-orange-600 hover:bg-orange-700 text-white"
-                      >
-                        <Icon name="XCircle" size={12} className="mr-1" />
-                        Закрыть по рынку
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
         </CardContent>
       )}
     </Card>

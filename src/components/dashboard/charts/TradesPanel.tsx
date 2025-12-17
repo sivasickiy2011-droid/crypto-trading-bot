@@ -117,10 +117,14 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="open" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="open" className="text-xs">
               <Icon name="CircleDot" size={14} className="mr-1.5" />
               Открытые ({displayPositions.length})
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="text-xs">
+              <Icon name="FileText" size={14} className="mr-1.5" />
+              Заявки (0)
             </TabsTrigger>
             <TabsTrigger value="history" className="text-xs">
               <Icon name="History" size={14} className="mr-1.5" />
@@ -177,6 +181,9 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
                         <div className="text-xs text-muted-foreground font-mono">
                           Вход: ${displayPosition.entry} • Объем: {displayPosition.size} • {displayPosition.leverage}x
                         </div>
+                        <div className="text-xs text-muted-foreground font-mono mt-0.5">
+                          <span className="text-destructive">SL: -2.5%</span> • <span className="text-success">TP: +5.0%</span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-6">
@@ -202,6 +209,14 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
                 })}
               </div>
             )}
+          </TabsContent>
+          
+          <TabsContent value="orders" className="mt-4">
+            <div className="text-center text-muted-foreground py-8">
+              <Icon name="FileText" size={36} className="mx-auto mb-3 opacity-30" />
+              <p className="text-sm">Нет активных заявок</p>
+              <p className="text-xs mt-1">Лимитные ордера будут отображаться здесь</p>
+            </div>
           </TabsContent>
           
           <TabsContent value="history" className="mt-4">
