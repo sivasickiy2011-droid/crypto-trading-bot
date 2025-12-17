@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Scatter, ReferenceLine } from 'recharts';
 import { CustomTooltip } from './PriceChartTooltip';
+import { CustomCursor } from './CustomCursor';
 import VolumeProfileOverlay from './VolumeProfileOverlay';
 
 interface PriceDataPoint {
@@ -91,7 +92,10 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
       />
       
       <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={chartData} margin={{ top: 15, right: 150, left: 0, bottom: 10 }}>
+      <ComposedChart 
+        data={chartData} 
+        margin={{ top: 15, right: 150, left: 0, bottom: 10 }}
+      >
         <defs>
           <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.15}/>
@@ -125,7 +129,10 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
           width={70}
           scale="linear"
         />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip 
+          content={<CustomTooltip />} 
+          cursor={<CustomCursor chartHeight={chartDimensions.height} yMin={yMin} yMax={yMax} />}
+        />
         
         {/* Overlay mode - show both spot and futures */}
         {marketType === 'overlay' && (
