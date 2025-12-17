@@ -267,6 +267,17 @@ export async function getOrderbook(symbol: string, limit: number = 25): Promise<
   throw new Error(data.error || 'Failed to fetch orderbook');
 }
 
+export async function getCurrentPrice(symbol: string): Promise<number> {
+  const response = await fetch(`${BYBIT_API_URL}?action=tickers&symbols=${symbol}`);
+  const data = await response.json();
+  
+  if (data.success && data.data && data.data.length > 0) {
+    return data.data[0].price;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch current price');
+}
+
 export interface StrategySignal {
   strategy: string;
   signal: 'buy' | 'sell' | 'neutral';

@@ -131,7 +131,7 @@ export default function DashboardCharts({
         <div className="space-y-6">
           <OrderbookPanel orderbook={orderbook} symbol={selectedSymbol.replace('/', '')} />
           <StrategySignalsPanel strategySignals={strategySignals} />
-          <ManualTradingSettings accountMode={accountMode} apiMode={apiMode} />
+          <ManualTradingSettings accountMode={accountMode} apiMode={apiMode} symbol={selectedSymbol.replace('/', '')} />
         </div>
       </div>
     </div>

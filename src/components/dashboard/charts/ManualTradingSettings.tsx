@@ -7,13 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 import { toast } from 'sonner';
+import { getCurrentPrice } from '@/lib/api';
 
 interface ManualTradingSettingsProps {
   accountMode: 'live' | 'demo';
   apiMode: 'live' | 'testnet';
+  symbol?: string;
 }
 
-export default function ManualTradingSettings({ accountMode, apiMode }: ManualTradingSettingsProps) {
+export default function ManualTradingSettings({ accountMode, apiMode, symbol = 'BTCUSDT' }: ManualTradingSettingsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [entryMode, setEntryMode] = useState<'single' | 'grid' | 'dca'>('single');
   const [side, setSide] = useState<'LONG' | 'SHORT'>('LONG');
@@ -25,10 +27,19 @@ export default function ManualTradingSettings({ accountMode, apiMode }: ManualTr
   const [useMarketPrice, setUseMarketPrice] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleMarketPrice = () => {
-    setUseMarketPrice(true);
-    setEntryPrice('');
-    toast.info('Вход по рыночной цене');
+  const handleMarketPrice = async () => {
+    try {
+      setIsLoading(true);
+      const price = await getCurrentPrice(symbol);
+      setEntryPrice(price.toFixed(2));
+      setUseMarketPrice(true);
+      toast.success(`Рыночная цена: $${price.toFixed(2)}`);
+    } catch (error) {
+      toast.error('Не удалось получить рыночную цену');
+      console.error('Market price fetch error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleTrade = async () => {
