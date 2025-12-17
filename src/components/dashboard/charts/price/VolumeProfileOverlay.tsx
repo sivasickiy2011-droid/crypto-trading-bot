@@ -40,7 +40,7 @@ export default function VolumeProfileOverlay({
   const MARGIN_RIGHT = 150;
   
   // Дополнительная корректировка для точного совпадения с областью рисования графика
-  const Y_AXIS_OFFSET = -25; // Поднято на 25px выше относительно базовой позиции
+  const Y_AXIS_OFFSET = -27; // Точная подгонка для совпадения с линиями bid/ask
   
   const effectiveHeight = chartHeight - MARGIN_TOP - MARGIN_BOTTOM - Y_AXIS_OFFSET;
   
