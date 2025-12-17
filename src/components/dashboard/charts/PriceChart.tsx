@@ -103,9 +103,9 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
             const dataLength = priceData.length;
             const visibleCount = Math.floor(dataLength / newZoom);
             setVisibleRange(prevRange => {
-              const center = (prevRange.start + prevRange.end) / 2;
-              const newStart = Math.max(0, Math.floor(center - visibleCount / 2));
-              const newEnd = Math.min(dataLength, newStart + visibleCount);
+              // ВСЕГДА показываем последний бар (прижимаем end к концу данных)
+              const newEnd = dataLength;
+              const newStart = Math.max(0, newEnd - visibleCount);
               return { start: newStart, end: newEnd };
             });
             
