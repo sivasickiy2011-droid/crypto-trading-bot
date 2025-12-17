@@ -61,9 +61,24 @@ export default function PriceChartHeader({
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <CardTitle className="text-base font-semibold">{selectedSymbol}</CardTitle>
-            <Badge variant="outline" className="text-[10px] h-5 px-1.5">
-              Бессрочный
-            </Badge>
+            <div className="flex items-center space-x-1">
+              <Button
+                variant={marketType === 'spot' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-6 px-2 text-[10px]"
+                onClick={() => setMarketType('spot')}
+              >
+                Спот
+              </Button>
+              <Button
+                variant={marketType === 'futures' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-6 px-2 text-[10px]"
+                onClick={() => setMarketType('futures')}
+              >
+                Фьючерсы
+              </Button>
+            </div>
           </div>
           <div className="flex flex-col">
             <div className={`text-2xl font-bold font-mono ${isPositive ? 'text-success' : 'text-destructive'}`}>

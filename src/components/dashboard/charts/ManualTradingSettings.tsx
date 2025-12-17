@@ -17,6 +17,7 @@ interface ManualTradingSettingsProps {
 
 export default function ManualTradingSettings({ accountMode, apiMode, symbol = 'BTCUSDT' }: ManualTradingSettingsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
   const [entryMode, setEntryMode] = useState<'single' | 'grid' | 'dca'>('single');
   const [side, setSide] = useState<'LONG' | 'SHORT'>('LONG');
   const [volume, setVolume] = useState('100');
@@ -79,6 +80,34 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
       </CardHeader>
       {isExpanded && (
         <CardContent className="space-y-3 pt-2 flex-1 overflow-y-auto">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">Тип рынка</Label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button 
+                    onClick={() => setMarketType('spot')}
+                    className={`h-7 px-2 rounded-md border text-xs font-medium transition-colors ${
+                      marketType === 'spot' 
+                        ? 'border-primary bg-primary/10 text-primary' 
+                        : 'border-border bg-secondary/50 text-muted-foreground hover:border-primary hover:bg-primary/5'
+                    }`}
+                  >
+                    <Icon name="Coins" size={12} className="inline mr-1" />
+                    Спот
+                  </button>
+                  <button 
+                    onClick={() => setMarketType('futures')}
+                    className={`h-7 px-2 rounded-md border text-xs font-medium transition-colors ${
+                      marketType === 'futures' 
+                        ? 'border-primary bg-primary/10 text-primary' 
+                        : 'border-border bg-secondary/50 text-muted-foreground hover:border-primary hover:bg-primary/5'
+                    }`}
+                  >
+                    <Icon name="TrendingUp" size={12} className="inline mr-1" />
+                    Фьючерсы
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label className="text-[10px] text-muted-foreground">Режим входа</Label>
                 <Select value={entryMode} onValueChange={(val) => setEntryMode(val as 'single' | 'grid' | 'dca')}>
