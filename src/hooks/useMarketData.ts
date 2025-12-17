@@ -41,45 +41,53 @@ export function useMarketData(enabled: boolean = true) {
 
     const loadMarketData = async () => {
       try {
-        const symbols = watchlist.map(w => w.symbol);
-        const tickers = await getMarketTickers(symbols);
-        
-        const updatedWatchlist = watchlist.map(item => {
-          const ticker = tickers.find(t => t.symbol === item.symbol);
-          return ticker ? {
-            ...item,
-            price: ticker.price,
-            change: ticker.change,
-            volume: ticker.volume,
-            signal: ticker.change > 2 ? 'buy' : ticker.change < -2 ? 'sell' : 'neutral'
-          } : item;
+        setWatchlist(currentWatchlist => {
+          const symbols = currentWatchlist.map(w => w.symbol);
+          
+          getMarketTickers(symbols).then(tickers => {
+            setWatchlist(prevWatchlist => {
+              const updatedWatchlist = prevWatchlist.map(item => {
+                const ticker = tickers.find(t => t.symbol === item.symbol);
+                return ticker ? {
+                  ...item,
+                  price: ticker.price,
+                  change: ticker.change,
+                  volume: ticker.volume,
+                  signal: ticker.change > 2 ? 'buy' : ticker.change < -2 ? 'sell' : 'neutral'
+                } : item;
+              });
+              return updatedWatchlist;
+            });
+            
+            const now = new Date();
+            const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            setLogs(prev => [{
+              time: timeStr,
+              type: 'info',
+              message: `Обновлены рыночные данные для ${tickers.length} пар`
+            }, ...prev].slice(0, 50));
+          }).catch(error => {
+            console.error('Failed to load market data:', error);
+            const now = new Date();
+            const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            setLogs(prev => [{
+              time: timeStr,
+              type: 'error',
+              message: 'Ошибка загрузки рыночных данных'
+            }, ...prev].slice(0, 50));
+          });
+          
+          return currentWatchlist;
         });
-        
-        setWatchlist(updatedWatchlist);
-        
-        const now = new Date();
-        const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-        setLogs(prev => [{
-          time: timeStr,
-          type: 'info',
-          message: `Обновлены рыночные данные для ${tickers.length} пар`
-        }, ...prev].slice(0, 50));
       } catch (error) {
         console.error('Failed to load market data:', error);
-        const now = new Date();
-        const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-        setLogs(prev => [{
-          time: timeStr,
-          type: 'error',
-          message: 'Ошибка загрузки рыночных данных'
-        }, ...prev].slice(0, 50));
       }
     };
 
     loadMarketData();
     const marketInterval = setInterval(loadMarketData, 30000);
     return () => clearInterval(marketInterval);
-  }, [watchlist, enabled]);
+  }, [enabled]);
 
   const handleAddPair = (symbol: string) => {
     if (watchlist.some(w => w.symbol === symbol)) {
