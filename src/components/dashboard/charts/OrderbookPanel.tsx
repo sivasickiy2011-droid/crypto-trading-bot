@@ -150,8 +150,11 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
           </div>
 
           {spreadPrice > 0 && (
-            <div className="flex items-center justify-center py-2 my-1 bg-zinc-900/50 flex-shrink-0">
-              <div className="text-center">
+            <div className="relative flex items-center justify-center py-2 my-1 bg-zinc-900/50 flex-shrink-0">
+              {/* Центральная линия */}
+              <div className="absolute left-0 right-0 top-1/2 h-[2px] bg-yellow-500/60 shadow-[0_0_8px_rgba(234,179,8,0.5)]" style={{ transform: 'translateY(-1px)' }} />
+              
+              <div className="text-center relative z-10">
                 <div className="text-lg font-mono font-bold text-red-400">
                   {bestAskPrice.toFixed(6)}
                 </div>
