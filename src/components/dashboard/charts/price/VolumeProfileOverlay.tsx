@@ -66,10 +66,20 @@ export default function VolumeProfileOverlay({
         width: svgWidth,
         height: effectiveHeight,
         pointerEvents: 'none',
-        border: '2px solid rgba(255, 0, 255, 0.5)', // DEBUG: Фиолетовая рамка для отладки
-        background: 'rgba(255, 0, 255, 0.05)', // DEBUG: Полупрозрачный фон
       }}
     >
+      {/* DEBUG: Выделение области объёмов */}
+      <rect
+        x={svgWidth - maxBarWidth - 10}
+        y={0}
+        width={maxBarWidth + 10}
+        height={effectiveHeight}
+        fill="rgba(255, 0, 255, 0.1)"
+        stroke="rgba(255, 0, 255, 0.6)"
+        strokeWidth={2}
+        strokeDasharray="5 5"
+      />
+      
       {/* Asks (Sell orders) - Red bars from right */}
       {asks.map((order, idx) => {
         if (order.price < yMin || order.price > yMax) return null;
