@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/ui/icon';
 import QuickOrderModal from '@/components/QuickOrderModal';
@@ -18,6 +18,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [selectedPrice, setSelectedPrice] = useState(0);
   const [orderType, setOrderType] = useState<'buy' | 'sell'>('buy');
+  const asksScrollRef = useRef<HTMLDivElement>(null);
 
   const handlePriceClick = (price: number, type: 'buy' | 'sell') => {
     setSelectedPrice(price);
@@ -27,7 +28,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
 
   // useMemo должен быть вызван ВСЕГДА, до любого условного return
   const { asks, bids, maxSize, spreadPrice, spreadPercent, bestAskPrice } = useMemo(() => {
-    const asksData = orderbook.filter(o => o.askSize > 0).sort((a, b) => a.price - b.price).slice(0, 20);
+    const asksData = orderbook.filter(o => o.askSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
     const bidsData = orderbook.filter(o => o.bidSize > 0).sort((a, b) => b.price - a.price).slice(0, 20);
     
     const maxSizeValue = Math.max(
@@ -36,9 +37,9 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
       1
     );
 
-    const spreadPriceValue = asksData.length > 0 && bidsData.length > 0 ? asksData[asksData.length - 1].price - bidsData[0].price : 0;
+    const spreadPriceValue = asksData.length > 0 && bidsData.length > 0 ? asksData[0].price - bidsData[0].price : 0;
     const spreadPercentValue = asksData.length > 0 && bidsData.length > 0 ? (spreadPriceValue / bidsData[0].price) * 100 : 0;
-    const bestAskPriceValue = asksData.length > 0 ? asksData[asksData.length - 1].price : 0;
+    const bestAskPriceValue = asksData.length > 0 ? asksData[0].price : 0;
 
     return {
       asks: asksData,
@@ -49,6 +50,12 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
       bestAskPrice: bestAskPriceValue
     };
   }, [orderbook]);
+
+  useEffect(() => {
+    if (asksScrollRef.current) {
+      asksScrollRef.current.scrollTop = asksScrollRef.current.scrollHeight;
+    }
+  }, [asks]);
 
   if (orderbook.length === 0) {
     return (
@@ -86,13 +93,42 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden flex flex-col p-0 px-3 pb-3 bg-black/50">
+          <style>{`
+            .orderbook-scroll::-webkit-scrollbar {
+              width: 8px;
+            }
+            .orderbook-scroll::-webkit-scrollbar-track {
+              background: #000;
+              border: 1px solid #27272a;
+              border-radius: 4px;
+            }
+            .orderbook-scroll::-webkit-scrollbar-thumb {
+              background: #fff;
+              border-radius: 4px;
+              border: 1px solid #27272a;
+            }
+            .orderbook-scroll::-webkit-scrollbar-thumb:hover {
+              background: #e4e4e7;
+            }
+            .orderbook-scroll::-webkit-scrollbar-button {
+              background: #27272a;
+              height: 12px;
+              border: 1px solid #18181b;
+            }
+            .orderbook-scroll::-webkit-scrollbar-button:vertical:decrement {
+              border-radius: 4px 4px 0 0;
+            }
+            .orderbook-scroll::-webkit-scrollbar-button:vertical:increment {
+              border-radius: 0 0 4px 4px;
+            }
+          `}</style>
           <div className="grid grid-cols-3 gap-1 text-[10px] font-medium text-zinc-500 px-1 py-2 border-b border-zinc-800/50">
             <div className="text-left">Цена(USDT)</div>
             <div className="text-right">Кол-во</div>
             <div className="text-right">Сумма</div>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-[1px] py-1">
+          <div ref={asksScrollRef} className="flex-1 overflow-y-auto space-y-[1px] py-1 orderbook-scroll">
             {asks.map((order, idx) => {
               const percent = (order.askSize / maxSize) * 100;
               const cumulative = asks.slice(idx).reduce((sum, o) => sum + o.askSize, 0);
@@ -139,7 +175,7 @@ export default function OrderbookPanel({ orderbook, symbol }: OrderbookPanelProp
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto space-y-[1px] py-1">
+          <div className="flex-1 overflow-y-auto space-y-[1px] py-1 orderbook-scroll">
             {bids.map((order, idx) => {
               const percent = (order.bidSize / maxSize) * 100;
               const cumulative = bids.slice(0, idx + 1).reduce((sum, o) => sum + o.bidSize, 0);
