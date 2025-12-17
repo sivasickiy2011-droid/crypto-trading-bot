@@ -39,7 +39,10 @@ export default function VolumeProfileOverlay({
   const MARGIN_BOTTOM = 10;
   const MARGIN_RIGHT = 150;
   
-  const effectiveHeight = chartHeight - MARGIN_TOP - MARGIN_BOTTOM;
+  // Дополнительная корректировка для точного совпадения с областью рисования графика
+  const Y_AXIS_OFFSET = 5; // Компенсация отступа YAxis
+  
+  const effectiveHeight = chartHeight - MARGIN_TOP - MARGIN_BOTTOM - Y_AXIS_OFFSET;
   
   const priceToY = (price: number) => {
     const priceRange = yMax - yMin;
@@ -58,7 +61,7 @@ export default function VolumeProfileOverlay({
     <svg
       style={{
         position: 'absolute',
-        top: MARGIN_TOP,
+        top: MARGIN_TOP + Y_AXIS_OFFSET,
         right: MARGIN_RIGHT - 100,
         width: svgWidth,
         height: effectiveHeight,
