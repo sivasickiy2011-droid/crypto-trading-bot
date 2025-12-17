@@ -52,10 +52,6 @@ export default function VolumeProfileOverlay({
 
   const svgWidth = chartWidth - (MARGIN_RIGHT - 100);
   const maxBarWidth = svgWidth * 0.2;
-  
-  // Вычисляем центр между bid и ask
-  const centerPrice = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : null;
-  const centerY = centerPrice ? priceToY(centerPrice) : null;
 
   return (
     <svg
@@ -99,18 +95,6 @@ export default function VolumeProfileOverlay({
           </g>
         );
       })}
-      
-      {centerY !== null && (
-        <line
-          x1={0}
-          y1={centerY}
-          x2={svgWidth}
-          y2={centerY}
-          stroke="#eab308"
-          strokeWidth={2}
-          opacity={0.8}
-        />
-      )}
       
       {bids.map((order: OrderbookEntry, idx: number) => {
         if (order.price < yMin || order.price > yMax) return null;
