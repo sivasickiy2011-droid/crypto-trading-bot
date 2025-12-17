@@ -1,19 +1,21 @@
 interface CustomCursorProps {
-  points?: Array<{ x: number; y: number }>;
+  points?: Array<{ x: number; y: number; payload?: any }>;
   width?: number;
   height?: number;
   chartHeight?: number;
   yMin?: number;
   yMax?: number;
+  coordinate?: { x: number; y: number };
 }
 
-export const CustomCursor = ({ points, width, height, chartHeight = 480, yMin = 0, yMax = 100 }: CustomCursorProps) => {
+export const CustomCursor = ({ points, width, height, yMin = 0, yMax = 100, coordinate }: CustomCursorProps) => {
   if (!points || points.length === 0 || !width || !height) return null;
   
-  const { x, y } = points[0];
+  const x = points[0].x;
+  const y = coordinate?.y ?? points[0].y;
   
   const priceRange = yMax - yMin;
-  const yAxisValue = points[0].payload?.price || yMin + ((height - y) / height) * priceRange;
+  const currentPrice = yMax - ((y / height) * priceRange);
   
   return (
     <g>
@@ -56,7 +58,7 @@ export const CustomCursor = ({ points, width, height, chartHeight = 480, yMin = 
           fontWeight={700}
           fontFamily="Roboto Mono"
         >
-          {yAxisValue.toFixed(2)}
+          {currentPrice.toFixed(2)}
         </text>
       </g>
     </g>
