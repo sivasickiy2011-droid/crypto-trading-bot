@@ -8,23 +8,20 @@ interface CustomCursorProps {
 }
 
 export const CustomCursor = ({ points, width, height, chartHeight = 480, yMin = 0, yMax = 100 }: CustomCursorProps) => {
-  if (!points || points.length === 0) return null;
+  if (!points || points.length === 0 || !width || !height) return null;
   
   const { x, y } = points[0];
   
   const priceRange = yMax - yMin;
-  const margin = 15;
-  const availableHeight = (chartHeight || 480) - margin * 2;
-  
-  const currentPrice = yMax - ((y - margin) / availableHeight) * priceRange;
+  const yAxisValue = points[0].payload?.price || yMin + ((height - y) / height) * priceRange;
   
   return (
     <g>
       <line
         x1={x}
-        y1={margin}
+        y1={0}
         x2={x}
-        y2={(chartHeight || 480) - 10}
+        y2={height}
         stroke="rgba(255, 255, 255, 0.3)"
         strokeWidth={1}
         strokeDasharray="4 4"
@@ -33,14 +30,14 @@ export const CustomCursor = ({ points, width, height, chartHeight = 480, yMin = 
       <line
         x1={0}
         y1={y}
-        x2={width || 0}
+        x2={width}
         y2={y}
         stroke="rgba(255, 255, 255, 0.3)"
         strokeWidth={1}
         strokeDasharray="4 4"
       />
       
-      <g transform={`translate(${(width || 0) - 70}, ${y})`}>
+      <g transform={`translate(${width - 70}, ${y})`}>
         <rect
           x={0}
           y={-10}
@@ -59,7 +56,7 @@ export const CustomCursor = ({ points, width, height, chartHeight = 480, yMin = 
           fontWeight={700}
           fontFamily="Roboto Mono"
         >
-          {currentPrice.toFixed(2)}
+          {yAxisValue.toFixed(2)}
         </text>
       </g>
     </g>
