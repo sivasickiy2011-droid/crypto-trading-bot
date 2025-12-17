@@ -66,6 +66,8 @@ export default function VolumeProfileOverlay({
         width: svgWidth,
         height: effectiveHeight,
         pointerEvents: 'none',
+        border: '2px solid rgba(255, 0, 255, 0.5)', // DEBUG: Фиолетовая рамка для отладки
+        background: 'rgba(255, 0, 255, 0.05)', // DEBUG: Полупрозрачный фон
       }}
     >
       {/* Asks (Sell orders) - Red bars from right */}
@@ -103,15 +105,28 @@ export default function VolumeProfileOverlay({
       
       {/* Центральная линия между bid/ask */}
       {centerY !== null && (
-        <line
-          x1={0}
-          y1={centerY}
-          x2={svgWidth}
-          y2={centerY}
-          stroke="#eab308"
-          strokeWidth={2}
-          opacity={0.8}
-        />
+        <>
+          <line
+            x1={0}
+            y1={centerY}
+            x2={svgWidth}
+            y2={centerY}
+            stroke="#eab308"
+            strokeWidth={3}
+            opacity={0.9}
+          />
+          {/* DEBUG: Метка с координатой Y */}
+          <text
+            x={10}
+            y={centerY - 5}
+            fontSize={11}
+            fill="#eab308"
+            fontWeight="bold"
+            fontFamily="monospace"
+          >
+            CENTER Y={centerY.toFixed(1)} PRICE={centerPrice?.toFixed(2)}
+          </text>
+        </>
       )}
       
       {/* Bids (Buy orders) - Green bars from right */}
