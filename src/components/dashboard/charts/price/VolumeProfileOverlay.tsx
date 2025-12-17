@@ -40,7 +40,7 @@ export default function VolumeProfileOverlay({
   const MARGIN_RIGHT = 150;
   
   // Дополнительная корректировка для точного совпадения с областью рисования графика
-  const Y_AXIS_OFFSET = 5; // Компенсация отступа YAxis
+  const Y_AXIS_OFFSET = 0; // Поднято на 5px выше (было 5)
   
   const effectiveHeight = chartHeight - MARGIN_TOP - MARGIN_BOTTOM - Y_AXIS_OFFSET;
   
