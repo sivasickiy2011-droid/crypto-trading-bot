@@ -16,7 +16,6 @@ interface ManualTradingSettingsProps {
 }
 
 export default function ManualTradingSettings({ accountMode, apiMode, symbol = 'BTCUSDT', availableBalance = 0 }: ManualTradingSettingsProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [marketType, setMarketType] = useState<'spot' | 'futures'>('spot');
   const [entryMode, setEntryMode] = useState<'single' | 'grid' | 'dca'>('single');
   const [side, setSide] = useState<'LONG' | 'SHORT'>('LONG');
@@ -63,241 +62,193 @@ export default function ManualTradingSettings({ accountMode, apiMode, symbol = '
   };
   
   return (
-    <div className="bg-black/50 rounded-md flex flex-col" style={isExpanded ? { minHeight: '400px' } : {}}>
-      <div className={`cursor-pointer flex-shrink-0 p-3 ${isExpanded ? 'pb-2' : 'py-2'}`} onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-xs text-white font-semibold">Ручная торговля</span>
-            <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-              <Icon name={isExpanded ? 'ChevronUp' : 'ChevronDown'} size={14} />
-            </Button>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Badge variant={apiMode === 'live' ? 'destructive' : 'secondary'} className="text-[10px] h-5">
-              <Icon name={apiMode === 'live' ? 'Zap' : 'TestTube'} size={10} className="mr-1" />
-              API: {apiMode === 'live' ? 'Боевой' : 'Тестовый'}
-            </Badge>
-            <Badge variant={accountMode === 'live' ? 'default' : 'outline'} className="text-[10px] h-5">
-              <Icon name="Wallet" size={10} className="mr-1" />
-              {accountMode === 'live' ? 'Боевой' : 'Демо'}
-            </Badge>
-          </div>
+    <div className="space-y-3">
+      <div className="flex items-center justify-end space-x-1">
+        <Badge variant={apiMode === 'live' ? 'destructive' : 'secondary'} className="text-[10px] h-5">
+          <Icon name={apiMode === 'live' ? 'Zap' : 'TestTube'} size={10} className="mr-1" />
+          API: {apiMode === 'live' ? 'Боевой' : 'Тестовый'}
+        </Badge>
+        <Badge variant={accountMode === 'live' ? 'default' : 'outline'} className="text-[10px] h-5">
+          <Icon name="Wallet" size={10} className="mr-1" />
+          {accountMode === 'live' ? 'Боевой' : 'Демо'}
+        </Badge>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-[10px] text-muted-foreground">Тип рынка</Label>
+        <div className="grid grid-cols-2 gap-1.5">
+          <button 
+            onClick={() => setMarketType('spot')}
+            className={`h-7 px-2 rounded-md border text-xs font-medium transition-colors ${
+              marketType === 'spot' 
+                ? 'border-primary bg-primary/10 text-primary' 
+                : 'border-border bg-secondary/50 text-muted-foreground hover:border-primary hover:bg-primary/5'
+            }`}
+          >
+            <Icon name="Coins" size={12} className="inline mr-1" />
+            Спот
+          </button>
+          <button 
+            onClick={() => setMarketType('futures')}
+            className={`h-7 px-2 rounded-md border text-xs font-medium transition-colors ${
+              marketType === 'futures' 
+                ? 'border-primary bg-primary/10 text-primary' 
+                : 'border-border bg-secondary/50 text-muted-foreground hover:border-primary hover:bg-primary/5'
+            }`}
+          >
+            <Icon name="TrendingUp" size={12} className="inline mr-1" />
+            Фьючерсы
+          </button>
         </div>
       </div>
-      {isExpanded && (
-        <div className="space-y-3 p-3 pt-2 flex-1 overflow-y-auto">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] text-muted-foreground">Тип рынка</Label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button 
-                    onClick={() => setMarketType('spot')}
-                    className={`h-7 px-2 rounded-md border text-xs font-medium transition-colors ${
-                      marketType === 'spot' 
-                        ? 'border-primary bg-primary/10 text-primary' 
-                        : 'border-border bg-secondary/50 text-muted-foreground hover:border-primary hover:bg-primary/5'
-                    }`}
-                  >
-                    <Icon name="Coins" size={12} className="inline mr-1" />
-                    Спот
-                  </button>
-                  <button 
-                    onClick={() => setMarketType('futures')}
-                    className={`h-7 px-2 rounded-md border text-xs font-medium transition-colors ${
-                      marketType === 'futures' 
-                        ? 'border-primary bg-primary/10 text-primary' 
-                        : 'border-border bg-secondary/50 text-muted-foreground hover:border-primary hover:bg-primary/5'
-                    }`}
-                  >
-                    <Icon name="TrendingUp" size={12} className="inline mr-1" />
-                    Фьючерсы
-                  </button>
-                </div>
-              </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-[10px] text-muted-foreground">Режим входа</Label>
-                <Select value={entryMode} onValueChange={(val) => setEntryMode(val as 'single' | 'grid' | 'dca')}>
-                  <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="single" className="text-xs">Разовая сделка</SelectItem>
-                    <SelectItem value="grid" className="text-xs">Сетка ордеров</SelectItem>
-                    <SelectItem value="dca" className="text-xs">DCA усреднение</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      <div className="space-y-1.5">
+        <Label className="text-[10px] text-muted-foreground">Режим входа</Label>
+        <Select value={entryMode} onValueChange={(val) => setEntryMode(val as 'single' | 'grid' | 'dca')}>
+          <SelectTrigger className="h-7 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="single" className="text-xs">Разовая сделка</SelectItem>
+            <SelectItem value="grid" className="text-xs">Сетка ордеров</SelectItem>
+            <SelectItem value="dca" className="text-xs">DCA усреднение</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-[10px] text-muted-foreground">Направление</Label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button 
-                    onClick={() => setSide('LONG')}
-                    className={`h-7 px-2 rounded-md border text-xs font-medium transition-colors ${
-                      side === 'LONG' 
-                        ? 'border-success bg-success/10 text-success' 
-                        : 'border-border bg-secondary/50 text-muted-foreground hover:border-success hover:bg-success/5'
-                    }`}
-                  >
-                    <Icon name="TrendingUp" size={12} className="inline mr-1" />
-                    Long
-                  </button>
-                  <button 
-                    onClick={() => setSide('SHORT')}
-                    className={`h-7 px-2 rounded-md border text-xs font-medium transition-colors ${
-                      side === 'SHORT' 
-                        ? 'border-destructive bg-destructive/10 text-destructive' 
-                        : 'border-border bg-secondary/50 text-muted-foreground hover:border-destructive hover:bg-destructive/5'
-                    }`}
-                  >
-                    <Icon name="TrendingDown" size={12} className="inline mr-1" />
-                    Short
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-[10px] text-muted-foreground">Цена входа</Label>
-                <div className="flex gap-1.5">
-                  <Input 
-                    type="number" 
-                    value={entryPrice}
-                    onChange={(e) => { setEntryPrice(e.target.value); setUseMarketPrice(false); }}
-                    placeholder="42500"
-                    className="h-7 text-xs font-mono flex-1"
-                    disabled={useMarketPrice}
-                  />
-                  <Button 
-                    onClick={handleMarketPrice}
-                    variant={useMarketPrice ? 'default' : 'outline'}
-                    size="sm"
-                    className="h-7 text-xs px-2 whitespace-nowrap"
-                  >
-                    <Icon name="Zap" size={12} className="mr-1" />
-                    По рынку
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground">
-                    Объём ($)
-                    {!isVolumeValid && <span className="text-destructive ml-1">Превышает баланс</span>}
-                  </Label>
-                  <Input 
-                    type="number" 
-                    value={volume}
-                    onChange={(e) => setVolume(e.target.value)}
-                    className={`h-7 text-xs font-mono ${!isVolumeValid ? 'border-destructive' : ''}`}
-                    max={availableBalance}
-                  />
-                  <div className="text-[9px] text-muted-foreground mt-0.5">
-                    Доступно: ${availableBalance.toFixed(2)}
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground">Плечо</Label>
-                  <Select value={leverage} onValueChange={setLeverage} disabled={marketType === 'spot'}>
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1" className="text-xs">1x</SelectItem>
-                      <SelectItem value="2" className="text-xs">2x</SelectItem>
-                      <SelectItem value="5" className="text-xs">5x</SelectItem>
-                      <SelectItem value="10" className="text-xs">10x</SelectItem>
-                      <SelectItem value="20" className="text-xs">20x</SelectItem>
-                      <SelectItem value="50" className="text-xs">50x</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {marketType === 'spot' && (
-                    <div className="text-[9px] text-muted-foreground mt-0.5">
-                      Спот без плеча
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {lotSize > 0 && (
-                <div className="bg-secondary/30 border border-border rounded-md p-2">
-                  <div className="text-[10px] text-muted-foreground mb-1">Информация о сделке</div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Объём покупки:</span>
-                    <span className="font-mono font-semibold">{lotSize.toFixed(8)} {symbol.replace('USDT', '')}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs mt-1">
-                    <span className="text-muted-foreground">Стоимость:</span>
-                    <span className="font-mono font-semibold">${volumeNum.toFixed(2)} USDT</span>
-                  </div>
-                  {marketType === 'futures' && parseFloat(leverage) > 1 && (
-                    <div className="flex items-center justify-between text-xs mt-1">
-                      <span className="text-muted-foreground">С плечом {leverage}x:</span>
-                      <span className="font-mono font-semibold">${(volumeNum * parseFloat(leverage)).toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground">Стоп-лосс (%)</Label>
-                  <Input 
-                    type="number" 
-                    value={stopLoss}
-                    onChange={(e) => setStopLoss(e.target.value)}
-                    className="h-7 text-xs font-mono"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground">Тейк-профит (%)</Label>
-                  <Input 
-                    type="number" 
-                    value={takeProfit}
-                    onChange={(e) => setTakeProfit(e.target.value)}
-                    className="h-7 text-xs font-mono"
-                  />
-                </div>
-              </div>
-
-              <Button 
-                onClick={handleTrade}
-                disabled={isLoading || !isVolumeValid || volumeNum === 0 || priceNum === 0}
-                className={`w-full h-8 text-xs ${
-                  side === 'LONG' 
-                    ? 'bg-success hover:bg-success/90' 
-                    : 'bg-destructive hover:bg-destructive/90'
-                } text-white`}
-              >
-                <Icon name={side === 'LONG' ? 'TrendingUp' : 'TrendingDown'} size={14} className="mr-1" />
-                {side === 'LONG' ? 'Купить' : 'Продать'}
-              </Button>
-
-              <div className="pt-1 border-t border-border">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-muted-foreground">Параметры сделки:</span>
-                </div>
-                <div className="mt-1 space-y-0.5 text-[10px] text-muted-foreground">
-                  <div className="flex items-center justify-between">
-                    <span>• Объём сделки:</span>
-                    <span className="font-mono text-foreground">${volume}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>• С плечом {leverage}x:</span>
-                    <span className="font-mono text-foreground">${(parseFloat(volume) * parseFloat(leverage)).toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>• Стоп-лосс:</span>
-                    <span className="font-mono text-destructive">-{stopLoss}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>• Тейк-профит:</span>
-                    <span className="font-mono text-success">+{takeProfit}%</span>
-                  </div>
-                </div>
-              </div>
+      <div className="space-y-1.5">
+        <Label className="text-[10px] text-muted-foreground">Направление</Label>
+        <div className="grid grid-cols-2 gap-1.5">
+          <button 
+            onClick={() => setSide('LONG')}
+            className={`h-7 px-2 rounded-md border text-xs font-medium transition-colors ${
+              side === 'LONG' 
+                ? 'border-success bg-success/10 text-success' 
+                : 'border-border bg-secondary/50 text-muted-foreground hover:border-success hover:bg-success/5'
+            }`}
+          >
+            <Icon name="TrendingUp" size={12} className="inline mr-1" />
+            Long
+          </button>
+          <button 
+            onClick={() => setSide('SHORT')}
+            className={`h-7 px-2 rounded-md border text-xs font-medium transition-colors ${
+              side === 'SHORT' 
+                ? 'border-destructive bg-destructive/10 text-destructive' 
+                : 'border-border bg-secondary/50 text-muted-foreground hover:border-destructive hover:bg-destructive/5'
+            }`}
+          >
+            <Icon name="TrendingDown" size={12} className="inline mr-1" />
+            Short
+          </button>
         </div>
-      )}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-[10px] text-muted-foreground">Цена входа</Label>
+        <div className="flex gap-1.5">
+          <Input 
+            type="number" 
+            value={entryPrice}
+            onChange={(e) => { setEntryPrice(e.target.value); setUseMarketPrice(false); }}
+            placeholder="42500"
+            className="h-7 text-xs font-mono flex-1"
+            disabled={useMarketPrice}
+          />
+          <Button 
+            onClick={handleMarketPrice}
+            variant={useMarketPrice ? 'default' : 'outline'}
+            size="sm"
+            className="h-7 text-xs px-2 whitespace-nowrap"
+          >
+            <Icon name="Zap" size={12} className="mr-1" />
+            По рынку
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Объём (USDT)</Label>
+          <Input 
+            type="number" 
+            value={volume}
+            onChange={(e) => setVolume(e.target.value)}
+            placeholder="100"
+            className={`h-7 text-xs font-mono ${!isVolumeValid ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+          />
+          {!isVolumeValid && (
+            <p className="text-[9px] text-destructive">Недостаточно средств</p>
+          )}
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Плечо</Label>
+          <Select value={leverage} onValueChange={setLeverage} disabled={marketType === 'spot'}>
+            <SelectTrigger className="h-7 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[1, 2, 3, 5, 10, 20, 50, 100].map(lev => (
+                <SelectItem key={lev} value={String(lev)} className="text-xs">
+                  {lev}x
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Stop Loss (%)</Label>
+          <Input 
+            type="number" 
+            value={stopLoss}
+            onChange={(e) => setStopLoss(e.target.value)}
+            placeholder="2.5"
+            className="h-7 text-xs font-mono"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] text-muted-foreground">Take Profit (%)</Label>
+          <Input 
+            type="number" 
+            value={takeProfit}
+            onChange={(e) => setTakeProfit(e.target.value)}
+            placeholder="5.0"
+            className="h-7 text-xs font-mono"
+          />
+        </div>
+      </div>
+
+      <div className="pt-2 space-y-1.5">
+        <div className="text-[10px] text-muted-foreground space-y-0.5">
+          <div className="flex justify-between">
+            <span>Размер позиции:</span>
+            <span className="font-mono">{lotSize.toFixed(4)} {symbol.replace('USDT', '')}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Доступно:</span>
+            <span className="font-mono">${availableBalance.toFixed(2)} USDT</span>
+          </div>
+        </div>
+        <Button 
+          onClick={handleTrade}
+          disabled={!isVolumeValid || isLoading}
+          className={`w-full h-8 text-xs font-semibold ${
+            side === 'LONG' 
+              ? 'bg-success hover:bg-success/90' 
+              : 'bg-destructive hover:bg-destructive/90'
+          }`}
+        >
+          {isLoading ? (
+            <Icon name="Loader2" size={14} className="animate-spin mr-2" />
+          ) : (
+            <Icon name={side === 'LONG' ? 'ArrowUp' : 'ArrowDown'} size={14} className="mr-2" />
+          )}
+          {side === 'LONG' ? 'Купить' : 'Продать'} {marketType === 'spot' ? 'Спот' : 'Фьючерсы'}
+        </Button>
+      </div>
     </div>
   );
 }
