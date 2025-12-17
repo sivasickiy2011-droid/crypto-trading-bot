@@ -1,0 +1,35 @@
+{
+  "tests": [
+    {
+      "name": "Save strategy config",
+      "method": "POST",
+      "headers": {
+        "X-User-Id": "1"
+      },
+      "body": {
+        "strategy_name": "test-strategy",
+        "config_data": {
+          "enabled": true,
+          "value": 123
+        }
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get all configs",
+      "method": "GET",
+      "headers": {
+        "X-User-Id": "1"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,14 +1,14 @@
 const BYBIT_API_URL = 'https://function.centerai.tech/api/bybit-market';
 const BYBIT_USER_DATA_URL = 'https://function.centerai.tech/api/bybit-user-data';
 const AUTH_API_URL = 'https://function.centerai.tech/api/auth';
-const STRATEGY_API_URL = 'https://function.centerai.tech/api/strategy-config';
+const STRATEGY_API_URL = 'https://functions.poehali.dev/9640515a-c02c-42e9-9706-ca5bfaeabcbd';
 const LANGUAGE_API_URL = 'https://function.centerai.tech/api/language';
 const STRATEGY_SIGNALS_URL = 'https://function.centerai.tech/api/strategy-signals';
 const TELEGRAM_NOTIFY_URL = 'https://function.centerai.tech/api/telegram-notify';
 const BOTS_MANAGER_URL = 'https://function.centerai.tech/api/bots-manager';
 const USER_SETTINGS_URL = 'https://function.centerai.tech/api/user-settings';
 const VIRTUAL_TRADES_URL = 'https://function.centerai.tech/api/virtual-trades';
-const API_KEYS_URL = 'https://function.centerai.tech/api/api-keys';
+const API_KEYS_URL = 'https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2';
 
 export interface TickerData {
   symbol: string;
