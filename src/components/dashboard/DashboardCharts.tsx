@@ -220,6 +220,7 @@ export default function DashboardCharts({
           />
           
           <TradesPanel 
+            key={ordersUpdateKey}
             positions={positions} 
             closedTrades={closedTrades} 
             strategySignals={strategySignals}
