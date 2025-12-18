@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getUserOrders, UserOrderData, cancelOrder } from '@/lib/api';
+import { getUserOrders, UserOrderData, cancelOrder, getTradesHistory, TradeHistoryItem } from '@/lib/api';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +61,8 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
   const [loadingVirtual, setLoadingVirtual] = useState(false);
   const [orders, setOrders] = useState<UserOrderData[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [tradesHistory, setTradesHistory] = useState<TradeHistoryItem[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // Load virtual trades
   useEffect(() => {
@@ -68,6 +70,7 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
       loadVirtualTrades();
     } else {
       loadOrders();
+      loadTradesHistory();
     }
   }, [tradeMode, userId]);
 
@@ -97,6 +100,18 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
       console.error('Failed to load orders:', error);
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const loadTradesHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const history = await getTradesHistory(userId, 100);
+      setTradesHistory(history);
+    } catch (error) {
+      console.error('Failed to load trades history:', error);
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -161,7 +176,7 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
             </TabsTrigger>
             <TabsTrigger value="history" className="text-xs">
               <Icon name="History" size={14} className="mr-1.5" />
-              История ({displayTrades.length})
+              История ({tradeMode === 'live' ? tradesHistory.length : displayTrades.length})
             </TabsTrigger>
             <TabsTrigger value="signals" className="text-xs">
               <Icon name="Activity" size={14} className="mr-1.5" />
@@ -301,7 +316,51 @@ export default function TradesPanel({ positions, closedTrades, strategySignals, 
           </TabsContent>
           
           <TabsContent value="history" className="mt-4">
-            {displayTrades.length === 0 ? (
+            {loadingHistory && tradeMode === 'live' ? (
+              <div className="text-center text-muted-foreground py-8">
+                <Icon name="Loader2" size={36} className="mx-auto mb-3 opacity-30 animate-spin" />
+                <p className="text-sm">Загрузка истории...</p>
+              </div>
+            ) : tradeMode === 'live' && tradesHistory.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                <Icon name="Inbox" size={36} className="mx-auto mb-3 opacity-30" />
+                <p className="text-sm">Нет истории сделок</p>
+              </div>
+            ) : tradeMode === 'live' ? (
+              <div className="space-y-2">
+                {tradesHistory.map((trade) => (
+                  <div key={trade.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
+                    <div className="flex items-center space-x-4">
+                      <Badge variant={trade.side === 'Buy' ? 'default' : 'destructive'} className="w-16 justify-center">
+                        {trade.side === 'Buy' ? 'LONG' : 'SHORT'}
+                      </Badge>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm">{trade.symbol}</span>
+                          <Badge variant="outline" className="text-xs h-5">{trade.orderType}</Badge>
+                          <Badge 
+                            variant={trade.status === 'success' ? 'default' : 'destructive'} 
+                            className="text-xs h-5"
+                          >
+                            {trade.status}
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground font-mono">
+                          Объем: {trade.qty} {trade.price && `• Цена: $${trade.price.toFixed(2)}`}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-mono mt-0.5">
+                          {new Date(trade.createdAt).toLocaleString('ru-RU')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-muted-foreground">Order ID</div>
+                      <div className="text-xs font-mono">{trade.orderId.substring(0, 12)}...</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : displayTrades.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 <Icon name="Inbox" size={36} className="mx-auto mb-3 opacity-30" />
                 <p className="text-sm">Нет закрытых сделок</p>

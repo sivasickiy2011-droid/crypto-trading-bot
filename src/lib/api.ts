@@ -9,6 +9,7 @@ const BOTS_MANAGER_URL = 'https://function.centerai.tech/api/bots-manager';
 const USER_SETTINGS_URL = 'https://function.centerai.tech/api/user-settings';
 const VIRTUAL_TRADES_URL = 'https://function.centerai.tech/api/virtual-trades';
 const API_KEYS_URL = 'https://functions.poehali.dev/6a6a9758-4774-44ac-81a0-af8f328603c2';
+const TRADES_HISTORY_URL = 'https://function.centerai.tech/trades-history';
 
 export interface TickerData {
   symbol: string;
@@ -316,6 +317,32 @@ export async function cancelOrder(userId: number, orderId: string, symbol: strin
     })
   });
   return await response.json();
+}
+
+export interface TradeHistoryItem {
+  id: number;
+  orderId: string;
+  symbol: string;
+  side: string;
+  orderType: string;
+  qty: number;
+  price: number | null;
+  status: string;
+  createdAt: string;
+  responseData: any;
+}
+
+export async function getTradesHistory(userId: number, limit: number = 50): Promise<TradeHistoryItem[]> {
+  const response = await fetch(`${TRADES_HISTORY_URL}?limit=${limit}`, {
+    headers: { 'X-User-Id': userId.toString() }
+  });
+  const data = await response.json();
+  
+  if (data.success) {
+    return data.data;
+  }
+  
+  throw new Error(data.error || 'Failed to fetch trades history');
 }
 
 export async function getCurrentPrice(symbol: string, category: 'spot' | 'linear' = 'linear'): Promise<number> {
