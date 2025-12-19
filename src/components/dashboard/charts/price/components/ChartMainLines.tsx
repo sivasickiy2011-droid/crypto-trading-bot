@@ -71,10 +71,11 @@ export default function ChartMainLines({ chartData, spotData = [], futuresData =
       
       {chartType === 'candle' && chartData.length > 0 && (
         <Scatter
+          dataKey="close"
           data={chartData}
           shape={(props: any) => {
-            const { cx, cy, payload, index } = props;
-            if (!payload || !payload.open || !payload.close || !payload.high || !payload.low) return null;
+            const { cx, cy, payload } = props;
+            if (!payload || payload.open === undefined || payload.close === undefined || payload.high === undefined || payload.low === undefined) return null;
             
             const chartHeight = 450;
             const margin = 30;
