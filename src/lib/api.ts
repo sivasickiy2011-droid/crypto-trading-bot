@@ -30,7 +30,13 @@ export interface KlineData {
 }
 
 export async function getMarketTickers(symbols: string[]): Promise<TickerData[]> {
-  const response = await fetch(`${BYBIT_API_URL}?action=tickers&symbols=${symbols.join(',')}`);
+  const response = await fetch(`${BYBIT_API_URL}?action=tickers&symbols=${symbols.join(',')}`, {
+    method: 'GET',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
   const data = await response.json();
   
   if (data.success) {
@@ -47,7 +53,14 @@ export async function getKlineData(
   category: 'spot' | 'linear' = 'linear'
 ): Promise<KlineData[]> {
   const response = await fetch(
-    `${BYBIT_API_URL}?action=kline&symbol=${symbol}&interval=${interval}&limit=${limit}&category=${category}`
+    `${BYBIT_API_URL}?action=kline&symbol=${symbol}&interval=${interval}&limit=${limit}&category=${category}`,
+    {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
   );
   const data = await response.json();
   
