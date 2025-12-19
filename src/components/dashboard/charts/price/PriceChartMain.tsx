@@ -37,6 +37,25 @@ interface OrderbookEntry {
   askSize: number;
 }
 
+interface MACrossoverSignal {
+  index: number;
+  type: 'BUY' | 'SELL';
+  price: number;
+  ema9: number;
+  ema21: number;
+  rsi: number;
+  timestamp: string;
+}
+
+interface MACrossoverData {
+  signals: MACrossoverSignal[];
+  indicators: {
+    ema9: number[];
+    ema21: number[];
+    rsi: number[];
+  };
+}
+
 interface PriceChartMainProps {
   chartData: PriceDataPoint[];
   spotData?: PriceDataPoint[];
@@ -60,9 +79,10 @@ interface PriceChartMainProps {
   orderbook?: OrderbookEntry[];
   userOrders?: Array<{orderId: string; symbol: string; side: string; price: number; orderStatus: string}>;
   userPositions?: Array<{symbol: string; side: string; entryPrice: number; unrealizedPnl: number; pnlPercent: number}>;
+  maCrossoverSignals?: MACrossoverData | null;
 }
 
-export default function PriceChartMain({ chartData, spotData = [], futuresData = [], marketType = 'futures', chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice, bestAsk, bestBid, orderbook = [], userOrders = [], userPositions = [] }: PriceChartMainProps) {
+export default function PriceChartMain({ chartData, spotData = [], futuresData = [], marketType = 'futures', chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice, bestAsk, bestBid, orderbook = [], userOrders = [], userPositions = [], maCrossoverSignals = null }: PriceChartMainProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = useState({ width: 1200, height: 480 });
 
@@ -322,6 +342,93 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
         )}
 
         {/* Центральная линия отрисовывается в VolumeProfileOverlay */}
+
+        {/* MA Crossover Signals */}
+        {maCrossoverSignals && maCrossoverSignals.signals && (
+          <>
+            {/* BUY Signals - Green triangles pointing up */}
+            <Scatter
+              data={maCrossoverSignals.signals
+                .filter(s => s.type === 'BUY')
+                .map(signal => {
+                  const dataPoint = chartData[signal.index];
+                  if (!dataPoint) return null;
+                  return {
+                    time: dataPoint.time,
+                    price: signal.price,
+                    signalType: signal.type,
+                    ema9: signal.ema9,
+                    ema21: signal.ema21,
+                    rsi: signal.rsi,
+                    timestamp: signal.timestamp
+                  };
+                })
+                .filter(s => s !== null)
+              }
+              fill="#22c55e"
+              dataKey="price"
+              shape={(props: any) => {
+                const { cx, cy, payload } = props;
+                if (!cx || !cy) return null;
+                const size = 10;
+                return (
+                  <g>
+                    <path
+                      d={`M ${cx} ${cy - size} L ${cx + size} ${cy + size} L ${cx - size} ${cy + size} Z`}
+                      fill="#22c55e"
+                      stroke="#16a34a"
+                      strokeWidth={1.5}
+                      opacity={0.9}
+                    />
+                    <title>{`BUY Signal\nPrice: ${payload?.price?.toFixed(4)}\nEMA9: ${payload?.ema9?.toFixed(4)}\nEMA21: ${payload?.ema21?.toFixed(4)}\nRSI: ${payload?.rsi?.toFixed(2)}`}</title>
+                  </g>
+                );
+              }}
+              isAnimationActive={false}
+            />
+            
+            {/* SELL Signals - Red triangles pointing down */}
+            <Scatter
+              data={maCrossoverSignals.signals
+                .filter(s => s.type === 'SELL')
+                .map(signal => {
+                  const dataPoint = chartData[signal.index];
+                  if (!dataPoint) return null;
+                  return {
+                    time: dataPoint.time,
+                    price: signal.price,
+                    signalType: signal.type,
+                    ema9: signal.ema9,
+                    ema21: signal.ema21,
+                    rsi: signal.rsi,
+                    timestamp: signal.timestamp
+                  };
+                })
+                .filter(s => s !== null)
+              }
+              fill="#ef4444"
+              dataKey="price"
+              shape={(props: any) => {
+                const { cx, cy, payload } = props;
+                if (!cx || !cy) return null;
+                const size = 10;
+                return (
+                  <g>
+                    <path
+                      d={`M ${cx} ${cy + size} L ${cx + size} ${cy - size} L ${cx - size} ${cy - size} Z`}
+                      fill="#ef4444"
+                      stroke="#dc2626"
+                      strokeWidth={1.5}
+                      opacity={0.9}
+                    />
+                    <title>{`SELL Signal\nPrice: ${payload?.price?.toFixed(4)}\nEMA9: ${payload?.ema9?.toFixed(4)}\nEMA21: ${payload?.ema21?.toFixed(4)}\nRSI: ${payload?.rsi?.toFixed(2)}`}</title>
+                  </g>
+                );
+              }}
+              isAnimationActive={false}
+            />
+          </>
+        )}
 
         {userOrders.map((order) => {
           const isLong = order.side === 'Buy';

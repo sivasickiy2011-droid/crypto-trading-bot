@@ -19,6 +19,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import MACrossoverStrategyModal, { StrategyConfig } from '@/components/MACrossoverStrategyModal';
 
 interface Bot {
   id: string;
@@ -52,6 +53,8 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
     market: 'futures' as 'spot' | 'futures',
     strategy: 'ma-crossover'
   });
+  const [maCrossoverModalOpen, setMaCrossoverModalOpen] = useState(false);
+  const [selectedSymbol, setSelectedSymbol] = useState('BTCUSDT');
 
   useEffect(() => {
     const loadBots = async () => {
@@ -296,6 +299,52 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
       });
     }
   };
+
+  const handleMACrossoverStart = async (config: StrategyConfig) => {
+    const newBotData: Bot = {
+      id: Date.now().toString(),
+      pair: config.symbol.replace('USDT', '/USDT'),
+      market: 'futures',
+      strategy: `MA Crossover (${config.orderType === 'single' ? 'Одиночная' : 'Сетка'})`,
+      status: 'searching',
+      active: true
+    };
+
+    try {
+      await createBot(userId, newBotData);
+      
+      setBots(prev => {
+        const updated = [...prev, newBotData];
+        const activeCount = updated.filter(b => b.active).length;
+        onBotCountChange?.(activeCount);
+        return updated;
+      });
+      
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      
+      onLogAdd({
+        id: Date.now().toString(),
+        botId: newBotData.id,
+        botName: `${newBotData.pair} (${newBotData.strategy})`,
+        timestamp: timeStr,
+        type: 'info',
+        message: `Запущена стратегия MA Crossover: ${config.side} ${config.quantity} USDT × ${config.leverage}x`
+      });
+
+      toast({
+        title: '✅ Бот запущен',
+        description: `MA Crossover стратегия активирована для ${config.symbol}`
+      });
+    } catch (error) {
+      console.error('Failed to create MA Crossover bot:', error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось запустить стратегию',
+        variant: 'destructive'
+      });
+    }
+  };
   
 
 
@@ -319,20 +368,52 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
     }
   };
 
+  const activeBotsCount = bots.filter(b => b.active).length;
+  const pausedBotsCount = bots.filter(b => !b.active).length;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Badge variant="secondary" className="text-xs">
-          <Icon name="TestTube" size={12} className="mr-1" />
-          Только демо
-        </Badge>
-          <Dialog open={newBotOpen} onOpenChange={setNewBotOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="h-7 text-xs">
-                <Icon name="Plus" size={14} className="mr-1" />
-                Добавить бота
-              </Button>
-            </DialogTrigger>
+      {/* Header with active bots counter */}
+      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
+        <div className="flex items-center gap-3 text-xs">
+          <span className="flex items-center gap-1">
+            <Icon name="Bot" size={14} />
+            <span className="font-medium">Боты</span>
+          </span>
+          <span className="text-muted-foreground">|</span>
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            Активно: <span className="font-semibold text-green-600">{activeBotsCount}</span>
+          </span>
+          {pausedBotsCount > 0 && (
+            <>
+              <span className="text-muted-foreground">|</span>
+              <span className="flex items-center gap-1">
+                <Icon name="Pause" size={12} />
+                На паузе: <span className="font-semibold">{pausedBotsCount}</span>
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <Button 
+          size="sm" 
+          className="h-8 text-xs flex-1"
+          onClick={() => setMaCrossoverModalOpen(true)}
+        >
+          <Icon name="TrendingUp" size={14} className="mr-1" />
+          MA Crossover стратегия
+        </Button>
+          
+        <Dialog open={newBotOpen} onOpenChange={setNewBotOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="h-8 text-xs" variant="outline">
+              <Icon name="Plus" size={14} className="mr-1" />
+              Другие
+            </Button>
+          </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Создать нового бота</DialogTitle>
@@ -472,6 +553,15 @@ export default function BotsPanel({ onLogAdd, onBotCountChange, onBotClick, user
             )}
           </div>
         </ScrollArea>
+
+      {/* MA Crossover Strategy Modal */}
+      <MACrossoverStrategyModal
+        open={maCrossoverModalOpen}
+        onClose={() => setMaCrossoverModalOpen(false)}
+        onStart={handleMACrossoverStart}
+        symbol={selectedSymbol}
+        userId={userId}
+      />
     </div>
   );
 }

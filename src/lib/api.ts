@@ -507,6 +507,9 @@ export async function deleteBot(userId: number, botId: string): Promise<{ succes
 export interface UserSettings {
   charts_enabled: boolean;
   signals_mode: 'disabled' | 'bots_only' | 'top10';
+  martingale_orders?: number;
+  martingale_step?: number;
+  martingale_multiplier?: number;
 }
 
 export async function getUserSettings(userId: number): Promise<UserSettings> {

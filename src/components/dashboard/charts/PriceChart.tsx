@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import PriceChartHeader from './price/PriceChartHeader';
 import PriceChartMain from './price/PriceChartMain';
 import PriceChartIndicators from './price/PriceChartIndicators';
+import { useMACrossoverSignals } from '@/hooks/useMACrossoverSignals';
 
 interface PriceDataPoint {
   time: string;
@@ -55,6 +56,7 @@ interface PriceChartProps {
 }
 
 export default function PriceChart({ priceData, spotData = [], futuresData = [], selectedSymbol, onTimeframeChange, onMarketTypeChange, strategySignals = [], positionLevels = [], currentMarketPrice, bestAsk, bestBid, orderbook = [], userOrders = [], userPositions = [] }: PriceChartProps) {
+  const { data: maCrossoverData } = useMACrossoverSignals(priceData, selectedSymbol, true);
   const [activeTimeframe, setActiveTimeframe] = useState('15');
   const [showIndicators, setShowIndicators] = useState({ 
     ema9: false, 
@@ -197,6 +199,7 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
             orderbook={['1', '5', '15'].includes(activeTimeframe) ? orderbook : []}
             userOrders={userOrders}
             userPositions={userPositions}
+            maCrossoverSignals={maCrossoverData}
           />
         </div>
         
