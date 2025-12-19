@@ -89,26 +89,36 @@ export default function ChartMainLines({ chartData, spotData = [], futuresData =
             const yClose = margin + (yMax - payload.close) * pixelsPerUnit;
             
             const isGreen = payload.close >= payload.open;
-            const color = isGreen ? '#16a34a' : '#ef4444';
+            const color = isGreen ? '#10b981' : '#ef4444';
             const bodyTop = Math.min(yOpen, yClose);
-            const bodyHeight = Math.abs(yOpen - yClose) || 1;
+            const bodyHeight = Math.abs(yOpen - yClose) || 1.5;
             
-            // Calculate dynamic candle width based on chart width and data length
             const chartWidth = typeof window !== 'undefined' ? window.innerWidth * 0.6 : 1200;
             const candleSpacing = chartWidth / (chartData.length + 1);
-            const bodyWidth = Math.max(Math.min(candleSpacing * 0.8, 16), 4); // Min 4px, max 16px, 80% of space
+            const bodyWidth = Math.max(Math.min(candleSpacing * 0.75, 14), 3);
             
             return (
               <g>
-                <line x1={cx} y1={yHigh} x2={cx} y2={yLow} stroke={color} strokeWidth={1} opacity={0.8} />
+                <line 
+                  x1={cx} 
+                  y1={yHigh} 
+                  x2={cx} 
+                  y2={yLow} 
+                  stroke={color} 
+                  strokeWidth={1.5} 
+                  opacity={0.7} 
+                />
                 <rect 
                   x={cx - bodyWidth / 2} 
                   y={bodyTop} 
                   width={bodyWidth} 
                   height={bodyHeight} 
                   fill={color} 
-                  stroke="none"
-                  opacity={0.95}
+                  stroke={color}
+                  strokeWidth={0.5}
+                  opacity={1}
+                  rx={1}
+                  ry={1}
                 />
               </g>
             );

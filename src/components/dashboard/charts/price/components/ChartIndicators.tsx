@@ -19,10 +19,10 @@ export default function ChartIndicators({ showIndicators }: ChartIndicatorsProps
           type="monotone" 
           dataKey="ema9" 
           stroke="#fbbf24" 
-          strokeWidth={1.2}
+          strokeWidth={2}
           dot={false}
           isAnimationActive={false}
-          opacity={0.8}
+          opacity={0.95}
         />
       )}
       
@@ -31,10 +31,10 @@ export default function ChartIndicators({ showIndicators }: ChartIndicatorsProps
           type="monotone" 
           dataKey="ema21" 
           stroke="#a855f7" 
-          strokeWidth={1.2}
+          strokeWidth={2}
           dot={false}
           isAnimationActive={false}
-          opacity={0.8}
+          opacity={0.95}
         />
       )}
       
@@ -43,10 +43,10 @@ export default function ChartIndicators({ showIndicators }: ChartIndicatorsProps
           type="monotone" 
           dataKey="ema50" 
           stroke="#3b82f6" 
-          strokeWidth={1.2}
+          strokeWidth={2}
           dot={false}
           isAnimationActive={false}
-          opacity={0.8}
+          opacity={0.95}
         />
       )}
       
@@ -56,21 +56,21 @@ export default function ChartIndicators({ showIndicators }: ChartIndicatorsProps
             type="monotone" 
             dataKey="bbUpper" 
             stroke="#818cf8" 
-            strokeWidth={1}
-            strokeDasharray="2 2"
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
             dot={false}
             isAnimationActive={false}
-            opacity={0.5}
+            opacity={0.6}
           />
           <Line 
             type="monotone" 
             dataKey="bbLower" 
             stroke="#818cf8" 
-            strokeWidth={1}
-            strokeDasharray="2 2"
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
             dot={false}
             isAnimationActive={false}
-            opacity={0.5}
+            opacity={0.6}
           />
         </>
       )}

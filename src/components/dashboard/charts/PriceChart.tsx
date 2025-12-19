@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import PriceChartHeader from './price/PriceChartHeader';
-import TradingViewChart from './price/TradingViewChart';
+import PriceChartMain from './price/PriceChartMain';
 import PriceChartIndicators from './price/PriceChartIndicators';
 import { useMACrossoverSignals } from '@/hooks/useMACrossoverSignals';
 
@@ -75,15 +75,80 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
       onMarketTypeChange(type);
     }
   };
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
+  const [priceZoom, setPriceZoom] = useState(1);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   const handleTimeframeChange = (tf: string) => {
     setActiveTimeframe(tf);
     onTimeframeChange(tf);
   };
 
-  const currentPrice = priceData.length > 0 ? (priceData[priceData.length - 1]?.close || priceData[priceData.length - 1]?.price) : 0;
+  useEffect(() => {
+    const chartContainer = chartContainerRef.current;
+    if (!chartContainer) return;
 
-  const hasVolumeData = priceData.some(d => d.volume && d.volume > 0);
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (e.deltaY) {
+        if (e.shiftKey) {
+          const delta = e.deltaY > 0 ? -0.15 : 0.15;
+          setPriceZoom(prev => Math.max(0.5, Math.min(5, prev + delta)));
+        } else {
+          const delta = e.deltaY > 0 ? -0.1 : 0.1;
+          setZoomLevel(prev => {
+            const newZoom = Math.max(0.5, Math.min(3, prev + delta));
+            
+            const dataLength = priceData.length;
+            const visibleCount = Math.floor(dataLength / newZoom);
+            setVisibleRange(prevRange => {
+              const newEnd = dataLength;
+              const newStart = Math.max(0, newEnd - visibleCount);
+              return { start: newStart, end: newEnd };
+            });
+            
+            return newZoom;
+          });
+        }
+      }
+    };
+
+    chartContainer.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      chartContainer.removeEventListener('wheel', handleWheel);
+    };
+  }, [priceData.length]);
+
+  const chartData = priceData.slice(visibleRange.start, visibleRange.end).map((point, idx) => {
+    const buySignals = strategySignals.filter(s => s.signal === 'buy');
+    const sellSignals = strategySignals.filter(s => s.signal === 'sell');
+    
+    if (idx === priceData.length - 1) {
+      return { 
+        ...point,
+        buySignal: buySignals.length > 0 ? point.price || point.close : undefined,
+        sellSignal: sellSignals.length > 0 ? point.price || point.close : undefined
+      };
+    }
+    return point;
+  });
+
+  const priceCenter = (bestBid && bestAsk) 
+    ? (bestBid + bestAsk) / 2 
+    : (chartData[chartData.length - 1]?.close || chartData[chartData.length - 1]?.price || 0);
+  
+  const baseRange = Math.abs(priceCenter * 0.015);
+  const priceRange = baseRange / priceZoom;
+  
+  const yMin = priceCenter - priceRange;
+  const yMax = priceCenter + priceRange;
+  
+  const currentPrice = chartData.length > 0 ? (chartData[chartData.length - 1]?.close || chartData[chartData.length - 1]?.price) : 0;
+
+  const hasVolumeData = chartData.some(d => d.volume && d.volume > 0);
 
   return (
     <Card className="bg-black/90 border-zinc-800">
@@ -102,21 +167,36 @@ export default function PriceChart({ priceData, spotData = [], futuresData = [],
         />
       </CardHeader>
       <CardContent className="pt-0 pb-4">
-        <div className="h-[580px] bg-black/50 rounded-md overflow-hidden">
-          <TradingViewChart
-            chartData={priceData}
+        <div className="mb-2 px-2 py-1 bg-zinc-900/30 border border-zinc-800/50 rounded text-[10px] text-zinc-500 flex items-center gap-2">
+          <span>💡 Зум: колесико мыши — по времени, Shift + колесико — по цене</span>
+        </div>
+        <div 
+          ref={chartContainerRef}
+          className="h-[480px] overflow-hidden bg-black/50 rounded-md" 
+          style={{ touchAction: 'none' }}
+        >
+          <PriceChartMain
+            chartData={chartData}
+            spotData={spotData}
+            futuresData={futuresData}
+            marketType={marketType}
             chartType={chartType}
             showIndicators={showIndicators}
+            yMin={yMin}
+            yMax={yMax}
+            positionLevels={positionLevels}
+            currentMarketPrice={currentMarketPrice}
+            bestAsk={bestAsk}
+            bestBid={bestBid}
+            orderbook={['1', '5', '15'].includes(activeTimeframe) ? orderbook : []}
             userOrders={userOrders}
             userPositions={userPositions}
             maCrossoverSignals={maCrossoverData}
-            bestAsk={bestAsk}
-            bestBid={bestBid}
           />
         </div>
         
         <PriceChartIndicators
-          chartData={priceData}
+          chartData={chartData}
           showRSI={showIndicators.rsi}
           showMACD={showIndicators.macd}
           showVolume={hasVolumeData}

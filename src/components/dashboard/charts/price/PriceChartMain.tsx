@@ -139,7 +139,7 @@ export default function PriceChartMain({
         >
           <ChartGradients />
           
-          <CartesianGrid strokeDasharray="1 1" stroke="rgba(255,255,255,0.05)" vertical={true} horizontal={true} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} horizontal={true} />
           
           <XAxis 
             dataKey="time" 
