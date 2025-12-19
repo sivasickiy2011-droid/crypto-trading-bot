@@ -2,6 +2,19 @@ import { useState, useEffect } from 'react';
 import { getKlineData } from '@/lib/api';
 import { WatchlistItem } from './useMarketData';
 
+const generateMockPriceData = (basePrice: number) => Array.from({ length: 50 }, (_, i) => ({
+  time: `${9 + Math.floor(i / 12)}:${(i % 12) * 5}`.padEnd(5, '0'),
+  price: basePrice + Math.random() * (basePrice * 0.05) - (basePrice * 0.025),
+  open: basePrice + Math.random() * (basePrice * 0.02) - (basePrice * 0.01),
+  high: basePrice + Math.random() * (basePrice * 0.03),
+  low: basePrice - Math.random() * (basePrice * 0.03),
+  close: basePrice + Math.random() * (basePrice * 0.02) - (basePrice * 0.01),
+  volume: Math.random() * 1000000,
+  ma20: basePrice + Math.sin(i / 10) * (basePrice * 0.01),
+  ma50: basePrice + Math.cos(i / 15) * (basePrice * 0.008),
+  signal: i % 15 === 0 ? (i % 30 === 0 ? 'buy' : 'sell') : null
+}));
+
 
 
 export interface PriceDataPoint {
@@ -114,7 +127,7 @@ export function usePriceData(
   enabled: boolean = true,
   marketType: 'spot' | 'futures' = 'futures'
 ) {
-  const [priceData, setPriceData] = useState<PriceDataPoint[]>([]);
+  const [priceData, setPriceData] = useState<PriceDataPoint[]>(generateMockPriceData(43580));
   const [spotData, setSpotData] = useState<PriceDataPoint[]>([]);
   const [futuresData, setFuturesData] = useState<PriceDataPoint[]>([]);
 
