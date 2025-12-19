@@ -75,7 +75,13 @@ export default function ChartMainLines({ chartData, spotData = [], futuresData =
           data={chartData}
           shape={(props: any) => {
             const { cx, cy, payload } = props;
-            if (!payload || payload.open === undefined || payload.close === undefined || payload.high === undefined || payload.low === undefined) return null;
+            
+            console.log('🕯️ Candle payload:', payload);
+            
+            if (!payload || payload.open === undefined || payload.close === undefined || payload.high === undefined || payload.low === undefined) {
+              console.log('❌ Missing candle data:', payload);
+              return null;
+            }
             
             const chartHeight = 450;
             const margin = 30;
