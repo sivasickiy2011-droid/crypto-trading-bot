@@ -31,6 +31,18 @@ interface ChartMainLinesProps {
 }
 
 export default function ChartMainLines({ chartData, spotData = [], futuresData = [], marketType, chartType, yMin, yMax }: ChartMainLinesProps) {
+  console.log('📊 ChartMainLines render:', { 
+    chartType, 
+    dataLength: chartData?.length,
+    firstItem: chartData?.[0],
+    hasOHLC: {
+      open: chartData?.[0]?.open,
+      high: chartData?.[0]?.high,
+      low: chartData?.[0]?.low,
+      close: chartData?.[0]?.close
+    }
+  });
+  
   return (
     <>
       {/* Overlay mode - show both spot and futures */}
