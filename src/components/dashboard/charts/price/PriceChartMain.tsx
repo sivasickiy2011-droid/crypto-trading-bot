@@ -1,8 +1,12 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Scatter, ReferenceLine } from 'recharts';
+import { useRef, useEffect, useState } from 'react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart } from 'recharts';
 import { CustomTooltip } from './PriceChartTooltip';
 import { CustomCursor } from './CustomCursor';
 import VolumeProfileOverlay from './VolumeProfileOverlay';
+import ChartGradients from './components/ChartGradients';
+import ChartMainLines from './components/ChartMainLines';
+import ChartIndicators from './components/ChartIndicators';
+import ChartMarkers from './components/ChartMarkers';
 
 interface PriceDataPoint {
   time: string;
@@ -82,7 +86,24 @@ interface PriceChartMainProps {
   maCrossoverSignals?: MACrossoverData | null;
 }
 
-export default function PriceChartMain({ chartData, spotData = [], futuresData = [], marketType = 'futures', chartType, showIndicators, yMin, yMax, positionLevels = [], currentMarketPrice, bestAsk, bestBid, orderbook = [], userOrders = [], userPositions = [], maCrossoverSignals = null }: PriceChartMainProps) {
+export default function PriceChartMain({ 
+  chartData, 
+  spotData = [], 
+  futuresData = [], 
+  marketType = 'futures', 
+  chartType, 
+  showIndicators, 
+  yMin, 
+  yMax, 
+  positionLevels = [], 
+  currentMarketPrice, 
+  bestAsk, 
+  bestBid, 
+  orderbook = [], 
+  userOrders = [], 
+  userPositions = [], 
+  maCrossoverSignals = null 
+}: PriceChartMainProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = useState({ width: 1200, height: 480 });
 
@@ -112,420 +133,62 @@ export default function PriceChartMain({ chartData, spotData = [], futuresData =
       />
       
       <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart 
-        data={chartData} 
-        margin={{ top: 15, right: 150, left: 0, bottom: 10 }}
-      >
-        <defs>
-          <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.15}/>
-            <stop offset="95%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0}/>
-          </linearGradient>
-          <linearGradient id="colorSpot" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#10b981" stopOpacity={0.25}/>
-            <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
-          </linearGradient>
-          <linearGradient id="colorFutures" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25}/>
-            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.05}/>
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="1 1" stroke="rgba(255,255,255,0.05)" vertical={true} horizontal={true} />
-        <XAxis 
-          dataKey="time" 
-          stroke="rgba(255,255,255,0.3)" 
-          tick={{ fontSize: 10, fontFamily: 'Roboto Mono', fill: 'rgba(255,255,255,0.4)' }}
-          tickLine={false}
-          axisLine={false}
-        />
-        <YAxis 
-          stroke="rgba(255,255,255,0.1)" 
-          tick={{ fontSize: 11, fontFamily: 'Roboto Mono', fill: 'rgba(255,255,255,0.5)' }}
-          tickLine={false}
-          axisLine={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
-          domain={[yMin, yMax]}
-          tickFormatter={(value) => value.toFixed(4)}
-          orientation="right"
-          width={70}
-          scale="linear"
-        />
-        <Tooltip 
-          content={<CustomTooltip />} 
-          cursor={<CustomCursor chartHeight={chartDimensions.height} yMin={yMin} yMax={yMax} />}
-        />
-        
-        {/* Overlay mode - show both spot and futures */}
-        {marketType === 'overlay' && (
-          <>
-            <Line 
-              type="monotone" 
-              dataKey="spotClose"
-              stroke="#10b981" 
-              strokeWidth={2.5}
-              dot={false}
-              isAnimationActive={false}
-              name="Спот"
-            />
-            <Line 
-              type="monotone" 
-              dataKey="futuresClose"
-              stroke="#f59e0b" 
-              strokeWidth={2.5}
-              dot={false}
-              isAnimationActive={false}
-              name="Фьючерсы"
-            />
-          </>
-        )}
-        
-        {chartType === 'line' && marketType !== 'overlay' && (
-          <Area 
-            type="monotone" 
-            dataKey="price" 
-            stroke="hsl(199, 89%, 48%)" 
-            fill="url(#colorPrice)"
-            strokeWidth={2}
-            dot={false}
-            isAnimationActive={false}
-          />
-        )}
-        
-        {chartType === 'candle' && chartData.length > 0 && (
-          <Scatter
-            data={chartData}
-            shape={(props: any) => {
-              const { cx, cy, payload, index } = props;
-              if (!payload || !payload.open || !payload.close || !payload.high || !payload.low) return null;
-              
-              const chartHeight = 450;
-              const margin = 30;
-              const availableHeight = chartHeight - 2 * margin;
-              
-              const priceRange = yMax - yMin;
-              const pixelsPerUnit = availableHeight / priceRange;
-              
-              const yHigh = margin + (yMax - payload.high) * pixelsPerUnit;
-              const yLow = margin + (yMax - payload.low) * pixelsPerUnit;
-              const yOpen = margin + (yMax - payload.open) * pixelsPerUnit;
-              const yClose = margin + (yMax - payload.close) * pixelsPerUnit;
-              
-              const isGreen = payload.close >= payload.open;
-              const color = isGreen ? '#16a34a' : '#ef4444';
-              const bodyTop = Math.min(yOpen, yClose);
-              const bodyHeight = Math.abs(yOpen - yClose) || 1;
-              
-              // Calculate dynamic candle width based on chart width and data length
-              const chartWidth = typeof window !== 'undefined' ? window.innerWidth * 0.6 : 1200;
-              const candleSpacing = chartWidth / (chartData.length + 1);
-              const bodyWidth = Math.max(Math.min(candleSpacing * 0.8, 16), 4); // Min 4px, max 16px, 80% of space
-              
-              return (
-                <g>
-                  <line x1={cx} y1={yHigh} x2={cx} y2={yLow} stroke={color} strokeWidth={1} opacity={0.8} />
-                  <rect 
-                    x={cx - bodyWidth / 2} 
-                    y={bodyTop} 
-                    width={bodyWidth} 
-                    height={bodyHeight} 
-                    fill={color} 
-                    stroke="none"
-                    opacity={0.95}
-                  />
-                </g>
-              );
-            }}
-            isAnimationActive={false}
-          />
-        )}
-
-        {showIndicators.ema9 && (
-          <Line 
-            type="monotone" 
-            dataKey="ema9" 
-            stroke="#fbbf24" 
-            strokeWidth={1.2}
-            dot={false}
-            isAnimationActive={false}
-            opacity={0.8}
-          />
-        )}
-        
-        {showIndicators.ema21 && (
-          <Line 
-            type="monotone" 
-            dataKey="ema21" 
-            stroke="#a855f7" 
-            strokeWidth={1.2}
-            dot={false}
-            isAnimationActive={false}
-            opacity={0.8}
-          />
-        )}
-        
-        {showIndicators.ema50 && (
-          <Line 
-            type="monotone" 
-            dataKey="ema50" 
-            stroke="#3b82f6" 
-            strokeWidth={1.2}
-            dot={false}
-            isAnimationActive={false}
-            opacity={0.8}
-          />
-        )}
-        
-        {showIndicators.bb && (
-          <>
-            <Line 
-              type="monotone" 
-              dataKey="bbUpper" 
-              stroke="#818cf8" 
-              strokeWidth={1}
-              strokeDasharray="2 2"
-              dot={false}
-              isAnimationActive={false}
-              opacity={0.5}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="bbLower" 
-              stroke="#818cf8" 
-              strokeWidth={1}
-              strokeDasharray="2 2"
-              dot={false}
-              isAnimationActive={false}
-              opacity={0.5}
-            />
-          </>
-        )}
-
-        {bestAsk && (
-          <ReferenceLine 
-            y={bestAsk} 
-            stroke="#ef4444" 
-            strokeWidth={1.5}
-            label={{ 
-              value: `${bestAsk.toFixed(4)}`, 
-              position: 'right',
-              fill: '#fff',
-              fontSize: 11,
-              fontWeight: 700,
-              fontFamily: 'Roboto Mono',
-              style: { 
-                backgroundColor: '#ef4444',
-                padding: '2px 6px',
-                borderRadius: '3px'
-              }
-            }}
-          />
-        )}
-
-        {bestBid && (
-          <ReferenceLine 
-            y={bestBid} 
-            stroke="#16a34a" 
-            strokeWidth={1.5}
-            label={{ 
-              value: `${bestBid.toFixed(4)}`, 
-              position: 'right',
-              fill: '#fff',
-              fontSize: 11,
-              fontWeight: 700,
-              fontFamily: 'Roboto Mono',
-              style: { 
-                backgroundColor: '#16a34a',
-                padding: '2px 6px',
-                borderRadius: '3px'
-              }
-            }}
-          />
-        )}
-
-        {/* Центральная линия отрисовывается в VolumeProfileOverlay */}
-
-        {/* MA Crossover Signals */}
-        {maCrossoverSignals && maCrossoverSignals.signals && (
-          <>
-            {/* BUY Signals - Green triangles pointing up */}
-            <Scatter
-              data={maCrossoverSignals.signals
-                .filter(s => s.type === 'BUY')
-                .map(signal => {
-                  const dataPoint = chartData[signal.index];
-                  if (!dataPoint) return null;
-                  return {
-                    time: dataPoint.time,
-                    price: signal.price,
-                    signalType: signal.type,
-                    ema9: signal.ema9,
-                    ema21: signal.ema21,
-                    rsi: signal.rsi,
-                    timestamp: signal.timestamp
-                  };
-                })
-                .filter(s => s !== null)
-              }
-              fill="#22c55e"
-              dataKey="price"
-              shape={(props: any) => {
-                const { cx, cy, payload } = props;
-                if (!cx || !cy) return null;
-                const size = 10;
-                return (
-                  <g>
-                    <path
-                      d={`M ${cx} ${cy - size} L ${cx + size} ${cy + size} L ${cx - size} ${cy + size} Z`}
-                      fill="#22c55e"
-                      stroke="#16a34a"
-                      strokeWidth={1.5}
-                      opacity={0.9}
-                    />
-                    <title>{`BUY Signal\nPrice: ${payload?.price?.toFixed(4)}\nEMA9: ${payload?.ema9?.toFixed(4)}\nEMA21: ${payload?.ema21?.toFixed(4)}\nRSI: ${payload?.rsi?.toFixed(2)}`}</title>
-                  </g>
-                );
-              }}
-              isAnimationActive={false}
-            />
-            
-            {/* SELL Signals - Red triangles pointing down */}
-            <Scatter
-              data={maCrossoverSignals.signals
-                .filter(s => s.type === 'SELL')
-                .map(signal => {
-                  const dataPoint = chartData[signal.index];
-                  if (!dataPoint) return null;
-                  return {
-                    time: dataPoint.time,
-                    price: signal.price,
-                    signalType: signal.type,
-                    ema9: signal.ema9,
-                    ema21: signal.ema21,
-                    rsi: signal.rsi,
-                    timestamp: signal.timestamp
-                  };
-                })
-                .filter(s => s !== null)
-              }
-              fill="#ef4444"
-              dataKey="price"
-              shape={(props: any) => {
-                const { cx, cy, payload } = props;
-                if (!cx || !cy) return null;
-                const size = 10;
-                return (
-                  <g>
-                    <path
-                      d={`M ${cx} ${cy + size} L ${cx + size} ${cy - size} L ${cx - size} ${cy - size} Z`}
-                      fill="#ef4444"
-                      stroke="#dc2626"
-                      strokeWidth={1.5}
-                      opacity={0.9}
-                    />
-                    <title>{`SELL Signal\nPrice: ${payload?.price?.toFixed(4)}\nEMA9: ${payload?.ema9?.toFixed(4)}\nEMA21: ${payload?.ema21?.toFixed(4)}\nRSI: ${payload?.rsi?.toFixed(2)}`}</title>
-                  </g>
-                );
-              }}
-              isAnimationActive={false}
-            />
-          </>
-        )}
-
-        {userOrders.map((order) => {
-          const isLong = order.side === 'Buy';
-          const color = isLong ? '#22c55e' : '#ef4444';
+        <ComposedChart 
+          data={chartData} 
+          margin={{ top: 15, right: 150, left: 0, bottom: 10 }}
+        >
+          <ChartGradients />
           
-          return (
-            <ReferenceLine 
-              key={order.orderId}
-              y={order.price} 
-              stroke={color} 
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              opacity={0.7}
-              label={{ 
-                value: `📋 ${isLong ? 'LONG' : 'SHORT'} $${order.price.toFixed(2)}`, 
-                position: 'insideTopRight',
-                fill: color,
-                fontSize: 10,
-                fontWeight: 600,
-                fontFamily: 'Roboto Mono'
-              }}
-            />
-          );
-        })}
-
-        {userPositions.map((position) => {
-          const isLong = position.side === 'Buy';
-          const color = isLong ? '#22c55e' : '#ef4444';
-          const pnlSign = position.pnlPercent >= 0 ? '+' : '';
+          <CartesianGrid strokeDasharray="1 1" stroke="rgba(255,255,255,0.05)" vertical={true} horizontal={true} />
           
-          return (
-            <ReferenceLine 
-              key={position.symbol + position.side}
-              y={position.entryPrice} 
-              stroke={color} 
-              strokeWidth={2.5}
-              opacity={0.9}
-              label={{ 
-                value: `${isLong ? '🟢' : '🔴'} $${position.entryPrice.toFixed(2)} | ${pnlSign}${position.pnlPercent.toFixed(2)}%`, 
-                position: 'insideTopRight',
-                fill: color,
-                fontSize: 10,
-                fontWeight: 700,
-                fontFamily: 'Roboto Mono'
-              }}
-            />
-          );
-        })}
-
-        {positionLevels.map((level, idx) => (
-          <React.Fragment key={idx}>
-            <ReferenceLine 
-              y={level.entryPrice} 
-              stroke={level.side === 'LONG' ? 'hsl(142, 76%, 36%)' : 'hsl(0, 84%, 60%)'} 
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              label={{ 
-                value: `Вход: $${level.entryPrice.toFixed(2)}`, 
-                position: 'right',
-                fill: level.side === 'LONG' ? 'hsl(142, 76%, 36%)' : 'hsl(0, 84%, 60%)',
-                fontSize: 11,
-                fontWeight: 600
-              }}
-            />
-            {level.stopLoss && (
-              <ReferenceLine 
-                y={level.stopLoss} 
-                stroke="hsl(0, 84%, 60%)" 
-                strokeWidth={1.5}
-                strokeDasharray="3 3"
-                label={{ 
-                  value: `SL: $${level.stopLoss.toFixed(2)}`, 
-                  position: 'right',
-                  fill: 'hsl(0, 84%, 60%)',
-                  fontSize: 10
-                }}
-              />
-            )}
-            {level.takeProfit && (
-              <ReferenceLine 
-                y={level.takeProfit} 
-                stroke="hsl(142, 76%, 36%)" 
-                strokeWidth={1.5}
-                strokeDasharray="3 3"
-                label={{ 
-                  value: `TP: $${level.takeProfit.toFixed(2)}`, 
-                  position: 'right',
-                  fill: 'hsl(142, 76%, 36%)',
-                  fontSize: 10
-                }}
-              />
-            )}
-          </React.Fragment>
-        ))}
-        
-      </ComposedChart>
-    </ResponsiveContainer>
+          <XAxis 
+            dataKey="time" 
+            stroke="rgba(255,255,255,0.3)" 
+            tick={{ fontSize: 10, fontFamily: 'Roboto Mono', fill: 'rgba(255,255,255,0.4)' }}
+            tickLine={false}
+            axisLine={false}
+          />
+          
+          <YAxis 
+            stroke="rgba(255,255,255,0.1)" 
+            tick={{ fontSize: 11, fontFamily: 'Roboto Mono', fill: 'rgba(255,255,255,0.5)' }}
+            tickLine={false}
+            axisLine={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+            domain={[yMin, yMax]}
+            tickFormatter={(value) => value.toFixed(4)}
+            orientation="right"
+            width={70}
+            scale="linear"
+          />
+          
+          <Tooltip 
+            content={<CustomTooltip />} 
+            cursor={<CustomCursor chartHeight={chartDimensions.height} yMin={yMin} yMax={yMax} />}
+          />
+          
+          <ChartMainLines 
+            chartData={chartData}
+            spotData={spotData}
+            futuresData={futuresData}
+            marketType={marketType}
+            chartType={chartType}
+            yMin={yMin}
+            yMax={yMax}
+          />
+          
+          <ChartIndicators showIndicators={showIndicators} />
+          
+          <ChartMarkers 
+            chartData={chartData}
+            bestAsk={bestAsk}
+            bestBid={bestBid}
+            maCrossoverSignals={maCrossoverSignals}
+            userOrders={userOrders}
+            userPositions={userPositions}
+            positionLevels={positionLevels}
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
     </div>
   );
 }
